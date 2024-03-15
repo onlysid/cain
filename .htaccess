@@ -1,0 +1,24 @@
+# Disable directory browsing
+Options -Indexes
+
+# Block direct access to PHP files in the views directory
+<FilesMatch "\.php$">
+    Deny from all
+</FilesMatch>
+
+# Allow access to specific PHP files in the views directory
+<Files index.php>
+    Allow from all
+</Files>
+
+# Rewrite URLs to index.php
+RewriteEngine On
+RewriteBase /
+
+# Skip rewriting for existing files and directories
+RewriteCond %{REQUEST_FILENAME} -d [OR]
+RewriteCond %{REQUEST_FILENAME} -f
+RewriteRule ^ - [L]
+
+# Rewrite all other requests to index.php
+RewriteRule ^(.+)$ index.php [QSA,L]
