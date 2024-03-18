@@ -12,6 +12,14 @@ Init!
 
 ### What's happened?
 
+#### 18/03/2024
+
+General design structured.
+
+-   Buttons, fonts and colour scheme implemented.
+-   Menu and general screen layout created.
+-   Mobile menu underway.
+
 #### 15/03/2024
 
 File structure created.

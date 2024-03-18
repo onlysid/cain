@@ -1,1 +1,1 @@
-<h1 class="font-black text-blue-500 text-4xl">Dashboard</h1>
+<h1>Dashboard</h1>

@@ -17,11 +17,17 @@ module.exports = {
     },
     extend: {
       colors: {
-        "primary": "#0EA5E9",
-        "secondary": "#14B8A6",
-        "dark": "#1F2937",
-        "light": "#F9FAFB"
+        "primary": "#E3FFEC",
+        "primary-dark": "#D3F1E4",
+        "secondary": "#16cdff",
+        "tirtiary": "#77DFFF",
+        "dark": "#4D4C4C",
+        "light": "#00000029",
+        "grey": "#5F5F5F",
       },
+    },
+    fontFamily: {
+      roboto: ['Roboto', 'sans-sefif'],
     },
     screens: {
       xs: "480px",

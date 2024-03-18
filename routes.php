@@ -4,10 +4,10 @@ require_once 'utils/PageRoute.php';
 
 // Define routes using PageRoute objects
 $routes = [
-    '/' => new PageRoute('views/dashboard.php'),
-    '/users' => new PageRoute('views/users.php', 'Users'),
-    '/login' => new PageRoute('views/login.php', 'Login', false),
-    // Add more routes as needed
+    '/' => new PageRoute('views/dashboard.php'), // Main dashboard
+    '/users' => new PageRoute('views/users.php', 'Users'), // User configurations
+    '/login' => new PageRoute('views/login.php', 'Login', false), // Login page
+    '/blocks' => new PageRoute('views/objects.php'), // Demo blocks
 ];
 
 // Dynamically populate $apiRoutes
