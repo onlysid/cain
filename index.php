@@ -5,6 +5,6 @@ require_once 'includes/config.php';
 require_once 'includes/functions.php';
 
 // Define your routes
-require_once 'routes.php';
+require_once 'includes/routes.php';
 
 ?>

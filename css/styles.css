@@ -89,15 +89,19 @@
 
 /* General Styles */
 h1 {
-    @apply font-bold text-dark xl:text-4xl text-2xl;
+    @apply font-bold text-dark xl:text-5xl text-4xl;
 }
 
 h2 {
-    @apply font-normal text-grey xl:text-3xl text-xl;
+    @apply font-bold text-grey xl:text-3xl text-2xl;
+}
+
+h3 {
+    @apply font-bold text-white xl:text-2xl text-xl;
 }
 
 p, a {
-    @apply text-grey xl:text-2xl text-lg
+    @apply text-grey xl:text-xl text-lg
 }
 
 a:not(.btn) {
@@ -117,19 +121,19 @@ a:not(.btn) {
 }
 
 .btn {
-    @apply px-6 py-4 flex gap-2 justify-center min-w-max items-center text-white font-bold rounded-xl xl:text-xl text-base hover:text-tirtiary;
+    @apply px-6 py-4 xl:py-5 flex gap-2 justify-center min-w-max items-center text-white font-bold rounded-xl xl:text-xl text-base hover:text-tirtiary;
     box-shadow: 0px 0px 10px #0000007C;
     background: rgb(2,0,36);
     background: radial-gradient(ellipse at 50% -30px, var(--bgCol1) 0%, var(--bgCol2) 76%);
     transition: --bgCol1 0.5s, --bgCol2 0.5s, color 0.5s, box-shadow 0.5s;
 }
 
-.menu .btn {
+#menu .btn {
     @apply justify-start;
 }
 
-.menu .btn.active {
-    @apply md:w-[calc(100%_+50px)];
+#menu .btn.active {
+    @apply md:w-[calc(100%_+50px)] ;
 }
 
 .btn:hover {
@@ -142,10 +146,101 @@ a:not(.btn) {
     @apply px-4 py-2 border-white border-solid border-8 text-base;
 }
 
+.simple-border-btn {
+    @apply px-8 py-3;
+    box-shadow: inset 0px 0px 3px 3px #00000071, inset 0px 0px 0px 4px #ffffff;
+}
+
+.alt-border-btn {
+    @apply px-8 py-3;
+    box-shadow: inset 0px 0px 3px 3px #00000071, inset 0px 0px 0px 4px #77DFFF;
+}
+
+.btn:has(svg):not(.border-btn) {
+    @apply py-1 pl-2 gap-3;
+}
+
 .btn svg {
-    @apply h-7 aspect-square p-0.5 border-[3px] border-solid border-white rounded-full fill-white transition-all duration-500;
+    @apply h-7 aspect-square p-0.5 fill-white transition-all duration-500;
+}
+
+.btn:has(svg):not(.border-btn) svg {
+    @apply h-12 xl:h-[3.75rem];
+}
+
+.border-btn svg {
+    @apply border-[3px] border-solid border-white rounded-full;
 }
 
 .btn:hover svg {
     @apply fill-tirtiary border-tirtiary;
+}
+
+body {
+    @apply bg-primary flex flex-col font-roboto items-center fixed justify-center h-screen w-full;
+}
+
+.radial-gradient {
+    box-shadow:  inset 0px 0px 0px 4px #777777, 0px 0px 20px #5F5F5F, inset 0px 0px 20px #000000;
+    background: rgb(2,0,36);
+    background: radial-gradient(ellipse at 50% -30px, var(--bgCol1) 0%, var(--bgCol2) 76%);
+}
+
+/* Menu Styles */
+#desktopMenuWrapper { 
+    @apply shrink-0 py-8 -my-2 md:block relative hidden -mr-4 rounded-xl;
+}
+
+#desktopMenu {
+    @apply h-full w-full pl-6 pt-2 rounded-xl pr-12 overflow-y-scroll overflow-x-hidden;
+}
+
+#mobileMenu {
+    @apply transition-all duration-300 fixed left-0 top-0 z-50 bg-blue-900/40 backdrop-blur-xl md:hidden opacity-0 pointer-events-none w-full h-full flex flex-col justify-center items-center px-4 xs:px-16 sm:px-20 py-12;
+}
+
+#mobileMenu.active {
+    @apply !opacity-100 !pointer-events-auto;
+}
+
+.menu-brush {
+    @apply w-[calc(100%_+50px)] h-2.5 absolute from-transparent to-primary;
+}
+
+#menu {
+    @apply min-w-[200px] flex w-full grow h-full overflow-y-scroll md:overflow-y-visible flex-col gap-2.5 p-4 md:p-0 items-stretch;
+}
+
+/* Footer Styles */
+#footerWrapper { 
+    @apply w-full bg-dark py-2.5 border border-solid border-light-grey;
+    box-shadow: inset 0px 0px 6px #000000, 0px 0px 10px #000000ac;
+}
+#footerWrapper .footer-icon {
+    @apply h-9 w-auto cursor-pointer;
+}
+
+#footerWrapper .footer-icon svg {
+    @apply w-full h-full transition-all fill-white duration-500 px-3 lg:px-6;
+}
+
+#footerWrapper .footer-icon:hover svg {
+    @apply scale-105;
+}
+
+#logoutModal {
+    @apply fixed flex flex-col items-center justify-between p-8 xl:p-12 pointer-events-none translate-y-[150%] transition-all duration-500 w-full max-w-[30rem] h-full max-h-[30rem] bottom-0 left-1/2 -translate-x-1/2 radial-gradient z-50 rounded-xl;
+}
+
+#logoutModal.active {
+    @apply pointer-events-auto translate-y-4 opacity-100;
+}
+
+/* Page layout */
+#contentOuterWrapper {
+    @apply overflow-y-scroll z-10 md:-ml-4 p-4;
+}
+
+#contentWrapper {
+    @apply p-8 xl:p-12 bg-primary-dark rounded-xl h-full shadow-[0px_0px_10px_#5F5F5F] w-full overflow-y-scroll flex flex-col gap-8;
 }

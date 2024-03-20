@@ -12,6 +12,15 @@ Init!
 
 ### What's happened?
 
+#### 20/03/2024
+
+Page structure, API logic and some more UI adjustments.
+
+-   Mobile menu completed.
+-   Login screen and general UI completed.
+-   Created page routing and API routing.
+-   API general logic solidified.
+
 #### 18/03/2024
 
 General design structured.
