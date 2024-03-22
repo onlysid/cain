@@ -1,5 +1,6 @@
 # Disable directory browsing
 Options -Indexes
+ErrorDocument 403 /index.php
 
 # Block direct access to PHP files in the views directory
 <FilesMatch "\.php$">
@@ -8,6 +9,11 @@ Options -Indexes
 
 # Allow access to specific PHP files in the views directory
 <Files index.php>
+    Allow from all
+</Files>
+
+# We also need to allow access to the db-update script (as it is accessed via AJAX request)
+<Files "db-update.php">
     Allow from all
 </Files>
 

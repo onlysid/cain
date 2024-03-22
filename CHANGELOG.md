@@ -12,6 +12,19 @@ Init!
 
 ### What's happened?
 
+#### 22/03/2024
+
+API, Session, Database abstracted. DB-Update logic finished.
+
+-   Further updates to API logic and database structure.
+-   403 Accounted for.
+-   TODO: Could make better exception logic for scripts in pageRouter.
+-   Added session logic.
+-   Separated API functionality.
+-   Added database connectivity.
+-   Added option to view pages in a logged out state.
+-   Started user authentication.
+
 #### 20/03/2024
 
 Page structure, API logic and some more UI adjustments.

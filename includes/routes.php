@@ -1,30 +1,42 @@
-<?php // Define routes for CAIN and routing logic
+<?php // Function to handle routing
 
-// Function to handle routing
-function route($routes, $apiRoutes, $request_uri) {
+function route($routes, $apiRoutes) {
+
     // Get the current page
     $currentPage = $_SERVER['REQUEST_URI'];
-
-    $path = parse_url($request_uri, PHP_URL_PATH);
+    $path = parse_url($currentPage, PHP_URL_PATH);
     
-    // Check if the requested path matches any non-API route
-    if (array_key_exists($path, $routes)) {
-        $route = $routes[$path];
-        include 'templates/base.php';
-        return;
+    // If we are not logged in, we need to check if we are allowed to be here
+    if (!isset($_SESSION['user_id']) && $currentPage !== '/login') {
+        if(array_key_exists($path, $routes)) {
+            if($routes[$path]->accessLevel !== GUEST) {
+                // Redirect to login page
+                header("Location: /login");
+                exit();
+            }
+        }
     }
-
+    
     // Check if the requested path matches any API route
     if (array_key_exists($path, $apiRoutes)) {
-        include 'includes/api.php';
+        include BASE_DIR . '/includes/api.php';
         return;
     }
+    
+    // Handle general routing logic
+    if (array_key_exists($path, $routes)) {
+        // Check if the requested path matches any non-API route
+        $route = $routes[$path];
+    } elseif (http_response_code() === 403) {
+        // Check if the HTTP response code is 403 (Forbidden)
+        $route = new PageRoute('views/403.php', '403: Forbidden', false, false);
+    } else {
+        // Handle 404 error
+        http_response_code(400);
+        $route = new PageRoute('views/404.php', '404: Not Found', false, false);
+    }
 
-    // Handle 404 error for both non-API and API routes
-    http_response_code(404);
-    $route = new PageRoute('views/404.php', '404: Not Found');
-
-    include 'templates/base.php';
+    include BASE_DIR . '/templates/base.php';
 }
 
 // Include PageRoute class
@@ -40,8 +52,9 @@ $routes = [
     '/logs' => new PageRoute('views/logs.php', 'Logs'), // List of all logs
     '/network-settings' => new PageRoute('views/network-settings.php', 'Network Settings'), // Network Settings
     '/versions' => new PageRoute('views/versions.php', 'Versions'), // Network Settings
-    '/login' => new PageRoute('views/login.php', 'Login', false), // Login page
-    '/blocks' => new PageRoute('views/objects.php', 'Demo'), // Demo blocks
+    '/login' => new PageRoute('auth/login.php', 'Login', false), // Login page
+    '/blocks' => new PageRoute('views/objects.php', 'Demo', true, GUEST), // Demo blocks
+    '/about' => new PageRoute('views/about.php', 'Demo', true, GUEST), // About this website
 ];
 
 // Dynamically populate apiRoutes
@@ -56,6 +69,6 @@ foreach ($apiFiles as $file) {
 }
 
 // Handle the request
-route($routes, $apiRoutes, $_SERVER['REQUEST_URI']);
+route($routes, $apiRoutes);
 
 ?>

@@ -22,4 +22,5 @@ if(!$data) {
 }
 
 // Include API-specific logic.
+include 'api-functions.php';
 include $route['view'];

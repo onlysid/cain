@@ -1,5 +1,10 @@
 <?php // Send information about an instrument.
 
+// 422 = Invalid data
+// 428 = Precondition required
+// 404 = Not found
+// 400 = Bad request
+
 /*
 Get moduleSerialNumber, frontPanelId, status, progress, timeRemaining, faultCode, versionNumber
 Codes:
@@ -32,7 +37,11 @@ if(!$data) {
     exit;
 }
 
-$response = "API Unfinished.";
+
 
 // Provide the response
-echo json_encode(["status" => $response]);
+if($response) {
+    echo json_encode(["status" => $response]);
+} else {
+    echo json_encode(["status" => "ERROR"]);
+}
