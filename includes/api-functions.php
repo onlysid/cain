@@ -31,7 +31,7 @@ function deleteProcessData($processId) {
 }
 
 // Function to add user to the queue (for LIMS processing)
-function externalOperatorCheck($operatorId, $password) {
+function externalOperatorCheck($operatorId) {
     global $cainDB;
 
     try {
@@ -44,38 +44,38 @@ function externalOperatorCheck($operatorId, $password) {
         // Get the last inserted process ID
         $processId = $cainDB->conn->lastInsertId();
 
-        // Insert 'operatorId' and 'password' data into the process_data table and link it to the process in the queue
+        // Insert 'operatorId' into the process_data table and link it to the process in the queue
         $cainDB->query("INSERT INTO process_data (process_id, `key`, value) VALUES (?, 'operatorId', ?)", [$processId, $operatorId]);
-        $cainDB->query("INSERT INTO process_data (process_id, `key`, value) VALUES (?, 'password', ?)", [$processId, $password]);
 
         // Commit the transaction
         $cainDB->commit();
 
         // Call a separate function to handle polling and status check
-        pollProcessStatus($processId);
+        return pollProcessStatus($processId, 42);
 
     } catch(PDOException $e) {
         // Rollback the transaction on error
         $cainDB->rollBack();
-        throw $e; // Re-throw the exception for handling at a higher level
+        throw $e;
     }
 }
 
 // Function to poll process status and handle deletion
-function pollProcessStatus($processId) {
+function pollProcessStatus($processId, $completionStatus) {
     global $cainDB;
-    // Poll the database for the status change (timeout in 20s)
-    $timeout = 20;
+    
+    // Poll the database for the status change (timeout according to the LIMS Timeout settings)
     $startTime = time();
+    $response = false;
 
-    while (time() - $startTime < $timeout) {
+    while (time() - $startTime < LIMS_TIMEOUT) {
         // Check the status of the queue entry
         $status = $cainDB->select("SELECT status FROM process_queue WHERE id = ?", [$processId]);
 
         // If status is 'pass' or 'fail', return the status
-        if ($status && ($status['status'] === 42)) {
+        if ($status && ($status['status'] === strval($completionStatus))) {
             // Check if operator ID is accepted
-            echo json_encode(array('status' => "Operator ID Accepted"));
+            $response = true;
             break;
         }
 
@@ -83,11 +83,7 @@ function pollProcessStatus($processId) {
         sleep(1);
     }
 
-    // If timeout reached without status change, return 'BUSY'
-    if (time() - $startTime >= $timeout) {
-        echo json_encode(array('status' => 'BUSY'));
-    }
-
     // Delete process data and process
     deleteProcessData($processId);
+    return $response;
 }

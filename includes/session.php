@@ -1,19 +1,23 @@
-<?php
+<?php 
 class Session {
     // Set session expiry time (in seconds)
-    private static $session_expiry = 1800; // 30 minutes
+    private static $sessionExpiry = 30; // 30 minutes
+
+    function __construct() {
+        $this->start();
+    }
 
     // Start session
     public static function start() {
         session_start();
 
-        // Regenerate session ID if it's time to do so
-        if (!isset($_SESSION['last_regenerated']) || time() - $_SESSION['last_regenerated'] > 60 * 30) { // Regenerate every 30 minutes
+        // Regenerate session ID if it's time to do so (every 30 minutes)
+        if (!isset($_SESSION['last-generated']) || time() - $_SESSION['last-generated'] > 60 * self::$sessionExpiry) {
             // Regenerate session ID and destroy the old session
             session_regenerate_id(true);
 
             // Update the last regenerated timestamp
-            $_SESSION['last_regenerated'] = time();
+            $_SESSION['last-generated'] = time();
         }
 
         // Check session expiry
@@ -30,6 +34,24 @@ class Session {
         return $_SESSION[$key] ?? null;
     }
 
+    // Set session notice
+    public static function setNotice($message) {
+        if (!self::exists('notices')) {
+            self::set('notices', []);
+        }
+        $_SESSION['notices'][] = $message;
+    }
+
+    // Get session notices
+    public static function getNotices() {
+        return self::get('notices') ?? [];
+    }
+
+    // Clear session notices
+    public static function clearNotices() {
+        self::remove('notices');
+    }
+
     // Check if session variable exists
     public static function exists($key) {
         return isset($_SESSION[$key]);
@@ -44,55 +66,131 @@ class Session {
 
     // Destroy session
     public static function destroy() {
+        // Destroy current session
         session_destroy();
+
+        // Start a new session
+        self::start();
+
+        // Go to the login screen
+        header('Location: /');
     }
 
     // Check session expiry
     private static function checkExpiry() {
-        if (isset($_SESSION['last_activity']) && time() - $_SESSION['last_activity'] > self::$session_expiry) {
-            // Session expired, destroy it
+        if (isset($_SESSION['last-activity']) && time() - $_SESSION['last-activity'] > self::$sessionExpiry * 60) {
+            // Session expired, destroy it and go to login page
             self::destroy();
         } else {
             // Update last activity timestamp
-            $_SESSION['last_activity'] = time();
+            $_SESSION['last-activity'] = time();
         }
     }
 
-    // Store session data securely
-    public static function secureSet($key, $value) {
-        // Encrypt session data before storing
-        $encrypted_value = encrypt($value); // Implement your encryption function here
-        self::set($key, $encrypted_value);
-    }
 
-    // Retrieve session data securely
-    public static function secureGet($key) {
-        // Decrypt session data after retrieval
-        $encrypted_value = self::get($key);
-        if ($encrypted_value !== null) {
-            return decrypt($encrypted_value); // Implement your decryption function here
+    // Authenticate user
+    public static function authenticate($operatorId, $password) {
+        global $cainDB;
+
+        $passwordRequired = isPasswordRequired();
+    
+        // Check if operator is in the database
+        if(operatorExists($operatorId)) {
+            // Get user information password
+            $operatorInfo = $cainDB->select("SELECT * FROM `users` WHERE `operator_id` = :operatorId;", [':operatorId' => $operatorId]);
+
+            // If the operator has been deactivated, show a message to say so
+            if($operatorInfo['status'] == 0) {
+                self::setNotice('This operator has been deactivated.');
+                return false;
+            }
+
+            // If we don't need a password generally and the operator is a clinician
+            if(!$passwordRequired && $operatorInfo['user_type'] === CLINICIAN) {
+                return true;
+            }
+
+            self::set('provisional-operator', $operatorId);
+            self::set('password-required', true);
+            self::set('provisional-operator-fname', $operatorInfo['first_name']);
+            self::set('provisional-operator-lname', $operatorInfo['last_name']);
+
+            // We need a password, but the operator doesn't have one. Set one up!
+            if(!$operatorInfo['password']) {
+                self::set('account-create', true);
+                return false;
+            }
+
+            // We need a password! But if it's null, we likely haven't asked for it.
+            if(!$password) {
+                // Refresh the page, this time with a password input field and pass the operatorId
+                return false;
+            }
+
+            // Otherwise, Authenticate username and password
+            if(password_verify($password, $operatorInfo['password'])) {
+                // Update the user's password with a new salty hash (salt auto-generated)
+                $newHashedPassword = password_hash($password, PASSWORD_BCRYPT);
+                // Update the user's password with the new hashed password and salt
+                $cainDB->query("UPDATE `users` SET `password` = :password WHERE `operator_id` = :operatorId;", [':password' => $newHashedPassword, ':operatorId' => $operatorId]);
+                return true;
+            }
+
+            // Unable to authenticate the operator
+            return false;
         }
-        return null;
+
+        // The operator doesn't exist locally. Check externally.
+        if(externalOperatorCheck($operatorId)) {
+            // If the operator exists externally, create a clinician and log them in.
+            $cainDB->query("INSERT INTO `users` (`operator_id`, `user_type`) VALUES (:operatorId, 1);", [':operatorId' => $operatorId]);
+
+            // Let the session know that this is a new operator
+            self::set('new-operator', true);
+
+            // Recur the function with the new operatorId
+            return self::authenticate($operatorId, null);
+        }
+
+        return false;
     }
 
-    // Encrypt data using OpenSSL AES-256-CBC algorithm
-    private static function encrypt($data) {
-        $iv_length = openssl_cipher_iv_length('AES-256-CBC');
-        $iv = openssl_random_pseudo_bytes($iv_length);
-        $encrypted = openssl_encrypt($data, 'AES-256-CBC', self::$encryption_key, 0, $iv);
-        return base64_encode($iv . $encrypted);
+    // Login user
+    public static function login($operatorId) {
+        global $cainDB;
+
+        // Set authenticated user ID in session after destroying what's already there
+        self::remove('password-required');
+        self::remove('provisional-operator-lname');
+        self::remove('provisional-operator-fname');
+        self::remove('provisional-operator');
+
+        // Store a hashed version of the operator ID and use this for session auth
+        $userId = md5(uniqid(mt_rand(), true));
+        $cainDB->query("UPDATE `users` SET `user_id` = :userId WHERE `operator_id` = :operatorId", [':userId' => $userId, ':operatorId' => $operatorId]);
+
+        self::set('user-id', $userId);
+        return true;
     }
 
-    // Decrypt data using OpenSSL AES-256-CBC algorithm
-    private static function decrypt($data) {
-        $data = base64_decode($data);
-        $iv_length = openssl_cipher_iv_length('AES-256-CBC');
-        $iv = substr($data, 0, $iv_length);
-        $encrypted_data = substr($data, $iv_length);
-        return openssl_decrypt($encrypted_data, 'AES-256-CBC', self::$encryption_key, 0, $iv);
+    // Logout user
+    public static function logout() {
+        self::destroy();
+    }
+
+    // Check if user is logged in
+    public static function isLoggedIn() {
+        global $cainDB;
+
+        // Whilst we're checking here, we may as well update the active timestamp
+        if(self::exists('user-id')) {
+            // Update last active
+            $cainDB->query("UPDATE `users` SET `last_active` = :timestamp WHERE `user_id` = :userId;", [":timestamp" => time(), ":userId" => self::get('user-id')]);
+            return true;
+        }
+        return false;
     }
 }
 
 // Start session
-Session::start();
-?>
+$session = new Session;

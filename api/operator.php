@@ -6,12 +6,20 @@ This is solely for the purpose of taking data from the tablet, inserting it into
 optionally, awaiting a response from LIMS.
 
 The DMS->LIMS application (AL) polls the database looking for changes in the status field.
+
+Returns:
+"status"
+    - 40: Request received but not yet processed
+    - 41: Request being processed
+    - 42: Request is processed
+
+TODO: We may need to add password generation logic here from the tablet
 */
 
 // Firstly, if we have no data, quit.
 if(!$data) {
     // Throw error and stop processing things.
-    echo(json_encode(["Error" => "No data available."]));
+    echo(json_encode(["status" => 42]));
     exit;
 }
 
@@ -23,43 +31,27 @@ try {
     // Get operatorId and password from POST request
     $operatorId = $data['operatorId'] ?? null;
 
-    if(!$operatorId) {
-        echo json_encode(['status' => 'ERROR']);
-        return;
-    }
-
-    $password = $data['password'] ?? null;
-
     // Check if operator exists
     $operatorExists = operatorExists($operatorId);
 
-    if ($passwordRequired == 0) {
-        // Password not required
-        if ($operatorExists) {
-            // The user exists in the database and they don't require a password.
-            echo json_encode(array('status' => 'PASS'));
-        } else {
-            // The user does not exist in the database but we don't need a password so add null to password column.
-            externalOperatorCheck($operatorId, null);
-        }
-    } else {
-        // Password required
-        if ($operatorExists) {
-            // Check password
-            // TODO: Implement password checking logic here
+    // Instantiate "result"
+    $result = false;
 
-            // For simplicity, let's assume password matches
-            echo json_encode(array('status' => 'PASS'));
+    // If the operator exists, we check if they need a password
+    if($operatorId) {
+        if($operatorExists) {
+            $userType = $cainDB->getOperatorInfo($operatorId)['user_type'];
+            if($userType == 1 && !$passwordRequired) {
+                $result = true;
+            }
         } else {
-            // The user does not exist in the database. Check if we have a password, if not, we will need one.
-            if($password) {
-                externalOperatorCheck($operatorId, $password);
-                echo json_encode(array('status' => 'AUTH'));
-            } else {
-                echo json_encode(array('status' => 'AUTH'));
+            // The user does not exist in the database.
+            if(externalOperatorCheck($operatorId)) {
+                $result = true;
             }
         }
     }
+    echo json_encode(["status" => 42, "operatorId" => $operatorId, "operatorResult" => $result]);
 } catch(PDOException $e) {
     // Handle database error
     http_response_code(500); // Internal Server Error

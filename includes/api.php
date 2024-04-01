@@ -1,6 +1,15 @@
 <?php // Get the route of the path and set some headers so the webserver knows how to interpret the request.
 $route = $apiRoutes[$path];
 
+// If we aren't posting to this page, we aren't allowed to see it.
+if ($_SERVER["REQUEST_METHOD"] != "POST") {
+    // Redirect to the 403 error page
+    header("HTTP/1.1 403 Forbidden");
+    $route = new PageRoute('views/403.php', '403: Forbidden', false, false);
+    include_once BASE_DIR . '/templates/base.php';
+    exit; // Stop further execution
+}
+
 // The content is JSON
 header('Content-Type: application/json; charset=UTF-8');
 
@@ -22,5 +31,4 @@ if(!$data) {
 }
 
 // Include API-specific logic.
-include 'api-functions.php';
 include $route['view'];

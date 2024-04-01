@@ -8,7 +8,9 @@ ini_set('display_errors', 1);
 require_once 'includes/config.php';
 require_once 'includes/db.php';
 require_once 'includes/session.php';
+require_once 'includes/form.php';
 require_once 'includes/functions.php';
+include 'includes/api-functions.php';
 
 // Define your routes
 require_once 'includes/routes.php';

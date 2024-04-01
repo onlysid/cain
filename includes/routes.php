@@ -1,13 +1,19 @@
 <?php // Function to handle routing
 
 function route($routes, $apiRoutes) {
+    // Set all global parameters
+    global $cainDB, $form;
+
+    // Get the current URL
+    $currentURL = htmlspecialchars(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+    $currentUser = userInfo();
 
     // Get the current page
     $currentPage = $_SERVER['REQUEST_URI'];
     $path = parse_url($currentPage, PHP_URL_PATH);
     
     // If we are not logged in, we need to check if we are allowed to be here
-    if (!isset($_SESSION['user_id']) && $currentPage !== '/login') {
+    if ((!Session::isLoggedIn()) && $currentPage !== '/login') {
         if(array_key_exists($path, $routes)) {
             if($routes[$path]->accessLevel !== GUEST) {
                 // Redirect to login page
@@ -15,6 +21,12 @@ function route($routes, $apiRoutes) {
                 exit();
             }
         }
+    }
+
+    // Check for processes
+    if($path === '/process') {
+        include BASE_DIR . '/includes/process.php';
+        return;
     }
     
     // Check if the requested path matches any API route
@@ -25,8 +37,14 @@ function route($routes, $apiRoutes) {
     
     // Handle general routing logic
     if (array_key_exists($path, $routes)) {
-        // Check if the requested path matches any non-API route
-        $route = $routes[$path];
+        // The path matches a valid route, check that the current user access this path
+        $requestedRoute = $routes[$path];
+        if($requestedRoute->accessLevel > ($currentUser['user_type'] ?? 0)) {
+            // We cannot show this resource to this user
+            $route = new PageRoute('views/403.php', '403: Forbidden', false, false);
+        } else {
+            $route = $requestedRoute;
+        }
     } elseif (http_response_code() === 403) {
         // Check if the HTTP response code is 403 (Forbidden)
         $route = new PageRoute('views/403.php', '403: Forbidden', false, false);
@@ -49,12 +67,12 @@ $routes = [
     '/users' => new PageRoute('views/users.php', 'Users'), // User config
     '/result-config' => new PageRoute('views/result-config.php', 'Result Configuration'), // Result config
     '/qc-policy' => new PageRoute('views/qc-policy.php', 'Quality Control Policy'), // QC Policy config
-    '/logs' => new PageRoute('views/logs.php', 'Logs'), // List of all logs
-    '/network-settings' => new PageRoute('views/network-settings.php', 'Network Settings'), // Network Settings
-    '/versions' => new PageRoute('views/versions.php', 'Versions'), // Network Settings
-    '/login' => new PageRoute('auth/login.php', 'Login', false), // Login page
+    '/logs' => new PageRoute('views/logs.php', 'Logs', true, ADMINISTRATIVE_CLINICIAN), // List of all logs
+    '/settings' => new PageRoute('views/settings/index.php', 'Settings', false), // All Settings
+    '/versions' => new PageRoute('views/versions.php', 'Versions', false, GUEST), // Versions & About
+    '/login' => new PageRoute('auth/login.php', 'Login', false, GUEST), // Login page
     '/blocks' => new PageRoute('views/objects.php', 'Demo', true, GUEST), // Demo blocks
-    '/about' => new PageRoute('views/about.php', 'Demo', true, GUEST), // About this website
+    '/about' => new PageRoute('views/about.php', 'About', true, GUEST), // About this website
 ];
 
 // Dynamically populate apiRoutes

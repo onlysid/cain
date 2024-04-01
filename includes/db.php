@@ -28,7 +28,7 @@ class DB {
             return $stmt->fetch(PDO::FETCH_ASSOC);
         } catch (PDOException $exception) {
             // Handle query execution error
-            // header("Location: " . BASE_DIR . "/views/db-error");
+            throw $exception;
             die;
         }
     }
@@ -41,7 +41,7 @@ class DB {
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $exception) {
             // Handle query execution error
-            // header("Location: " . BASE_DIR . "/views/db-error");
+            throw $exception;
             die;
         }
     }
@@ -54,7 +54,7 @@ class DB {
             return $stmt->rowCount(); // Number of affected rows
         } catch (PDOException $exception) {
             // Handle query execution error
-            // header("Location: " . BASE_DIR . "/views/db-error");
+            throw $exception;
             die;
         }
     }
@@ -73,6 +73,29 @@ class DB {
     // Roll back a transaction
     public function rollBack() {
         return $this->conn->rollBack();
+    }
+
+    // Get operator information
+    public function getOperatorInfo($operatorId) {
+        $query = "SELECT * FROM users WHERE operator_id = ?;";
+        $params = [$operatorId];
+        return $this->select($query, $params);
+    }
+
+    // Get current user info
+    public function currentUserInfo($userId) {
+        $query = "SELECT * FROM users WHERE user_id = ?;";
+        $params = [$userId];
+        $currentUser = $this->select($query, $params);
+
+        if($currentUser) {
+            return $this->select($query, $params);
+        } else {
+            Session::logout();
+            Session::setNotice("You have been logged out.");
+            header('Location: /');
+        }
+
     }
 }
 

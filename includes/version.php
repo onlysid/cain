@@ -8,4 +8,4 @@ This app adheres to the following semantic versioning rules, using "x.y.z":
 - Updates should also specify changes in CHANGELOG.md
 */
 
-$version = "2.5.20";
+$version = "3.0.0";

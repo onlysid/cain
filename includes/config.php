@@ -18,3 +18,6 @@ define("SERVICE_ENGINEER", 3);
 define("ADMINISTRATIVE_CLINICIAN", 2);
 define("CLINICIAN", 1);
 define("GUEST", 0);
+
+// LIMS Timeout (how long until LIMS times out) (s)
+define("LIMS_TIMEOUT", 30);

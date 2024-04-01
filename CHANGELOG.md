@@ -6,11 +6,28 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
-## [v0.0.0] - 15/03/2024
+## [v3.0.0] - 15/03/2024
 
 Init!
 
 ### What's happened?
+
+#### 01/04/2024
+
+Login and Session management
+
+-   DB Updated to reflect changes in users table.
+-   Login is multi-step, looking first for an operator then registering one where necessary.
+-   Passwords hashed and salted.
+-   Settings are now separated (area needs building).
+-   Process logic now separated fully.
+-   Form logic and styling added.
+
+#### 25/03/2024
+
+DB-Update logic improvement
+
+-   DB Update is now stateful. State is held in the db and users trying to invoke the message will get the same status message no matter where they are in the process.
 
 #### 22/03/2024
 
