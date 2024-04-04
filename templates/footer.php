@@ -14,7 +14,7 @@ foreach ($hospitalInfo as $setting) {
     }
 }
 
-var_dump($_SESSION);
+// var_dump($_SESSION);
 ?>
 
 <div id="footerWrapper">

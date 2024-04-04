@@ -1064,6 +1064,10 @@ video {
   height: 100vh;
 }
 
+.h-svh {
+  height: 100svh;
+}
+
 .max-h-16 {
   max-height: 4rem;
 }
@@ -2998,7 +3002,7 @@ a:not(.btn):hover, .a-tag:hover {
 body, main {
   position: fixed;
   display: flex;
-  height: 100vh;
+  height: 100svh;
   width: 100%;
   flex-grow: 1;
   flex-direction: column;

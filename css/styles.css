@@ -221,7 +221,7 @@ a:not(.btn), .a-tag {
 }
 
 body, main {
-    @apply bg-primary flex grow flex-col font-roboto items-center fixed justify-center h-screen w-full;
+    @apply bg-primary flex grow flex-col font-roboto items-center fixed justify-center h-svh w-full;
 }
 
 form {
