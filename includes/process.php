@@ -3,7 +3,7 @@
 class Process {
     function __construct() {
         // ! Auto-redirect override (for debugging only, to remain on process page)
-        $redirectOverride = true;
+        $redirectOverride = false;
 
         if(isset($_POST['action'])) {
             switch($_POST['action']) {
