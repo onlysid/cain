@@ -193,19 +193,19 @@ class Process {
         try {
             // Prepare the query
             $query = "UPDATE settings SET `value` = CASE `name`
-                WHEN 'hospital_name' THEN '$hospitalName'
-                WHEN 'office_name' THEN '$officeName'
-                WHEN 'hospital_location' THEN '$hospitalLocation'
-                WHEN 'date_format' THEN '$dateFormat'
+                WHEN 'hospital_name' THEN :hospitalName
+                WHEN 'office_name' THEN :officeName
+                WHEN 'hospital_location' THEN :hospitalLocation
+                WHEN 'date_format' THEN :dateFormat
             END;";
             
             // Bind parameters
-            $params = array(
+            $params = [
                 ':hospitalName' => $hospitalName,
                 ':officeName' => $officeName,
                 ':hospitalLocation' => $hospitalLocation,
                 ':dateFormat' => $dateFormat
-            );
+            ];
 
             // Execute the query
             $rowCount = $cainDB->query($query, $params);

@@ -37,6 +37,9 @@ class DB {
     public function selectAll($query, $params = []) {
         try {
             $stmt = $this->conn->prepare($query);
+            foreach ($params as $param => $value) {
+                $stmt->bindValue($param, $value);
+            }
             $stmt->execute($params);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $exception) {
