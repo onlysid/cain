@@ -141,7 +141,7 @@ class Session {
         }
 
         // The operator doesn't exist locally. Check externally.
-        if(limsRequest(["operatorId" => $operatorId])) {
+        if(limsRequest(["operatorId" => $operatorId], 40, 42)) {
             // If the operator exists externally, create a clinician and log them in.
             $cainDB->query("INSERT INTO `users` (`operator_id`, `user_type`) VALUES (:operatorId, 1);", [':operatorId' => $operatorId]);
 
