@@ -350,13 +350,26 @@ label:not(.toggle) {
 .checkbox-wrapper .tgl:checked + .toggle:before {
     background: #7ada84;
 }
+
+.checkbox-wrapper .tgl:disabled + .toggle {
+    cursor: not-allowed;
+}
+
+.checkbox-wrapper .tgl:disabled + .toggle:before {
+    background: #c68f8f;
+}
+
+.checkbox-wrapper .tgl:disabled + .toggle span {
+    background: #cb3f3f!important;
+}
+
 .checkbox-wrapper .tgl:checked + .toggle span {
     background: #03b500;
     transform: translateX(20px);
     transition: 0.2s cubic-bezier(0.8, 0.4, 0.3, 1.25), background 0.15s;
     box-shadow: 0 3px 8px rgba(79, 46, 220, 0.2);
 }
-.checkbox-wrapper .tgl:checked + .toggle span:before {
+.checkbox-wrapper .tgl:not(:disabled):checked + .toggle span:before {
     transform: scale(1);
     opacity: 0;
     transition: 0.4s;

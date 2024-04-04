@@ -45,8 +45,11 @@ try {
                 $result = true;
             }
         } else {
-            // The user does not exist in the database.
-            if(externalOperatorCheck($operatorId)) {
+            // TODO: See if there's something specific we're meant to get back
+            // The user does not exist in the database. Request LIMS stuff!
+            $response = limsRequest(["operatorId" => $operatorId], 40, 42);
+            // Any repsonse will do (just that the response array is not empty)
+            if($response) {
                 $result = true;
             }
         }

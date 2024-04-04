@@ -14,6 +14,12 @@ Init!
 
 #### 04/04/2024
 
+API Progress
+
+-   Completed Lookup API.
+
+#### 04/04/2024
+
 Settings overhaul
 
 -   More DB updates to reflect changes to the settings table.
