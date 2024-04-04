@@ -6,11 +6,10 @@ require_once 'utils/MenuItem.php';
 // Define all menu items
 $menuItems = [
     new MenuItem($routes['/'], null, 'list-icon'),
-    new MenuItem($routes['/users'], 'User Login Control'),
     new MenuItem($routes['/assay-modules']),
+    new MenuItem($routes['/users'], 'User Login Control'),
     new MenuItem($routes['/result-config']),
     new MenuItem($routes['/qc-policy']),
-    new MenuItem($routes['/blocks']),
     new MenuItem($routes['/logs']),
     new MenuItem($routes['/versions']),
     new MenuItem($routes['/about']),

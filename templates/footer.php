@@ -1,7 +1,20 @@
 <?php // The footer menu bar 
-$hospitalInfo = "[Hospital Name] - [Office Name]";
-// var_dump($currentUser);
-// var_dump(password_hash("letmein", PASSWORD_BCRYPT));
+
+// Get hospital information for the footer
+$hospitalInfo = systemInfo();
+$hospitalName = $officeName = "";
+
+foreach ($hospitalInfo as $setting) {
+    if ($setting['name'] === 'hospital_name') {
+        $hospitalName = $setting['value'];
+    }
+
+    if ($setting['name'] === 'office_name') {
+        $officeName = $setting['value'];
+    }
+}
+
+var_dump($_SESSION);
 ?>
 
 <div id="footerWrapper">
@@ -33,7 +46,7 @@ $hospitalInfo = "[Hospital Name] - [Office Name]";
                 <?php if($currentUser) : ?>
                     <p class="font-bold text-white text-right xl:text-xl text-lg truncate overflow-hidden"><?= ucfirst($currentUser['first_name'][0] ?? "") . " " . ucfirst($currentUser['last_name'] ?? "");?></p>
                 <?php endif;?>
-                <p class="text-white font-medium text-base xl:text-lg truncate overflow-hidden"><?= $hospitalInfo;?></p>
+                <p class="text-white font-medium text-base xl:text-lg truncate overflow-hidden"><?= $hospitalName;?> - <?= $officeName;?></p>
             </div>
         </div>
 

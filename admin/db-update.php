@@ -6,13 +6,13 @@ include BASE_DIR . "/includes/version.php";
 function autoUpdate($version) {
     global $cainDB;
 
-    // Get a list of all info tables
-    $infoTable = $cainDB->select("SHOW TABLES LIKE 'info';");
+    // Get a list of all versions tables
+    $versionsTable = $cainDB->select("SHOW TABLES LIKE 'versions';");
 
-    if(!$infoTable) {
-        // If the info table does not exist, create it!
+    if(!$versionsTable) {
+        // If the versions table does not exist, create it!
         $cainDB->query(
-                "CREATE TABLE `info` (
+                "CREATE TABLE `versions` (
                 `id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 `info` VARCHAR(50) UNIQUE,
                 `value` VARCHAR(50)
@@ -21,28 +21,28 @@ function autoUpdate($version) {
 
         // Insert a value of 0.0.0. If the table doesn't exist, we must assume the site is at version 0.
         $cainDB->query(
-            "INSERT INTO info (info, value)
-            VALUES ('version', '0.0.0');"
+            "INSERT INTO versions (info, value)
+            VALUES ('web-app', '0.0.0');"
         );
 
         // Reccur the function
         autoUpdate($version);
     } else {
         // We know the table exists, so get the version of the database.
-        $dbVersionInfo = $cainDB->select("SELECT value FROM info WHERE info = 'version'");
+        $dbVersionInfo = $cainDB->select("SELECT value FROM versions WHERE info = 'web-app'");
         
         // Just in case, check if the dbVersionInfo exists. If not, create it.
         if(!$dbVersionInfo) {
             $cainDB->query(
-                "INSERT INTO info (info, value)
-                VALUES ('version', '0.0.0');"
+                "INSERT INTO versions (info, value)
+                VALUES ('web-app', '0.0.0');"
             );
 
             // Recur the function
             autoUpdate($version);
         } elseif($dbVersionInfo['value'] != $version && $dbVersionInfo['value'] !== 'updating' && $dbVersionInfo !== 'error') {
             // Set a flag to indicate updates are in progress (if we are not already in progress)
-            $cainDB->query("UPDATE info SET `value` = 'updating' WHERE info = 'version';");
+            $cainDB->query("UPDATE versions SET `value` = 'updating' WHERE info = 'web-app';");
             
             // Run updates
             runUpdates($version, $dbVersionInfo['value']);
@@ -54,7 +54,7 @@ function autoUpdate($version) {
             // Incrementally check the db for if we have finished updating.
             while (time() - $startTime < $timeout) {
                 // Check the status of the queue entry
-                $status = $cainDB->select("SELECT value FROM info WHERE info = 'version';");
+                $status = $cainDB->select("SELECT value FROM versions WHERE info = 'web-app';");
 
                 // If update is successful, we will break out of our loop.
                 if ($status && ($status['value'] !== 'updating')) {
@@ -94,7 +94,7 @@ function compareVersions($oldV, $newV) {
 function runUpdates($version, $dbVersion) {
     global $cainDB, $casinoGames;
     
-    $dbVersion = $cainDB->select("SELECT value FROM info WHERE info = 'version';")['value'];
+    $dbVersion = $cainDB->select("SELECT value FROM versions WHERE info = 'web-app';")['value'];
 
     /*
      * Here we outline the versions of the database for which we need to run updates.
@@ -174,11 +174,7 @@ function runUpdates($version, $dbVersion) {
         // Add some settings
         $settingsTableExists = $cainDB->select("SHOW TABLES LIKE 'settings'");
         if($settingsTableExists) {
-            $passwordRequiredField = $cainDB->select("SELECT * FROM settings WHERE name = 'password_required'");
-            if(!$passwordRequiredField) {
-                $change[] = "ALTER TABLE settings MODIFY `flags` int;";
-                $change[] = "INSERT INTO settings (`name`, `value`) VALUES ('password_required', '1');";
-            }
+            $cainDB->query("DROP TABLE `settings`;");
         }
 
         foreach($change as $dbQuery) {
@@ -220,6 +216,75 @@ function runUpdates($version, $dbVersion) {
             }    
         }
         $change = [];
+
+        $softwareTableExists = $cainDB->select("SHOW TABLES LIKE 'software';");
+        if(!$softwareTableExists) {
+            $change[] = "CREATE TABLE software (
+                id INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+                `name` VARCHAR(50)
+            );";
+
+            $change[] = "INSERT INTO software (`name`) VALUES ('Web App'), ('Hub'), ('Tablet App'), ('Instrument'), ('Scripts');";
+        }
+
+        $softwareFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'versions' AND column_name = 'software';");
+        if(!$softwareFieldExists["COUNT(*)"]) {
+            $change[] = "ALTER TABLE versions ADD software int UNSIGNED NOT NULL DEFAULT 1;";
+            $change[] = "ALTER TABLE versions ADD FOREIGN KEY (software) REFERENCES software(id);";
+    
+            $change[] = "INSERT INTO versions (`value`, `software`) VALUES ('3.1.004', 2), ('ER - 3.1.003', 3), ('ER - 3.1.004', 3), ('SIIIAM-0003 0 3.1.007', 4), ('SIIIAM-0004 0 3.1.007', 4), ('SIIIAM-0013 0 3.1.007', 4), ('SCoV - 0.0.1', 5), ('SCoV/Flu/RSV - 0.0.2', 5);";
+        }
+
+        foreach($change as $dbQuery) {
+            try {
+                $cainDB->query($dbQuery);
+            } catch(PDOException $e) {
+                echo($e);
+                $caught[] = $e;
+            }    
+        }
+        $change = [];
+
+        // We need to change the settings page!
+        $settingsTableExists = $cainDB->select("SHOW TABLES LIKE 'settings';");
+        if(!$settingsTableExists) {
+            $change[] = "CREATE TABLE `settings` (
+                id int AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                `name` varchar(255) NOT NULL UNIQUE,
+                `value` varchar(255)
+            );";
+
+            $change[] = "INSERT INTO settings (`name`, `value`) VALUES 
+                ('hospital_name', 'Hospital ABC'), 
+                ('office_name', 'Office ABC'),
+                ('hospital_location', 'Location ABC'),
+                ('date_format', 'd M Y'),
+                ('protocol', 'LIMS'),
+                ('dms_ip', '192.168.1.237'),
+                ('dms_port', '8080'),
+                ('lims_ip', '0.0.0.0'),
+                ('lims_port', '8080'),
+                ('lims_server_name', 'lims'),
+                ('comms_status', '1'),
+                ('patient_id', '1'),
+                ('data_expiration', '365'),
+                ('require_password', '0'),
+                ('session_expiration', '1800'),
+                ('demo_mode', '0'),
+                ('field_behaviour', '0'),
+                ('field_visibility', '0')
+            ;";
+        }
+
+        foreach($change as $dbQuery) {
+            try {
+                $cainDB->query($dbQuery);
+            } catch(PDOException $e) {
+                echo($e);
+                $caught[] = $e;
+            }    
+        }
+        $change = [];
     }
 
     // Test long processes (and add a few seconds for psychological validation)
@@ -229,7 +294,7 @@ function runUpdates($version, $dbVersion) {
  
     // Finally, update the DB version to match the app version
     if($caught) {
-        $cainDB->query("UPDATE info SET value = 'error' WHERE info = 'version';");
+        $cainDB->query("UPDATE versions SET value = 'error' WHERE info = 'web-app';");
         echo("Something has gone wrong. Please speak with an admin about database integrity.");
         echo("<br>");
         echo("Error: $caught[0]");
@@ -240,7 +305,7 @@ function runUpdates($version, $dbVersion) {
     echo("Successfully updated.");
 
     // Set the flag to indicate updates are complete
-    $cainDB->query("UPDATE info SET `value` = '$version' WHERE info = 'version';");
+    $cainDB->query("UPDATE versions SET `value` = '$version' WHERE info = 'web-app';");
 }
 
 // Set the session to determine if any of this is necessary!

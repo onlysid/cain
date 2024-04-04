@@ -16,12 +16,12 @@ function operatorExists($operatorId) {
 
 function checkForUpdates($version) {
     global $cainDB;
-    $tomInfoTables = $cainDB->query("SHOW TABLES LIKE 'info';");
+    $cainVersionsTable = $cainDB->query("SHOW TABLES LIKE 'versions';");
 
     // If we don't have an info table, make one
-    if(!$tomInfoTables) {
+    if(!$cainVersionsTable) {
         $cainDB->query(
-            "CREATE TABLE `info` (
+            "CREATE TABLE `versions` (
                 `id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 `info` VARCHAR(50) UNIQUE,
                 `value` VARCHAR(50)
@@ -30,13 +30,13 @@ function checkForUpdates($version) {
     }
 
     // If we don't have any version in the info table, insert it
-    $dbVersionInfo = $cainDB->select("SELECT value FROM info WHERE info = 'version'");
+    $dbVersionInfo = $cainDB->select("SELECT value FROM versions WHERE info = 'web-app'");
     if(!$dbVersionInfo) {
         $cainDB->query(
-            "INSERT INTO info (info, value)
-            VALUES ('version', '0.0.0');"
+            "INSERT INTO versions (info, value)
+            VALUES ('web-app', '0.0.0');"
         );
-        $dbVersionInfo = $cainDB->select("SELECT value FROM info WHERE info = 'version'");
+        $dbVersionInfo = $cainDB->select("SELECT value FROM versions WHERE info = 'web-app'");
     } 
 
     // Process the response
@@ -54,6 +54,7 @@ function checkForUpdates($version) {
     return false;
 }
 
+// Get current user info
 function userInfo() {
     global $cainDB;
     if(!Session::isLoggedIn()) {
@@ -63,4 +64,11 @@ function userInfo() {
     $user = $cainDB->currentUserInfo($userId);
 
     return $user;
+}
+
+// Retrieve everything from the settings table in the db
+function systemInfo() {
+    global $cainDB;
+
+    return $cainDB->selectAll("SELECT * FROM settings;");
 }

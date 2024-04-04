@@ -14,6 +14,17 @@ if(mobileMenuCloseIcon && mobileMenuIcon && mobileMenuWrapper) {
     });
 }
 
+// Settings Mobile menu logic
+var settingsMobileMenuIcon = document.getElementById('settingsMobileMenuIcon');
+var settingsMenu = document.getElementById('settingsMenu');
+if(settingsMobileMenuIcon && settingsMenu) {
+    // Open mobile menu
+    settingsMobileMenuIcon.addEventListener('click', () => {
+        settingsMenu.classList.toggle('active');
+        settingsMobileMenuIcon.classList.toggle('active');
+    });
+}
+
 // Logout modal logic
 var logoutModal = document.getElementById('logoutModal');
 var userIcons = document.querySelectorAll('.logout-trigger');
@@ -94,4 +105,11 @@ loadingBtns.forEach((btn) => {
             btn.disabled = false;
         }, limsTimeout * 1000);
     });
+});
+
+var yanaButton = document.querySelector("#yanabutton");
+var yanaDemon = document.getElementById("yanademon");
+
+yanaButton.addEventListener("click", () => {
+    yanaDemon.classList.toggle("active");
 });

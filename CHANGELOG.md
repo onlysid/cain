@@ -12,6 +12,17 @@ Init!
 
 ### What's happened?
 
+#### 04/04/2024
+
+Settings overhaul
+
+-   More DB updates to reflect changes to the settings table.
+-   Removed info table in favour of versions.
+-   Settings area is now built.
+-   General settings now works.
+-   Field selection logic implemented using bitmaps and a custom class.
+-   Login now automatically presumes account creator wants to login to the account which has just been created!
+
 #### 01/04/2024
 
 Login and Session management

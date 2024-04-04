@@ -2,7 +2,7 @@
 
 function route($routes, $apiRoutes) {
     // Set all global parameters
-    global $cainDB, $form;
+    global $cainDB, $form, $settingsRoutes;
 
     // Get the current URL
     $currentURL = htmlspecialchars(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
@@ -34,9 +34,17 @@ function route($routes, $apiRoutes) {
         include BASE_DIR . '/includes/api.php';
         return;
     }
+
+    // Are we a settings page?
+    $settingsPage = false;
     
     // Handle general routing logic
     if (array_key_exists($path, $routes)) {
+        // If we are in a settingsRoute then we are a settingsPage
+        if(array_key_exists($path, $settingsRoutes)) {
+            $settingsPage = true;
+        }
+        
         // The path matches a valid route, check that the current user access this path
         $requestedRoute = $routes[$path];
         if($requestedRoute->accessLevel > ($currentUser['user_type'] ?? 0)) {
@@ -62,18 +70,33 @@ require_once 'utils/PageRoute.php';
 
 // Define routes using PageRoute objects
 $routes = [
-    '/' => new PageRoute('views/dashboard.php', 'Dashboard'), // Main dashboard
+    '/' => new PageRoute('views/dashboard.php', 'All Results'), // Main dashboard
     '/assay-modules' => new PageRoute('views/assay-modules.php', 'Assay Modules'), // Assay Modules List
     '/users' => new PageRoute('views/users.php', 'Users'), // User config
     '/result-config' => new PageRoute('views/result-config.php', 'Result Configuration'), // Result config
     '/qc-policy' => new PageRoute('views/qc-policy.php', 'Quality Control Policy'), // QC Policy config
     '/logs' => new PageRoute('views/logs.php', 'Logs', true, ADMINISTRATIVE_CLINICIAN), // List of all logs
-    '/settings' => new PageRoute('views/settings/index.php', 'Settings', false), // All Settings
-    '/versions' => new PageRoute('views/versions.php', 'Versions', false, GUEST), // Versions & About
+    '/versions' => new PageRoute('views/versions.php', 'Versions', true, GUEST), // Versions & About
     '/login' => new PageRoute('auth/login.php', 'Login', false, GUEST), // Login page
     '/blocks' => new PageRoute('views/objects.php', 'Demo', true, GUEST), // Demo blocks
-    '/about' => new PageRoute('views/about.php', 'About', true, GUEST), // About this website
+    '/changelog' => new PageRoute('views/changelog.php', 'Changelog', true, GUEST), // About this website
 ];
+
+// Define "settings" routes
+$settingsRoutes = [
+    '/settings' => new PageRoute('views/settings/general.php', 'General', false),
+    '/settings/fields' => new PageRoute('views/settings/fields.php', 'Field Selection', false),
+    '/settings/assay-modules' => new PageRoute('views/settings/assay-modules.php', 'Assay Modules', false),
+    '/settings/qc' => new PageRoute('views/settings/general.php', 'QC Settings', false),
+    '/settings/lots' => new PageRoute('views/settings/general.php', 'Lot Settings', false),
+    '/settings/users' => new PageRoute('views/settings/general.php', 'User Settings', false),
+    '/settings/networks' => new PageRoute('views/settings/general.php', 'DMS/LIMS Options', false),
+    '/settings/logging' => new PageRoute('views/settings/general.php', 'Scripts and Logging', false),
+    '/about' => new PageRoute('views/settings/general.php', 'About', false),
+];
+
+// Add settings routes to general routes to combine logic
+$routes += $settingsRoutes;
 
 // Dynamically populate apiRoutes
 $apiRoutes = [];

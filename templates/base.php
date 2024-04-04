@@ -47,12 +47,17 @@ $showMenu = $route->showMenu;
                     <?php include 'templates/menu.php';?>
                 </div>
             <?php endif;?>
-        
-            <div id="contentOuterWrapper" class="<?= $showMenu ? 'show-menu ' : '';?>">
-                <div id="contentWrapper">
-                    <?php include $route->view; ?>
+
+            <?php // Don't bother with wrappers if we are on a settings page. Also load a new "template"
+            if($settingsPage) : ?>
+                <?php include "templates/settings.php";?>
+            <?php else : ?>
+                <div id="contentOuterWrapper" class="<?= $showMenu ? 'show-menu ' : '';?>">
+                    <div id="contentWrapper">
+                        <?php include $route->view;?>
+                    </div>
                 </div>
-            </div>
+            <?php endif;?>
     
             <?php if($showMenu) : ?>
             </div>

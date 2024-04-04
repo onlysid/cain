@@ -185,7 +185,11 @@ class Session {
         // Whilst we're checking here, we may as well update the active timestamp
         if(self::exists('user-id')) {
             // Update last active
-            $cainDB->query("UPDATE `users` SET `last_active` = :timestamp WHERE `user_id` = :userId;", [":timestamp" => time(), ":userId" => self::get('user-id')]);
+            try {
+                $cainDB->query("UPDATE `users` SET `last_active` = :timestamp WHERE `user_id` = :userId;", [":timestamp" => time(), ":userId" => self::get('user-id')]);
+            } catch(PDOException $exception) {
+                self::logout();
+            }
             return true;
         }
         return false;

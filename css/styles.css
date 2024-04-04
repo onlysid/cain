@@ -101,19 +101,19 @@
 }
 
 h1 {
-    @apply font-bold text-dark xl:text-5xl text-4xl mb-4;
+    @apply font-bold text-dark xl:text-5xl sm:text-4xl text-3xl mb-4;
 }
 
 h2 {
-    @apply font-bold text-grey xl:text-3xl text-2xl;
+    @apply font-bold text-grey xl:text-3xl sm:text-2xl text-xl;
 }
 
 h3 {
-    @apply font-bold text-white xl:text-2xl text-xl;
+    @apply font-bold text-white xl:text-2xl sm:text-xl text-lg;
 }
 
 p, a {
-    @apply text-grey xl:text-xl text-lg
+    @apply text-grey xl:text-xl text-lg;
 }
 
 a:not(.btn), .a-tag {
@@ -142,6 +142,10 @@ a:not(.btn), .a-tag {
     background: rgb(2,0,36);
     background: radial-gradient(ellipse at 50% -30px, var(--bgCol1) 0%, var(--bgCol2) 76%);
     transition: --bgCol1 0.5s, --bgCol2 0.5s, color 0.5s, box-shadow 0.5s;
+}
+
+.smaller-btn {
+    @apply text-lg py-2.5 px-4;
 }
 
 .btn.alt {
@@ -188,13 +192,20 @@ a:not(.btn), .a-tag {
     @apply h-12 xl:h-[3.75rem];
 }
 
-.border-btn svg {
+.border-btn:not(.no-circle) svg {
     @apply border-[3px] border-solid border-white rounded-full;
 }
 
 .btn:hover svg {
     @apply fill-tirtiary border-tirtiary;
 }
+
+.btn-small {
+    @apply px-4 py-1.5 font-semibold text-base rounded-lg bg-blue-500 !text-white transition-all duration-500 hover:!text-dark hover:bg-tirtiary shadow-md shadow-dark hover:shadow-secondary/50;
+}
+
+/* Table Styles */
+
 
 /* Loading button */
 .trigger-loading.loading {
@@ -213,27 +224,51 @@ body, main {
     @apply bg-primary flex grow flex-col font-roboto items-center fixed justify-center h-screen w-full;
 }
 
+form {
+    @apply max-w-sm md:max-w-2xl self-center w-full flex flex-col items-center gap-4;
+}
+
 .form-error {
     @apply text-center text-base -mt-2.5 -mb-1 text-red-500;
 }
 
 .form-fields {
-    @apply flex flex-col items-center justify-center gap-4 w-full;
+    @apply flex flex-wrap flex-col md:flex-row items-center justify-center gap-4 w-full;
+}
+
+.field {
+    @apply grow flex flex-col w-full md:w-auto justify-center items-center;
+}
+
+label:not(.toggle) {
+    @apply text-base text-grey self-start pl-3;
 }
 
 .form-fields .input-wrapper {
-    @apply transition-all w-full flex justify-center bg-white text-dark rounded-full px-4 py-2 border-light border-solid border items-center max-w-xs gap-2.5 md:gap-3;
+    @apply transition-all w-full flex justify-center bg-white text-dark rounded-full px-4 py-2 border-light border-solid border items-center gap-2.5 md:gap-3;
 }
 
-.form-fields .input-wrapper > input {
+#login .form-fields .input-wrapper {
+    @apply max-w-xs;
+}
+
+.form-fields .input-wrapper > input, select {
     @apply bg-transparent border-transparent w-full focus:outline-none;
+}
+
+.input-wrapper.disabled {
+    @apply cursor-not-allowed bg-blue-200;
+}
+
+.input-wrapper.disabled select {
+    @apply pointer-events-none text-dark;
 }
 
 .form-fields .input-wrapper > svg {
     @apply transition-all h-7 md:h-8 fill-grey;
 }
 
-.form-fields .input-wrapper:hover,
+.form-fields .input-wrapper:not(.disabled):hover,
 .form-fields .input-wrapper:focus-within {
     @apply border-secondary scale-105;
 }
@@ -242,10 +277,148 @@ body, main {
     @apply fill-secondary scale-105;
 }
 
+.input-wrapper:has(select) {
+    @apply !px-2 md:px-4;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+    visibility: hidden;
+    display: none;
+}
+.checkbox-wrapper .toggle {
+    position: relative;
+    display: block;
+    width: 40px;
+    height: 20px;
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+    transform: translate3d(0, 0, 0);
+    transition: 0.3s;
+}
+.checkbox-wrapper .toggle:before {
+    content: "";
+    position: relative;
+    top: 3px;
+    left: 3px;
+    width: 34px;
+    height: 14px;
+    display: block;
+    background: #9a9999;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.checkbox-wrapper .toggle:hover {
+    @apply scale-110;
+}
+
+*,
+::after,
+::before {
+    box-sizing: border-box;
+}
+
+.checkbox-wrapper .toggle span {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 20px;
+    height: 20px;
+    display: block;
+    background: #b1b1b1;
+    border-radius: 10px;
+    box-shadow: 0 3px 8px rgba(154, 153, 153, 0.5);
+    transition: 0.2s;
+}
+.gametype-card,
+.index-alerts-wrapper a:not(.no-new-alerts) {
+    transition: 0.3s linear;
+}
+.checkbox-wrapper .toggle span:before {
+    content: "";
+    position: absolute;
+    display: block;
+    margin: -18px;
+    width: 56px;
+    height: 56px;
+    background: rgba(46, 220, 98, 0.5);
+    border-radius: 50%;
+    transform: scale(0);
+    opacity: 1;
+    pointer-events: none;
+}
+.checkbox-wrapper .tgl:checked + .toggle:before {
+    background: #7ada84;
+}
+.checkbox-wrapper .tgl:checked + .toggle span {
+    background: #03b500;
+    transform: translateX(20px);
+    transition: 0.2s cubic-bezier(0.8, 0.4, 0.3, 1.25), background 0.15s;
+    box-shadow: 0 3px 8px rgba(79, 46, 220, 0.2);
+}
+.checkbox-wrapper .tgl:checked + .toggle span:before {
+    transform: scale(1);
+    opacity: 0;
+    transition: 0.4s;
+}
+
 .radial-gradient {
     box-shadow:  inset 0px 0px 0px 4px #777777, 0px 0px 20px #5F5F5F, inset 0px 0px 20px #000000;
     background: rgb(2,0,36);
     background: radial-gradient(ellipse at 50% -30px, var(--bgCol1) 0%, var(--bgCol2) 76%);
+}
+
+#settingsBackLink {
+    @apply absolute top-3.5 flex justify-center items-center !text-white pl-1 py-1 gap-1 right-4 rounded-full bg-[#434655] transition-all duration-500 overflow-hidden;
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
+}
+
+#settingsMenu {
+    @apply z-40;
+}
+
+#settingsMenu.active {
+    @apply w-full sm:w-64;
+}
+
+#settingsMobileMenuIcon.active #openSettingsMenu {
+    @apply scale-0;
+}
+
+#settingsMobileMenuIcon.active #closeSettingsMenu {
+    @apply scale-100;
+}
+
+#settingsMobileMenuIcon.active {
+    @apply translate-x-[calc(100vw-6rem)];
+}
+
+#settingsBackLink svg {
+    @apply w-8 h-auto fill-white transition-all duration-500;
+}
+
+#settingsBackLink:hover svg {
+    @apply -rotate-180;
+}
+
+#settingsBackLink span {
+    @apply opacity-0 transition-all duration-500 max-w-0 whitespace-nowrap pl-0;
+}
+
+#settingsBackLink:hover span {
+    @apply opacity-100 max-w-16 pl-1;
+}
+
+#settingsBackLink:hover {
+    @apply pr-4 bg-blue-800;
+}
+
+#settingsMenu .menu-item {
+    @apply bg-dark text-white hover:bg-blue-200 hover:text-black flex items-center p-4 basis-16;
+}
+
+#settingsMenu .menu-item.active {
+    @apply bg-blue-200 text-black;
 }
 
 /* Menu Styles */
@@ -362,6 +535,17 @@ body, main {
     text-align: center;
     color: #000;
 }
+
+/* Settings Page */
+#settings {
+    @apply w-full h-full p-4 md:p-8 flex flex-col bg-black/75;
+}
+
+#settingsWrapper {
+    @apply bg-primary-dark rounded-2xl h-full shadow-2xl shadow-blue-200/50 flex relative justify-between overflow-hidden;
+}
+
+/* Loader */
 .loadingspinner {
     --square: 26px;
     --offset: 30px;

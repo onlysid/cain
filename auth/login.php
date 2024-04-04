@@ -21,13 +21,13 @@ if($passwordRequired) {
         $formType = "create-account";
         $buttonText = "Create Account";
     } else {
-        $instruction = "Please enter your operator ID";
+        $instruction = "Please enter your password";
         $title = "Hello, $operatorFirstName";
     }
 }
 // The login form ?>
 
-<div class="flex flex-col justify-center items-center w-full grow">
+<div id="login" class="flex flex-col justify-center items-center w-full grow">
     <h1 class="text-center"><?= $title;?></h1>
     <div class="divider !-mt-2"></div>
     <form action="process" method="POST" id="loginForm" class="flex flex-col items-center gap-3 w-full">
