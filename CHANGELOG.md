@@ -12,6 +12,13 @@ Init!
 
 ### What's happened?
 
+#### 05/04/2024
+
+API Progress + AJAX Abstractions
+
+-   Completed Instrument API.
+-   Instrument checks in the settings page are now using AJAX (not yet completed)
+
 #### 04/04/2024
 
 API Progress

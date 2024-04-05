@@ -97,6 +97,7 @@ function pollProcessStatus($processId, $confirmationCode) {
         if ($status && ($status['status'] === strval($confirmationCode))) {
             // Check if operator ID is accepted
             $query = $cainDB->selectAll("SELECT `key`, `value` FROM process_data WHERE process_id = ?", [$processId]);
+            var_dump($query);
 
             foreach($query as $item) {
                 $response[$item["key"]] = $item["value"];

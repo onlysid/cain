@@ -13,6 +13,7 @@ $menuItems = [
     new MenuItem($routes['/logs']),
     new MenuItem($routes['/versions']),
     new MenuItem($routes['/about']),
+    new MenuItem($routes['/settings'], "Settings"),
     // Add more menu items above and sort as you like
 ];?>
 

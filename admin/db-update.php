@@ -285,8 +285,34 @@ function runUpdates($version, $dbVersion) {
             }    
         }
         $change = [];
+
+        // Add the Instrument table
+        $instrumentsTableExists = $cainDB->select("SHOW TABLES LIKE 'instruments';");
+        if(!$instrumentsTableExists) {
+            $change[] = "CREATE TABLE instruments (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                serial_number varchar(100) UNIQUE,
+                module_id varchar(100),
+                `status` tinyint,
+                `progress` tinyint,
+                `time_remaining` int,
+                `fault_code` tinyint,
+                `version_number` varchar(100)
+            );";
+        }
+
+        foreach($change as $dbQuery) {
+            try {
+                $cainDB->query($dbQuery);
+            } catch(PDOException $e) {
+                echo($e);
+                $caught[] = $e;
+            }    
+        }
+        $change = [];
     }
 
+    
     // Test long processes (and add a few seconds for psychological validation)
     if(compareVersions($dbVersion, "100.0.0")) {
         sleep(3);

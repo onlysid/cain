@@ -7,6 +7,9 @@ function route($routes, $apiRoutes) {
     // Get the current URL
     $currentURL = htmlspecialchars(isset($_SERVER['HTTPS']) && $_SERVER['HTTPS'] === 'on' ? "https" : "http") . "://" . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
     $currentUser = userInfo();
+    
+    // Are we a settings page?
+    $settingsPage = false;
 
     // Get the current page
     $currentPage = $_SERVER['REQUEST_URI'];
@@ -34,9 +37,6 @@ function route($routes, $apiRoutes) {
         include BASE_DIR . '/includes/api.php';
         return;
     }
-
-    // Are we a settings page?
-    $settingsPage = false;
     
     // Handle general routing logic
     if (array_key_exists($path, $routes)) {

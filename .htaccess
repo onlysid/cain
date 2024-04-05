@@ -2,7 +2,7 @@
 Options -Indexes
 ErrorDocument 403 /index.php
 
-# Block direct access to PHP files in the views directory
+# Block direct access to PHP files
 <FilesMatch "\.php$">
     Deny from all
 </FilesMatch>
@@ -16,6 +16,11 @@ ErrorDocument 403 /index.php
 <Files "db-update.php">
     Allow from all
 </Files>
+
+# Allow access to scripts within the /scripts/ directory
+<FilesMatch ".*-check.php$">
+    Allow from all
+</FilesMatch>
 
 # Rewrite URLs to index.php
 RewriteEngine On

@@ -69,6 +69,61 @@ function userInfo() {
 // Retrieve everything from the settings table in the db
 function systemInfo() {
     global $cainDB;
-
     return $cainDB->selectAll("SELECT * FROM settings;");
+}
+
+function updateInstrument($instrumentData) {
+    global $cainDB;
+    $serialNumber = $instrumentData['serial_number'];
+
+    if($serialNumber) {
+        // Get rid of this from the instrument data array as we have it stored separately
+        unset($instrumentData['serial_number']);
+
+        // Check if the instrument already exists in the database
+        $instrumentExists = $cainDB->query("SELECT id FROM instruments WHERE serial_number = '$serialNumber';");
+    
+        if(!$instrumentExists) {
+            $query = "INSERT INTO instruments ";
+            $query1 = "(serial_number, ";
+            $query2 = " VALUES ('$serialNumber', ";
+        } else {
+            $query = "UPDATE instruments SET ";
+        }
+
+        $validDataCount = 0;
+        foreach($instrumentData as $data) {
+            if(isset($data)) {
+                $validDataCount++;
+            }
+        }
+    
+        $i = 1;
+        foreach($instrumentData as $dbCol => $data) {
+            if(isset($data)) {
+                if(!$instrumentExists) {
+                    $query1 .= $dbCol . (($i < $validDataCount) ? ", " : ")");
+                    $query2 .= "'" . $data . "'" . (($i < $validDataCount) ? ", " : ");");
+                } else {
+                    $query .= $dbCol . " = '" . $data . "'" . (($i < $validDataCount) ? ", " : "");
+                }
+                $i++;
+            }
+        }
+
+        
+        if($validDataCount > 0) {
+            if($instrumentExists) {
+                $query .= " WHERE serial_number = '$serialNumber';";
+            } else {
+                $query .= $query1 . $query2;
+            }
+
+            // Run the query
+            $cainDB->query($query);
+            return true;
+        }
+    }
+
+    return false;
 }

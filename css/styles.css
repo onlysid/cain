@@ -2,6 +2,8 @@
 @tailwind components;
 @tailwind utilities;
 
+
+
 /* Define fonts */
 @font-face {
     font-family: 'Roboto';
@@ -225,7 +227,7 @@ body, main {
 }
 
 form {
-    @apply max-w-sm md:max-w-2xl self-center w-full flex flex-col items-center gap-4;
+    @apply max-w-lg md:max-w-2xl self-center w-full flex flex-col items-center gap-4;
 }
 
 .form-error {
@@ -504,6 +506,20 @@ label:not(.toggle) {
 #contentOuterWrapper:has(#settings), #contentWrapper:has(#settings) {
     @apply w-full h-full;
 } 
+
+section {
+    @apply mb-8;
+}
+
+/* Notices and Generic Section Layouts */
+section.notice {
+    @apply px-6 py-4 rounded-xl bg-blue-200 flex flex-col md:flex-row items-start lg:items-center gap-1 md:gap-3;
+}
+
+section.notice svg {
+    @apply w-8 h-auto shrink-0 py-1 fill-dark;
+}
+
 
 #updateAlert {
     position: fixed;

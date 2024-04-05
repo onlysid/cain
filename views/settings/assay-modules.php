@@ -6,46 +6,15 @@ $hospitalInfo = array_intersect_key($settings, array_flip($hospitalInfoKeys));
 
 // Accepted Date Formats
 $dateFormats = ["d M Y", "d F Y", "d/m/Y"];
+
 ?>
 
-<form action="/process" method="POST">
-    <input type="hidden" name="action" value="general-settings">
-    <input type="hidden" name="return-path" value="<?= $currentURL;?>">
-    <h3 class="text-dark mt-4 w-full text-center rounded-xl px-4 py-2 bg-blue-200/75 shadow-lg">Hospital Information</h3>
-    <div class="form-fields">
-        <div class="field">
-            <label for="hospitalName">Hospital Name</label>
-            <div class="input-wrapper">
-                <input required id="hospitalName" type="text" name="hospitalName" value="<?= $hospitalInfo['hospital_name'];?>">
-            </div>
-        </div>
-        <div class="field">
-            <label for="officeName">Office Name</label>
-            <div class="input-wrapper">
-                <input required id="officeName" type="text" name="officeName" value="<?= $hospitalInfo['office_name'];?>">
-            </div>
-        </div>
-    </div>
-    <div class="form-fields">
-        <div class="field">
-            <label for="hospitalLocation">Hospital Location</label>
-            <div class="input-wrapper">
-                <input required id="hospitalLocation" type="text" name="hospitalLocation" value="<?= $hospitalInfo['hospital_location'];?>">
-            </div>
-        </div>
-    </div>
-    <h3 class="text-dark mt-4 w-full text-center rounded-xl px-4 py-2 bg-blue-200/75 shadow-lg">Other Settings</h3>
-    <div class="form-fields">
-        <div class="field">
-            <label for="dateFormat">Date Format</label>
-            <div class="input-wrapper">
-                <select required name="dateFormat" id="dateFormat">
-                    <?php foreach($dateFormats as $dateFormat) : ?>
-                        <option <?= ($dateFormat == $hospitalInfo['date_format']) ? 'selected' : '';?> value="<?= $dateFormat;?>"><?= date($dateFormat);?></option>
-                    <?php endforeach;?>
-                </select>
-            </div>
-        </div>
-    </div>
-    <button class="btn smaller-btn" type="submit">Save Settings</button>
-</form>
+<section class="notice">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+        <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/>
+    </svg>
+    <p>This page is automatically updated every 10s with the latest information available about all Assay Modules in the network.</p>
+</section>
+
+<p>Machine statuses: <span id="statusSpan"></span></p>
+<script src="/js/instrumentCheck.js" />

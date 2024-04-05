@@ -1,10 +1,10 @@
-<?php // Send a test result to the DMS from the tablet (and, optionally, to LIMS)
+<?php // Send a test result to the DMS from the tablet (and, optionally, to LIMS, but we needn't do anything here for that)
 
 /*
 Get: {
     "site": "Test Site Alpha",
     "testStartTimestamp": "2018-09-24 09:13",
-    "testCompleteTimestamp: "2018-09-24 11:09",
+    "testCompleteTimestamp": "2018-09-24 11:09",
     "clinicId": "Clinic Beta",
     "operatorId": "Smith",
     "moduleSerialNumber": "1098",
@@ -19,26 +19,26 @@ Get: {
     "patientSex": "M",
     "sampleId": "S8427",
     "sampleCollected": "2018-09-23 14:50",
-    "sampleReceived": "2018-09-24 08:10"
+    "sampleReceived": "2018-09-24 08:10",
     "product": "HIV-1 Blood Qual",
-    "result": TBD,
+    "result": "TBD",
     "testPurpose": "1",
-	“lotNumber”: “”,
-	“sender”: “”,
-	“version”: “”,
-	“sequenceNumber”: ””,
-	“trackingCode”: “”,
-	“abortErrorCode”: “”,
-	“assayStepNumber”: “”,
-	“reserve1”: “”,
-	“reserve2”: “”,
-	“cameraReading”: “”,
+    "lotNumber": "",
+	"sender": "",
+	"version": "",
+	"sequenceNumber": "",
+	"trackingCode": "",
+	"abortErrorCode": "",
+	"assayStepNumber": "",
+	"reserve1": "",
+	"reserve2": "",
+	"cameraReading": "",
     
 	The following is not to be saved in the DB, only in a CSV!
-	“curve_data_1”, “0.123,0.1241,0.32121,0.2132141,0.213213,…”,
-	“curve_data_2”, “0.123,0.1241,0.32121,0.2132141,0.213213,…”,
-	“curve_index”, “123567”, (/var/www/html/curves/123567.csv)
-	“flags”, “”,
+    "curve_data_1": "0.123,0.1241,0.32121,0.2132141,0.213213,…",
+	"curve_data_2": "0.123,0.1241,0.32121,0.2132141,0.213213,…",
+	"curve_index": "123567", (/var/www/html/curves/123567.csv)
+	"flags": ""
 }
 Return status
 
@@ -64,9 +64,12 @@ Curve data will be as follows:
 // Firstly, if we have no data, quit.
 if(!$data) {
     // Throw error and stop processing things.
-    echo(json_encode(["Error" => "No data available."]));
+    echo(json_encode(["status" => 10]));
     exit;
 }
+
+// We have data! Now we must clean it, add the result to the results table and make a CSV file.
+
 
 $response = "API Unfinished.";
 

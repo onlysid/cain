@@ -106,10 +106,3 @@ loadingBtns.forEach((btn) => {
         }, limsTimeout * 1000);
     });
 });
-
-var yanaButton = document.querySelector("#yanabutton");
-var yanaDemon = document.getElementById("yanademon");
-
-yanaButton.addEventListener("click", () => {
-    yanaDemon.classList.toggle("active");
-});
