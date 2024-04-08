@@ -211,7 +211,53 @@ a:not(.btn), .a-tag {
 }
 
 /* Table Styles */
+table {
+    @apply w-full text-sm lg:text-base text-left rtl:text-right;
+}
 
+table thead {
+    @apply text-dark border-light-grey border bg-blue-200;
+}
+
+table thead th {
+    @apply text-start lg:px-6 sm:px-4 px-2 py-3;
+}
+
+table tbody {
+    @apply bg-gray-50;
+}
+
+table tbody tr {
+    @apply border-light-grey border;
+}
+
+table tbody tr td {
+    @apply lg:px-6 sm:px-4 px-2 py-2;
+}
+
+table tbody tr td:last-of-type {
+    @apply w-0;
+}
+
+td .status-indicator {
+    @apply h-4 w-4 aspect-square rounded-full bg-red-500;
+}
+
+td .status-indicator.active {
+    @apply bg-green-500;
+}
+
+td .instrument-table-controls {
+    @apply flex gap-2.5 items-center;
+}
+
+td .instrument-table-controls svg  {
+    @apply h-7;
+}
+
+.table-button {
+    @apply transition-all duration-500 hover:scale-110;
+}
 
 /* Loading button */
 .trigger-loading.loading {
@@ -285,6 +331,19 @@ label:not(.toggle) {
 
 .input-wrapper.select-wrapper {
     @apply !px-2 md:px-4;
+}
+
+.tooltip {
+    @apply relative inline-block;
+}
+
+.tooltip::before {
+    @apply absolute bg-dark rounded-lg pointer-events-none text-white px-4 py-1 whitespace-nowrap z-10 bottom-[90%] left-1/2 -translate-x-1/2 opacity-0 transition-all duration-500;
+    content: attr(title);    
+}
+
+.tooltip:hover::before {
+    @apply opacity-100 bottom-full;
 }
 
 .checkbox-wrapper input[type="checkbox"] {

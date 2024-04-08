@@ -1,8 +1,9 @@
 <?php // Instrument Check
+include_once __DIR__ . "/../includes/config.php";
+include_once BASE_DIR . "/includes/db.php";
+include_once BASE_DIR . "/includes/functions.php";
 
 // Fetch all instrument data from the database and return it in a JSON object
-
-// Generate random number (for now)
-$response = ["Instrument1" => ["status" => rand()], "Instrument2" => ["status" => rand()], "Instrument3" => ["status" => rand()], "Instrument4" => ["status" => rand()]];
+$response = getInstrumentSnapshot();
 
 echo(json_encode($response));

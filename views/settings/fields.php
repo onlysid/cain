@@ -20,17 +20,17 @@ $visibilityFields = getSettingsBitmap(count($dataFields), 2, $fieldInfo['field_v
     <input type="hidden" name="action" value="field-settings">
     <input type="hidden" name="return-path" value="<?= $currentURL;?>">
     <div class="flex flex-col gap-2 items-center justify-center form-fields rounded-none">
-        <table class="w-full text-sm lg:text-base text-left rtl:text-right">
-            <thead class="text-dark border-light-grey border bg-blue-200">
-                <th class="text-start lg:px-6 sm:px-4 px-2 py-3">Field</th>
-                <th class="text-start lg:px-6 sm:px-4 px-2 py-3">Behaviour</th>
-                <th class="text-start lg:px-6 sm:px-4 px-2 py-3">Visibility</th>
+        <table>
+            <thead>
+                <th>Field</th>
+                <th>Behaviour</th>
+                <th>Visibility</th>
             </thead>
-            <tbody class="bg-gray-50">
+            <tbody>
                 <?php foreach($dataFields as $index => $dataField) : ?>
                     <tr class="border-light-grey border">
-                        <td class="lg:px-6 sm:px-4 px-2 py-2"><?= $dataField->name;?></td>
-                        <td class="lg:px-6 sm:px-4 px-2 py-2">
+                        <td><?= $dataField->name;?></td>
+                        <td>
                             <div class="input-wrapper select-wrapper <?= $dataField->behaviourLock ? "disabled" : "";?>">
                                 <select name="fieldBehaviour<?= $index;?>" id="fieldBehaviour<?= $index;?>">
                                     <option value="0" <?= $behaviourFields[$index] == 0 ? "selected" : "";?> <?= $dataField->behaviourLock ? "disabled" : "";?>>Hidden</option>
@@ -40,7 +40,7 @@ $visibilityFields = getSettingsBitmap(count($dataFields), 2, $fieldInfo['field_v
                                 </select>
                             </div>
                         </td>
-                        <td class="lg:px-6 sm:px-4 px-2 py-2">
+                        <td>
                             <div class="checkbox-wrapper">
                                 <input class="tgl" name="fieldVisibility<?= $index;?>" id="fieldVisibility<?= $index;?>" type="checkbox" <?= $dataField->visibilityLock ? "disabled" : "";?> <?= $dataField->visibilityLock || $visibilityFields[$index] ? "checked" : "";?>>
                                 <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="fieldVisibility<?= $index;?>"><span></span></label>

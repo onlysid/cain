@@ -127,3 +127,14 @@ function updateInstrument($instrumentData) {
 
     return false;
 }
+
+function getInstrumentSnapshot($instrumentId = null) {
+    global $cainDB;
+
+    // If the instrument ID is not passed, we get all instrument data
+    if($instrumentId) {
+        return $cainDB->select("SELECT * FROM instruments WHERE ?", [$instrumentId]);
+    } else {
+        return $cainDB->selectAll("SELECT * FROM instruments;");
+    }
+}

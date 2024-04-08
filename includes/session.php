@@ -71,9 +71,6 @@ class Session {
 
         // Start a new session
         self::start();
-
-        // Go to the login screen
-        header('Location: /');
     }
 
     // Check session expiry

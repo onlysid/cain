@@ -14,12 +14,15 @@ Init!
 
 #### 08/04/2024
 
-Firefox Fun
+Firefox Fun, API adjustments and more settings.
 
 -   Completed Send API.
 -   Shifted some menu item positions.
 -   Added curve generation logic for CSV creation.
 -   Fixed older versions of Firefox compatibility issues with a variety of styles.
+-   GitIgnore curves.
+-   Assay Modules now has some AJAX-powered settings.
+-   Sessions no longer destroy and redirect to logout as this tampers with API usage.
 
 #### 05/04/2024
 

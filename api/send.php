@@ -147,34 +147,36 @@ if($errors) {
         }
     }
 
-    // Directory to store CSV files
-    $directory = BASE_DIR . '/curves';
-
-    // Ensure the directory exists
-    if (!file_exists($directory)) {
-        mkdir($directory, 0777, true); // Create directory recursively
-    }
-
-    // Define file path
-    $filePath = "$directory/$resultId.csv";
-
-    // Open file for writing
-    $file = fopen($filePath, "w");
-
-    // Write CSV header
-    fputcsv($file, range(1, 45));
-
-
-    // Save CSV files
-    foreach ($csvData as $curveNumber => $curveData) {
-        // Write curve data as CSV rows
-        $rows = explode(",", $curveData); // Assuming comma-separated values
-        fputcsv($file, $rows);
-    }
-
-    // Close file
-    fclose($file);
+    if($csvData) {
+        // Directory to store CSV files
+        $directory = BASE_DIR . '/curves';
     
+        // Ensure the directory exists
+        if (!file_exists($directory)) {
+            mkdir($directory, 0777, true); // Create directory recursively
+        }
+    
+        // Define file path
+        $filePath = "$directory/$resultId.csv";
+    
+        // Open file for writing
+        $file = fopen($filePath, "w");
+    
+        // Write CSV header
+        fputcsv($file, range(1, 45));
+    
+    
+        // Save CSV files
+        foreach ($csvData as $curveNumber => $curveData) {
+            // Write curve data as CSV rows
+            $rows = explode(",", $curveData); // Assuming comma-separated values
+            fputcsv($file, $rows);
+        }
+    
+        // Close file
+        fclose($file);
+    }
+
     // Let the user know it's being processed
     $response["status"] = 7;
 

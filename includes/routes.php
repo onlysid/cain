@@ -76,11 +76,11 @@ $routes = [
     '/result-config' => new PageRoute('views/result-config.php', 'Result Configuration'), // Result config
     '/qc-policy' => new PageRoute('views/qc-policy.php', 'Quality Control Policy'), // QC Policy config
     '/logs' => new PageRoute('views/logs.php', 'Logs', true, ADMINISTRATIVE_CLINICIAN), // List of all logs
-    '/versions' => new PageRoute('views/versions.php', 'Versions', true, GUEST), // Versions & About
+    '/versions' => new PageRoute('views/versions.php', 'Versions', true), // Versions & About
     '/login' => new PageRoute('auth/login.php', 'Login', false, GUEST), // Login page
-    '/blocks' => new PageRoute('views/objects.php', 'Demo', true, GUEST), // Demo blocks
-    '/changelog' => new PageRoute('views/changelog.php', 'Changelog', true, GUEST), // About this website
-    '/about' => new PageRoute('views/about.php', 'About', true, GUEST),
+    '/blocks' => new PageRoute('views/objects.php', 'Demo', true), // Demo blocks
+    '/changelog' => new PageRoute('views/changelog.php', 'Changelog', true), // About this website
+    '/about' => new PageRoute('views/about.php', 'About', true),
 ];
 
 // Define "settings" routes

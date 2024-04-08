@@ -29,6 +29,9 @@ class Process {
                 case('field-settings'):
                     $this->updateFieldSettings();
                     break;
+                case('delete-instrument'):
+                    $this->deleteInstrument();
+                    break;
                 default:
                     // Silence. This post has not been accounted for.
                     break;
@@ -259,6 +262,16 @@ class Process {
         $cainDB->query("UPDATE settings SET `value` = :updatedBehaviour WHERE `name` = 'field_behaviour';", [":updatedBehaviour" => $updatedBehaviour]);
         $cainDB->query("UPDATE settings SET `value` = :updatedVisibility WHERE `name` = 'field_visibility';", [":updatedVisibility" => $updatedVisibility]);
         
+    }
+
+    function deleteInstrument() {
+        global $cainDB;
+
+        $instrumentId = $_POST['instrument-id'] ?? null;
+
+        if($instrumentId) { 
+            $cainDB->query("DELETE FROM instruments WHERE id = :id", [":id" => $instrumentId]);
+        }
     }
 }
 
