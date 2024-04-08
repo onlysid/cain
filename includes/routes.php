@@ -80,6 +80,7 @@ $routes = [
     '/login' => new PageRoute('auth/login.php', 'Login', false, GUEST), // Login page
     '/blocks' => new PageRoute('views/objects.php', 'Demo', true, GUEST), // Demo blocks
     '/changelog' => new PageRoute('views/changelog.php', 'Changelog', true, GUEST), // About this website
+    '/about' => new PageRoute('views/about.php', 'About', true, GUEST),
 ];
 
 // Define "settings" routes
@@ -87,12 +88,11 @@ $settingsRoutes = [
     '/settings' => new PageRoute('views/settings/general.php', 'General', false),
     '/settings/fields' => new PageRoute('views/settings/fields.php', 'Field Selection', false),
     '/settings/assay-modules' => new PageRoute('views/settings/assay-modules.php', 'Assay Modules', false),
-    '/settings/qc' => new PageRoute('views/settings/general.php', 'QC Settings', false),
+    '/settings/qc' => new PageRoute('views/settings/qc.php', 'QC Settings', false),
     '/settings/lots' => new PageRoute('views/settings/general.php', 'Lot Settings', false),
     '/settings/users' => new PageRoute('views/settings/general.php', 'User Settings', false),
     '/settings/networks' => new PageRoute('views/settings/general.php', 'DMS/LIMS Options', false),
     '/settings/logging' => new PageRoute('views/settings/general.php', 'Scripts and Logging', false),
-    '/about' => new PageRoute('views/settings/general.php', 'About', false),
 ];
 
 // Add settings routes to general routes to combine logic

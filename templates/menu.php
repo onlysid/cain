@@ -21,7 +21,7 @@ $menuItems = [
     <?php foreach($menuItems as $menuItem) : ?>
         <?php $targetRoute = array_search($menuItem->pageRoute, $routes);
         if(($currentUser['user_type'] ?? 0) >= $menuItem->pageRoute->accessLevel) : ?>
-            <a href="<?= $targetRoute;?>" class="btn w-full <?= $targetRoute === $currentPage ? 'active' : '';?>">
+            <a href="<?= $targetRoute;?>" class="btn w-full <?= $menuItem->icon ? "has-icon" : "";?> <?= $targetRoute === $currentPage ? 'active' : '';?>">
                 <?php if($menuItem->icon) {
                     include('assets/' . $menuItem->icon . '.svg');
                 };?>
@@ -29,5 +29,6 @@ $menuItems = [
             </a>
         <?php endif;?>
     <?php endforeach;?>
-    <br>
+    <!-- Firefox workaround for getting a bit of padding at the bottom of the menu... -->
+    <a href="#" class="h-0 invisible">#</a>
 </div>

@@ -31,7 +31,7 @@ $visibilityFields = getSettingsBitmap(count($dataFields), 2, $fieldInfo['field_v
                     <tr class="border-light-grey border">
                         <td class="lg:px-6 sm:px-4 px-2 py-2"><?= $dataField->name;?></td>
                         <td class="lg:px-6 sm:px-4 px-2 py-2">
-                            <div class="input-wrapper <?= $dataField->behaviourLock ? "disabled" : "";?>">
+                            <div class="input-wrapper select-wrapper <?= $dataField->behaviourLock ? "disabled" : "";?>">
                                 <select name="fieldBehaviour<?= $index;?>" id="fieldBehaviour<?= $index;?>">
                                     <option value="0" <?= $behaviourFields[$index] == 0 ? "selected" : "";?> <?= $dataField->behaviourLock ? "disabled" : "";?>>Hidden</option>
                                     <option value="1" <?= $behaviourFields[$index] == 1 ? "selected" : "";?> <?= $dataField->behaviourLock ? "disabled" : "";?>>Visible</option>

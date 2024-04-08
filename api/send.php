@@ -23,7 +23,7 @@ Get: {
     "product": "HIV-1 Blood Qual",
     "result": "TBD",
     "testPurpose": "1",
-    "lotNumber": "",
+    ?"lotNumber": "",? What is this
 	"sender": "",
 	"version": "",
 	"sequenceNumber": "",
@@ -33,12 +33,12 @@ Get: {
 	"reserve1": "",
 	"reserve2": "",
 	"cameraReading": "",
+	"flag": ""
     
 	The following is not to be saved in the DB, only in a CSV!
     "curve_data_1": "0.123,0.1241,0.32121,0.2132141,0.213213,…",
 	"curve_data_2": "0.123,0.1241,0.32121,0.2132141,0.213213,…",
 	"curve_index": "123567", (/var/www/html/curves/123567.csv)
-	"flags": ""
 }
 Return status
 
@@ -68,10 +68,119 @@ if(!$data) {
     exit;
 }
 
-// We have data! Now we must clean it, add the result to the results table and make a CSV file.
+$errors = null;
+
+// Firstly, we need to check that the result isn't already in the database
+
+// We have data! Now we must clean it, add the result to the results table and make a CSV file. Separate what needs to go in the db and what needs to be a CSV.
+$dbData = [
+    "sender" => $data['sender'] ?? "",
+    "version" => $data['version'] ?? "",
+    "sequenceNumber" => $data['sequenceNumber'] ?? "",
+    "site" => $data['site'] ?? "",
+    "firstName" => $data['firstName'] ?? "",
+    "lastName" => $data['lastName'] ?? "",
+    "dob" => $data['dob'] ?? "",
+    "hospitalId" => $data['hospitalId'] ?? "",
+    "nhsNumber" => $data['nhsNumber'] ?? "",
+    "timestamp" => $data['timestamp'] ?? "",
+    "testCompleteTimestamp" => $data['testCompleteTimestamp'] ?? "",
+    "clinicId" => $data['clinicId'] ?? "",
+    "operatorId" => $data['operatorId'] ?? "",
+    "moduleSerialNumber" => $data['moduleSerialNumber'] ?? "",
+    "patientId" => $data['patientId'] ?? "",
+    "patientAge" => $data['patientAge'] ?? "",
+    "patientSex" => $data['patientSex'] ?? "",
+    "sampleId" => $data['sampleId'] ?? "",
+    "trackingCode" => $data['trackingCode'] ?? "",
+    "product" => $data['product'] ?? "",
+    "result" => $data['result'] ?? "",
+    "testPurpose" => $data['testPurpose'] ?? "",
+    "abortErrorCode" => $data['abortErrorCode'] ?? "",
+    "assayStepNumber" => $data['assayStepNumber'] ?? "",
+    "cameraReadings" => $data['cameraReading'] ?? "",
+    "patientLocation" => $data['patientLocation'] ?? "",
+    "reserve1" => $data['reserve1'] ?? "",
+    "reserve2" => $data['reserve2'] ?? "",
+    "sampleCollected" => $data['sampleCollected'] ?? "",
+    "sampleReceived" => $data['sampleReceived'] ?? "",
+    "flag" => $data['flag'] ?? null,
+    "post_timestamp" => time(),
+];
+
+// Everything is in the database, not much is allowed to be null and most things instead default to an empty string.
+$query = "INSERT INTO results (";
+$query .= implode(", ", array_keys($dbData));
+$query .= ") VALUES (";
+$query .= implode(", ", array_fill(0, count($dbData), "?"));
+$query .= ")";
+
+// Fill array with values
+$params = array_values($dbData);
+
+try {
+    // Begin transaction to ensure safety
+    $cainDB->beginTransaction();
+    
+    // Add items to db
+    $cainDB->query($query, $params);
+    
+    // Get the last inserted ID
+    $resultId = $cainDB->conn->lastInsertId();
+    
+    // Commit the transaction
+    $cainDB->commit();
+} catch(PDOException $e) {
+    // Rollback the transaction on error
+    $cainDB->rollBack();
+    $errors = $e;
+}
+
+if($errors) {
+    $response["status"] = $errors;
+} else {
+    // Add the CSV data: we may have up to 6 curves.
+    $csvData = [];
+    for($i = 1; $i < 7; $i++) {
+        if(isset($data["curve_data_$i"])) {
+            $csvData[$i] = $data["curve_data_$i"];
+        }
+    }
+
+    // Directory to store CSV files
+    $directory = BASE_DIR . '/curves';
+
+    // Ensure the directory exists
+    if (!file_exists($directory)) {
+        mkdir($directory, 0777, true); // Create directory recursively
+    }
+
+    // Define file path
+    $filePath = "$directory/$resultId.csv";
+
+    // Open file for writing
+    $file = fopen($filePath, "w");
+
+    // Write CSV header
+    fputcsv($file, range(1, 45));
 
 
-$response = "API Unfinished.";
+    // Save CSV files
+    foreach ($csvData as $curveNumber => $curveData) {
+        // Write curve data as CSV rows
+        $rows = explode(",", $curveData); // Assuming comma-separated values
+        fputcsv($file, $rows);
+    }
+
+    // Close file
+    fclose($file);
+    
+    // Let the user know it's being processed
+    $response["status"] = 7;
+
+    // Give the user the unique ID of the result because why not
+    $response["resultId"] = $resultId;
+}
 
 // Provide the response
-echo json_encode(["status" => $response]);
+echo json_encode($response);

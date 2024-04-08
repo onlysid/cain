@@ -38,7 +38,7 @@ $dateFormats = ["d M Y", "d F Y", "d/m/Y"];
     <div class="form-fields">
         <div class="field">
             <label for="dateFormat">Date Format</label>
-            <div class="input-wrapper">
+            <div class="input-wrapper select-wrapper">
                 <select required name="dateFormat" id="dateFormat">
                     <?php foreach($dateFormats as $dateFormat) : ?>
                         <option <?= ($dateFormat == $hospitalInfo['date_format']) ? 'selected' : '';?> value="<?= $dateFormat;?>"><?= date($dateFormat);?></option>

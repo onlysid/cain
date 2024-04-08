@@ -616,6 +616,10 @@ video {
   visibility: visible;
 }
 
+.invisible {
+  visibility: hidden;
+}
+
 .collapse {
   visibility: collapse;
 }
@@ -846,6 +850,14 @@ video {
   margin-bottom: -0.25rem;
 }
 
+.-mb-2 {
+  margin-bottom: -0.5rem;
+}
+
+.-mb-6 {
+  margin-bottom: -1.5rem;
+}
+
 .-ml-4 {
   margin-left: -1rem;
 }
@@ -1024,6 +1036,10 @@ video {
 
 .h-2\.5 {
   height: 0.625rem;
+}
+
+.h-20 {
+  height: 5rem;
 }
 
 .h-32 {
@@ -1406,6 +1422,10 @@ video {
 
 .justify-normal {
   justify-content: normal;
+}
+
+.justify-start {
+  justify-content: flex-start;
 }
 
 .justify-center {
@@ -2873,10 +2893,18 @@ a:not(.btn):hover, .a-tag:hover {
 }
 
 .btn {
+  --bgCol1: #919090;
+  --bgCol2: #4D4C4C;
   box-shadow: 0px 0px 10px #0000007C;
   background: rgb(2,0,36);
   background: radial-gradient(ellipse at 50% -30px, var(--bgCol1) 0%, var(--bgCol2) 76%);
   transition: --bgCol1 0.5s, --bgCol2 0.5s, color 0.5s, box-shadow 0.5s;
+}
+
+.btn:hover {
+  box-shadow: 0px 0px 10px #7aa8acce;
+  --bgCol1: #4D4C4C;
+  --bgCol2: #7c7c7c;
 }
 
 .smaller-btn {
@@ -2903,12 +2931,6 @@ a:not(.btn):hover, .a-tag:hover {
   #menu .btn.active {
     width: calc(100% + 50px);
   }
-}
-
-.btn:hover {
-  box-shadow: 0px 0px 10px #7aa8acce;
-  --bgCol1: #4D4C4C;
-  --bgCol2: #7c7c7c;
 }
 
 .border-btn {
@@ -2940,7 +2962,7 @@ a:not(.btn):hover, .a-tag:hover {
   box-shadow: inset 0px 0px 3px 3px #00000071, inset 0px 0px 0px 4px #77DFFF;
 }
 
-.btn:has(svg):not(.border-btn) {
+.btn.has-icon:not(.border-btn) {
   gap: 0.75rem;
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
@@ -2957,12 +2979,12 @@ a:not(.btn):hover, .a-tag:hover {
   transition-duration: 500ms;
 }
 
-.btn:has(svg):not(.border-btn) svg {
+.btn.has-icon:not(.border-btn) svg {
   height: 3rem;
 }
 
 @media (min-width: 1280px) {
-  .btn:has(svg):not(.border-btn) svg {
+  .btn.has-icon:not(.border-btn) svg {
     height: 3.75rem;
   }
 }
@@ -3206,13 +3228,13 @@ label:not(.toggle) {
   fill: #16cdff;
 }
 
-.input-wrapper:has(select) {
+.input-wrapper.select-wrapper {
   padding-left: 0.5rem !important;
   padding-right: 0.5rem !important;
 }
 
 @media (min-width: 782px) {
-  .input-wrapper:has(select) {
+  .input-wrapper.select-wrapper {
     padding-left: 1rem;
     padding-right: 1rem;
   }
@@ -3321,6 +3343,8 @@ label:not(.toggle) {
 }
 
 .radial-gradient {
+  --bgCol1: #919090;
+  --bgCol2: #4D4C4C;
   box-shadow:  inset 0px 0px 0px 4px #777777, 0px 0px 20px #5F5F5F, inset 0px 0px 20px #000000;
   background: rgb(2,0,36);
   background: radial-gradient(ellipse at 50% -30px, var(--bgCol1) 0%, var(--bgCol2) 76%);
@@ -3617,6 +3641,8 @@ label:not(.toggle) {
   transition-property: all;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
   transition-duration: 500ms;
+  --bgCol1: #919090;
+  --bgCol2: #4D4C4C;
   box-shadow:  inset 0px 0px 0px 4px #777777, 0px 0px 20px #5F5F5F, inset 0px 0px 20px #000000;
   background: rgb(2,0,36);
   background: radial-gradient(ellipse at 50% -30px, var(--bgCol1) 0%, var(--bgCol2) 76%);
@@ -3637,7 +3663,7 @@ label:not(.toggle) {
 
 /* Page layout */
 
-#contentOuterWrapper:not(:has(#settings)) {
+#contentOuterWrapper:not(.settings-wrapper) {
   z-index: 10;
   display: flex;
   min-width: 100%;
@@ -3647,22 +3673,22 @@ label:not(.toggle) {
 }
 
 @media (min-width: 782px) {
-  #contentOuterWrapper:not(:has(#settings)) {
+  #contentOuterWrapper:not(.settings-wrapper) {
     min-width: 550px;
   }
 }
 
-#contentOuterWrapper.show-menu:not(:has(#settings)) {
+#contentOuterWrapper.show-menu:not(.settings-wrapper) {
   width: 100%;
 }
 
 @media (min-width: 782px) {
-  #contentOuterWrapper.show-menu:not(:has(#settings)) {
+  #contentOuterWrapper.show-menu:not(.settings-wrapper) {
     margin-left: -1rem;
   }
 }
 
-#contentWrapper:not(:has(#settings)) {
+#contentWrapper:not(.settings-wrapper) {
   display: flex;
   height: 100%;
   width: 100%;
@@ -3679,12 +3705,12 @@ label:not(.toggle) {
 }
 
 @media (min-width: 1280px) {
-  #contentWrapper:not(:has(#settings)) {
+  #contentWrapper:not(.settings-wrapper) {
     padding: 3rem;
   }
 }
 
-#contentOuterWrapper:has(#settings), #contentWrapper:has(#settings) {
+#contentOuterWrapper.settings-wrapper, #contentWrapper.settings-wrapper {
   height: 100%;
   width: 100%;
 }
@@ -4050,6 +4076,10 @@ section.notice svg {
   --tw-scale-x: 1.1;
   --tw-scale-y: 1.1;
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+}
+
+.group:hover .group-hover\:fill-dark {
+  fill: #4D4C4C;
 }
 
 @media (min-width: 480px) {

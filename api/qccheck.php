@@ -14,7 +14,7 @@ if(!$data) {
     exit;
 }
 
-$response = "API Unfinished.";
+$response = "API Unfinished. More information required.";
 
 // Provide the response
 echo json_encode(["status" => $response]);

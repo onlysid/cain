@@ -12,6 +12,15 @@ Init!
 
 ### What's happened?
 
+#### 08/04/2024
+
+Firefox Fun
+
+-   Completed Send API.
+-   Shifted some menu item positions.
+-   Added curve generation logic for CSV creation.
+-   Fixed older versions of Firefox compatibility issues with a variety of styles.
+
 #### 05/04/2024
 
 API Progress + AJAX Abstractions
