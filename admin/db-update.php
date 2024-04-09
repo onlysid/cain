@@ -275,7 +275,12 @@ function runUpdates($version, $dbVersion) {
                 ('field_behaviour', '0'),
                 ('field_visibility', '0'),
                 ('app_mode', '1'),
-                ('app_version', 'v2.0.0')
+                ('app_version', 'v2.0.0'),
+                ('qc_enforcement', 'off'),
+                ('qc_positive_requirements', '1'),
+                ('qc_negative_requirements', '1'),
+                ('qc_enable_independence', '1'),
+                ('instrument_interval', '4')
             ;";
         }
 
@@ -300,7 +305,35 @@ function runUpdates($version, $dbVersion) {
                 `progress` tinyint,
                 `time_remaining` int,
                 `fault_code` tinyint,
-                `version_number` varchar(100)
+                `version_number` varchar(100),
+                `last_connected` int,
+                `last_qc_pass` int,
+                `qc_flag` tinyint
+            );";
+        }
+
+        // Add the Lot Management Table
+        $lotTable = $cainDB->select("SHOW TABLES LIKE 'lots';");
+        if(!$lotTable) {
+            $change[] = "CREATE TABLE lots (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                `lot_number` varchar(100),
+                `qc_result` tinyint
+            );";
+        }
+
+        // Add the QC Results table
+        $qcResultsTableExists = $cainDB->select("SHOW TABLES LIKE 'qc_results';");
+        if(!$qcResultsTableExists) {
+            $change[] = "CREATE TABLE qc_results (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                lot_id INT,
+                `timestamp` INT,
+                `operator_id` varchar(50),
+                `instrument_id` INT,
+                `result` TINYINT,
+                FOREIGN KEY (lot_id) REFERENCES lots(id)
+
             );";
         }
 

@@ -29,6 +29,9 @@ class Process {
                 case('field-settings'):
                     $this->updateFieldSettings();
                     break;
+                case('qc-settings'):
+                    $this->updateQCSettings();
+                    break;
                 case('delete-instrument'):
                     $this->deleteInstrument();
                     break;
@@ -276,6 +279,12 @@ class Process {
         if($instrumentId) { 
             $cainDB->query("DELETE FROM instruments WHERE id = :id", [":id" => $instrumentId]);
         }
+    }
+
+    function updateQCSettings() {
+        global $caionDB;
+
+        
     }
 }
 

@@ -48,7 +48,7 @@ try {
         $response = limsRequest($processData, 30, 32);
     }
 
-    $response["status"] = 42;
+    $response["status"] = 32;
 
     echo json_encode($response);
 } catch(PDOException $e) {
