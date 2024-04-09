@@ -60,7 +60,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 var validResponse = responseText == "Successfully updated.";
 
                 // Display different messages based on if the updated succeeded or not.
-                updateAlert.style.backgroundColor = validResponse ? "green" : "red";
+                updateAlert.style.backgroundColor = validResponse ? "#217153" : "red";
                 updateAlert.innerHTML = (validResponse ? ("<h2>Update complete!</h2>") : ("<h2>Something went wrong!</h2>")) + "<p>Click anywhere to dismiss this message.</p><div class='response-code'>Response: " + responseText + "</div>";
                 document.title = validResponse ? "Update complete!" : "Something went wrong...";
 

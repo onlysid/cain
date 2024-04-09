@@ -90,9 +90,9 @@ $settingsRoutes = [
     '/settings/assay-modules' => new PageRoute('views/settings/assay-modules.php', 'Assay Modules', false),
     '/settings/qc' => new PageRoute('views/settings/qc.php', 'QC Settings', false),
     '/settings/lots' => new PageRoute('views/settings/lots.php', 'Lot Settings', false),
-    '/settings/users' => new PageRoute('views/settings/general.php', 'User Settings', false),
-    '/settings/networks' => new PageRoute('views/settings/general.php', 'DMS/LIMS Options', false),
-    '/settings/logging' => new PageRoute('views/settings/general.php', 'Scripts and Logging', false),
+    '/settings/users' => new PageRoute('views/settings/users.php', 'User Settings', false),
+    '/settings/network' => new PageRoute('views/settings/network.php', 'Network Settings', false),
+    '/settings/logging' => new PageRoute('views/settings/logging.php', 'Scripts and Logging', false),
 ];
 
 // Add settings routes to general routes to combine logic

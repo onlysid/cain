@@ -46,6 +46,7 @@ var id = setInterval(getInstrumentDetails, 10000);
 
 // Function to update table rows with JSON data
 function updateTable(data) {
+    const table = document.getElementById("instrumentsTable");
     const tableBody = document.getElementById("instrumentsTableBody");
     tableBody.innerHTML = ""; // Clear existing rows
     
@@ -75,6 +76,10 @@ function updateTable(data) {
         `;
         tableBody.appendChild(row);
     });
+
+    if(!data.length) {
+        table.innerHTML = `<p>There are no instruments in the database. Please add some by connecting with the tablet.</p>`;
+    }
 }
 
 // Function to get status text based on status code and progress

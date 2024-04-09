@@ -106,3 +106,19 @@ loadingBtns.forEach((btn) => {
         }, limsTimeout * 1000);
     });
 });
+
+// In the settings menu, choose whether to show LIMS options
+var protocolDropdown = document.getElementById("protocol");
+var limsSection = document.getElementById("limsOptions");
+
+if(protocolDropdown && limsOptions) {
+    protocolDropdown.addEventListener('change', () => {
+        console.log(protocolDropdown.value);
+        if(protocolDropdown.value == 1) {
+            // If the selected protocol is HL7, no need to show or require the LIMS settings
+            limsSection.classList.add("active");
+        } else {
+            limsSection.classList.remove("active");
+        }
+    });
+}

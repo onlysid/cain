@@ -19,9 +19,9 @@ $qcSettings = array_intersect_key($settings, array_flip($qcKeys));
             <label for="qcEnforcement">QC Enforcement</label>
             <div class="input-wrapper select-wrapper">
                 <select name="qcEnforcement" id="qcEnforcement">
-                    <option value="off" <?= $qcSettings === "off" ? "selected" : "";?>>Off</option>
-                    <option value="lockout" <?= $qcSettings === "lockout" ? "selected" : "";?>>Lockout</option>
-                    <option value="warn" <?= $qcSettings === "warn" ? "selected" : "";?>>Warn</option>
+                    <option value="off" <?= $qcSettings['qc_enforcement'] === "off" ? "selected" : "";?>>Off</option>
+                    <option value="lockout" <?= $qcSettings['qc_enforcement'] === "lockout" ? "selected" : "";?>>Lockout</option>
+                    <option value="warn" <?= $qcSettings['qc_enforcement'] === "warn" ? "selected" : "";?>>Warn</option>
                 </select>
             </div>
         </div>
@@ -44,7 +44,7 @@ $qcSettings = array_intersect_key($settings, array_flip($qcKeys));
         <label for="enableIndependence" class="field !flex-row toggle-field !px-6 py-2 rounded-full bg-white shadow-md">
             <div class="flex flex-col w-full">
                 <div class="shrink">Enable Independence</div>
-                <div class="description !text-xs text-grey mr-4">Allow instruments to have their own QC policies if necessary.</div>
+                <div class="description !text-xs text-grey mr-4">Allow each instrument to have its own QC policy if necessary.</div>
             </div>
             <div class="checkbox-wrapper">
                 <input class="tgl" name="enableIndependence" id="enableIndependence" type="checkbox" <?= $qcSettings['qc_enable_independence'] ? "checked" : "";?>>

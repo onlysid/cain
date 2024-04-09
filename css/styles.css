@@ -589,6 +589,10 @@ section.notice svg {
     @apply w-8 h-auto shrink-0 py-1 fill-dark;
 }
 
+section p a {
+    @apply !text-blue-800 hover:!text-green-800;
+}
+
 
 #updateAlert {
     position: fixed;
@@ -643,6 +647,40 @@ section.notice svg {
     @apply bg-primary-dark rounded-2xl h-full shadow-2xl shadow-blue-200/50 flex relative justify-between overflow-hidden;
 }
 
+#limsOptions {
+    @apply max-h-0 opacity-0 transition-all duration-500 pointer-events-none;
+}
+
+#limsOptions.active {
+    @apply max-h-[30rem] opacity-100 pointer-events-auto;
+}
+
+/* Changelog overrides */
+#changelog h3 {
+    @apply mb-2 text-dark text-xl underline;
+}
+
+#changelog p {
+    @apply mb-3 text-base;
+}
+
+#changelog h4 {
+    @apply text-base text-grey uppercase -mt-2 font-extrabold;
+}
+
+ul {
+    @apply mb-9 relative text-dark px-6 py-4 rounded-lg bg-white;
+}
+
+ul::after {
+    @apply absolute -bottom-3 left-0 w-full h-0.5 bg-dark rounded-full;
+    content: "";
+}
+
+ul li {
+    @apply list-disc ml-3;
+}
+
 /* Loader */
 .loadingspinner {
     --square: 26px;
@@ -661,7 +699,7 @@ section.notice svg {
 }
 .loadingspinner div {
     display: inline-block;
-    background: #434655;
+    background: #E3FFEC;
     border: none;
     border-radius: 2px;
     width: var(--square);

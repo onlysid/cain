@@ -32,8 +32,14 @@ class Process {
                 case('qc-settings'):
                     $this->updateQCSettings();
                     break;
+                case('user-general-settings'):
+                    $this->updateGeneralUserSettings();
+                    break;
                 case('delete-instrument'):
                     $this->deleteInstrument();
+                    break;
+                case('network-settings'):
+                    $this->updateNetworkSettings();
                     break;
                 default:
                     // Silence. This post has not been accounted for.
@@ -205,6 +211,7 @@ class Process {
                 WHEN 'date_format' THEN :dateFormat
                 WHEN 'test_mode' THEN :testMode
                 WHEN 'app_mode' THEN :appMode
+                ELSE `value`
             END;";
             
             // Bind parameters
@@ -282,9 +289,139 @@ class Process {
     }
 
     function updateQCSettings() {
-        global $caionDB;
+        global $cainDB;
 
-        
+        // Retrieve form data
+        $qcEnforcement = $_POST['qcEnforcement'];
+        $posRequired = $_POST['posRequired'];
+        $negRequired = $_POST['negRequired'];
+        $enableIndependence = $_POST['enableIndependence'] == "on" ? 1 : 0;
+
+        // Prepare and execute the query to update all settings in one go
+        try {
+            // Prepare the query
+            $query = "UPDATE settings SET `value` = CASE `name`
+                WHEN 'qc_enforcement' THEN :qcEnforcement
+                WHEN 'qc_positive_requirements' THEN :posRequired
+                WHEN 'qc_negative_requirements' THEN :negRequired
+                WHEN 'qc_enable_independence' THEN :enableIndependence
+                ELSE `value`
+            END;";
+            
+            // Bind parameters
+            $params = [
+                ':qcEnforcement' => $qcEnforcement,
+                ':posRequired' => $posRequired,
+                ':negRequired' => $negRequired,
+                ':enableIndependence' => $enableIndependence,
+            ];
+
+            // Execute the query
+            $rowCount = $cainDB->query($query, $params);
+
+            // Check if the update was successful
+            if ($rowCount > 0) {
+                return;
+            } else {
+                // Failed to update settings
+                echo "Failed to update settings.";
+            }
+        } catch (Exception $e) {
+            // Handle exceptions if any
+            echo "An error occurred: " . $e->getMessage();
+        }
+
+    }
+
+    function updateGeneralUserSettings() {
+        global $cainDB;
+
+        // Retrieve form data
+        $sessionTimeout = $_POST['sessionTimeout'];
+        $passwordRequired = $_POST['passwordRequired'] == "on" ? 1 : 0;
+
+        // Prepare and execute the query to update all settings in one go
+        try {
+            // Prepare the query
+            $query = "UPDATE settings SET `value` = CASE `name`
+                WHEN 'session_expiration' THEN :sessionTimeout
+                WHEN 'password_required' THEN :passwordRequired
+                ELSE `value`
+            END;";
+            
+            // Bind parameters
+            $params = [
+                ':sessionTimeout' => $sessionTimeout,
+                ':passwordRequired' => $passwordRequired,
+            ];
+
+            // Execute the query
+            $rowCount = $cainDB->query($query, $params);
+
+            // Check if the update was successful
+            if ($rowCount > 0) {
+                return;
+            } else {
+                // Failed to update settings
+                echo "Failed to update settings.";
+            }
+        } catch (Exception $e) {
+            // Handle exceptions if any
+            echo "An error occurred: " . $e->getMessage();
+        }
+    }
+
+    function updateNetworkSettings() {
+        global $cainDB;
+
+        // Retrieve form data
+        $protocol = $_POST['protocol'] == 0 ? "Cain" : "HL7";
+        $dmsIP = $_POST['dmsIP'];
+        $dmsPort = $_POST['dmsPort'];
+        $limsIP = $_POST['limsIP'];
+        $limsPort = $_POST['limsPort'];
+        $limsServerName = $_POST['limsServerName'];
+        $patientId = ($_POST['patientId'] ?? null) == "on" ? 1 : 0;
+
+        // Prepare and execute the query to update all settings in one go
+        try {
+            // Prepare the query
+            $query = "UPDATE settings SET `value` = CASE `name`
+                WHEN 'selected_protocol' THEN :protocol
+                WHEN 'dms_ip' THEN :dmsIP
+                WHEN 'dms_port' THEN :dmsPort
+                WHEN 'lims_ip' THEN :limsIP
+                WHEN 'lims_port' THEN :limsPort
+                WHEN 'lims_server_name' THEN :limsServerName
+                WHEN 'patient_id' THEN :patientId
+                ELSE `value`
+            END;";
+            
+            // Bind parameters
+            $params = [
+                ':protocol' => $protocol,
+                ':dmsIP' => $dmsIP,
+                ':dmsPort' => $dmsPort,
+                ':limsIP' => $limsIP,
+                ':limsPort' => $limsPort,
+                ':limsServerName' => $limsServerName,
+                ':patientId' => $patientId,
+            ];
+
+            // Execute the query
+            $rowCount = $cainDB->query($query, $params);
+
+            // Check if the update was successful
+            if ($rowCount > 0) {
+                return;
+            } else {
+                // Failed to update settings
+                echo "Failed to update settings.";
+            }
+        } catch (Exception $e) {
+            // Handle exceptions if any
+            echo "An error occurred: " . $e->getMessage();
+        }
     }
 }
 

@@ -1,18 +1,19 @@
 <?php 
 class Session {
-    // Set session expiry time (in seconds)
-    private static $sessionExpiry = 30; // 30 minutes
+    // Set session expiry time (in minutes)
+    public $sessionExpiry;
 
-    function __construct() {
+    public function __construct(int $sessionExpiry = 30) {
+        $this->sessionExpiry = $sessionExpiry;
         $this->start();
     }
 
     // Start session
-    public static function start() {
+    public function start() {
         session_start();
 
         // Regenerate session ID if it's time to do so (every 30 minutes)
-        if (!isset($_SESSION['last-generated']) || time() - $_SESSION['last-generated'] > 60 * self::$sessionExpiry) {
+        if (!isset($_SESSION['last-generated']) || time() - $_SESSION['last-generated'] > 60 * $this->sessionExpiry) {
             // Regenerate session ID and destroy the old session
             session_regenerate_id(true);
 
@@ -74,8 +75,8 @@ class Session {
     }
 
     // Check session expiry
-    private static function checkExpiry() {
-        if (isset($_SESSION['last-activity']) && time() - $_SESSION['last-activity'] > self::$sessionExpiry * 60) {
+    private function checkExpiry() {
+        if (isset($_SESSION['last-activity']) && time() - $_SESSION['last-activity'] > $this->sessionExpiry * 60) {
             // Session expired, destroy it and go to login page
             self::destroy();
         } else {
@@ -194,4 +195,4 @@ class Session {
 }
 
 // Start session
-$session = new Session;
+$session = new Session(intval($cainDB->select("SELECT value FROM settings WHERE `name` = 'session_expiration';")['value']));

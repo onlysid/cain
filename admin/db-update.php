@@ -270,7 +270,7 @@ function runUpdates($version, $dbVersion) {
                 ('patient_id', '1'),
                 ('data_expiration', '365'),
                 ('password_required', '0'),
-                ('session_expiration', '1800'),
+                ('session_expiration', '30'),
                 ('test_mode', '0'),
                 ('field_behaviour', '0'),
                 ('field_visibility', '0'),

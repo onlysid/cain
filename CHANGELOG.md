@@ -12,6 +12,13 @@ Init!
 
 ### What's happened?
 
+#### 09/04/2024
+
+Settings...
+
+-   Most settings now complete.
+-   Updated changelog styling!
+
 #### 08/04/2024
 
 Firefox Fun, API adjustments and more settings.
