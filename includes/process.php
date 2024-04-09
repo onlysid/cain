@@ -189,8 +189,8 @@ class Process {
         $officeName = $_POST['officeName'];
         $hospitalLocation = $_POST['hospitalLocation'];
         $dateFormat = $_POST['dateFormat'];
-
-        // TODO: Sanitize form data if required
+        $testMode = $_POST['testMode'] == "on" ? 1 : 0;
+        $appMode = $_POST['appMode'] == "on" ? 1 : 0;
 
         // Prepare and execute the query to update all settings in one go
         try {
@@ -200,6 +200,8 @@ class Process {
                 WHEN 'office_name' THEN :officeName
                 WHEN 'hospital_location' THEN :hospitalLocation
                 WHEN 'date_format' THEN :dateFormat
+                WHEN 'test_mode' THEN :testMode
+                WHEN 'app_mode' THEN :appMode
             END;";
             
             // Bind parameters
@@ -207,7 +209,9 @@ class Process {
                 ':hospitalName' => $hospitalName,
                 ':officeName' => $officeName,
                 ':hospitalLocation' => $hospitalLocation,
-                ':dateFormat' => $dateFormat
+                ':dateFormat' => $dateFormat,
+                ':testMode' => $testMode,
+                ':appMode' => $appMode
             ];
 
             // Execute the query

@@ -962,6 +962,10 @@ video {
   margin-right: 4rem;
 }
 
+.mr-4 {
+  margin-right: 1rem;
+}
+
 .mr-8 {
   margin-right: 2rem;
 }
@@ -1410,6 +1414,10 @@ video {
 
 .resize {
   resize: both;
+}
+
+.\!flex-row {
+  flex-direction: row !important;
 }
 
 .flex-row {
@@ -2014,6 +2022,21 @@ video {
   padding-right: 0.5rem !important;
 }
 
+.\!px-4 {
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
+}
+
+.\!px-6 {
+  padding-left: 1.5rem !important;
+  padding-right: 1.5rem !important;
+}
+
+.\!px-8 {
+  padding-left: 2rem !important;
+  padding-right: 2rem !important;
+}
+
 .px-1 {
   padding-left: 0.25rem;
   padding-right: 0.25rem;
@@ -2117,6 +2140,10 @@ video {
 .py-8 {
   padding-top: 2rem;
   padding-bottom: 2rem;
+}
+
+.\!pr-8 {
+  padding-right: 2rem !important;
 }
 
 .pb-0 {
@@ -2233,6 +2260,16 @@ video {
 
 .font-roboto {
   font-family: Roboto, sans-sefif;
+}
+
+.\!text-sm {
+  font-size: 0.875rem !important;
+  line-height: 1.25rem !important;
+}
+
+.\!text-xs {
+  font-size: 0.75rem !important;
+  line-height: 1rem !important;
 }
 
 .text-2xl {
@@ -2845,7 +2882,7 @@ a:not(.btn), .a-tag {
   color: rgb(22 205 255 / var(--tw-text-opacity));
   transition-property: all;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 300ms;
+  transition-duration: 500ms;
 }
 
 a:not(.btn):hover, .a-tag:hover {
@@ -3303,7 +3340,7 @@ label:not(.toggle) {
   color: rgb(77 76 76 / var(--tw-text-opacity));
   transition-property: all;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
+  transition-duration: 500ms;
 }
 
 @media (min-width: 782px) {
@@ -3344,7 +3381,7 @@ label:not(.toggle) {
   fill: #5F5F5F;
   transition-property: all;
   transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
+  transition-duration: 500ms;
 }
 
 @media (min-width: 782px) {
@@ -3922,6 +3959,18 @@ section.notice {
 @media (min-width: 960px) {
   section.notice {
     align-items: center;
+  }
+}
+
+section.notice p {
+  font-size: 1rem;
+  line-height: 1.5rem;
+}
+
+@media (min-width: 782px) {
+  section.notice p {
+    font-size: 1.125rem;
+    line-height: 1.75rem;
   }
 }
 

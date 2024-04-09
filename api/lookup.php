@@ -42,6 +42,7 @@ try {
         if($nhsNumber) {
             $processData["nhsNumber"] = $nhsNumber;
         }
+        $processData["lookup"] = "";
 
         // Post whatever data we have to the process queue
         $response = limsRequest($processData, 30, 32);

@@ -251,7 +251,8 @@ function runUpdates($version, $dbVersion) {
             $change[] = "CREATE TABLE `settings` (
                 id int AUTO_INCREMENT PRIMARY KEY NOT NULL,
                 `name` varchar(255) NOT NULL UNIQUE,
-                `value` varchar(255)
+                `value` varchar(255),
+                `flags` int DEFAULT 0 NOT NULL
             );";
 
             $change[] = "INSERT INTO settings (`name`, `value`) VALUES 
@@ -259,20 +260,22 @@ function runUpdates($version, $dbVersion) {
                 ('office_name', 'Office ABC'),
                 ('hospital_location', 'Location ABC'),
                 ('date_format', 'd M Y'),
-                ('protocol', 'LIMS'),
+                ('selected_protocol', 'HL7'),
                 ('dms_ip', '192.168.1.237'),
                 ('dms_port', '8080'),
                 ('lims_ip', '0.0.0.0'),
                 ('lims_port', '8080'),
                 ('lims_server_name', 'lims'),
-                ('comms_status', '1'),
+                ('comms_status', '0'),
                 ('patient_id', '1'),
                 ('data_expiration', '365'),
                 ('password_required', '0'),
                 ('session_expiration', '1800'),
-                ('demo_mode', '0'),
+                ('test_mode', '0'),
                 ('field_behaviour', '0'),
-                ('field_visibility', '0')
+                ('field_visibility', '0'),
+                ('app_mode', '1'),
+                ('app_version', 'v2.0.0')
             ;";
         }
 

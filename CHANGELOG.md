@@ -23,6 +23,8 @@ Firefox Fun, API adjustments and more settings.
 -   GitIgnore curves.
 -   Assay Modules now has some AJAX-powered settings.
 -   Sessions no longer destroy and redirect to logout as this tampers with API usage.
+-   Added lookup dummy to process_data.
+-   Added a few more general settings.
 
 #### 05/04/2024
 

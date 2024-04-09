@@ -1,7 +1,7 @@
 <?php // General Settings
 
 // Hospital Info Settings Subset
-$hospitalInfoKeys = ['hospital_name', 'office_name', 'hospital_location', 'date_format'];
+$hospitalInfoKeys = ['hospital_name', 'office_name', 'hospital_location', 'date_format', 'test_mode', 'app_mode'];
 $hospitalInfo = array_intersect_key($settings, array_flip($hospitalInfoKeys));
 
 // Accepted Date Formats
@@ -46,6 +46,28 @@ $dateFormats = ["d M Y", "d F Y", "d/m/Y"];
                 </select>
             </div>
         </div>
+    </div>
+    <div class="form-fields">
+        <label for="testMode" class="field !flex-row toggle-field !px-6 py-2 rounded-full bg-white shadow-md">
+            <div class="flex flex-col w-full">
+                <div class="shrink">Test Mode</div>
+                <div class="description !text-xs text-grey mr-4">Dummy data and processes for testing.</div>
+            </div>
+            <div class="checkbox-wrapper">
+                <input class="tgl" name="testMode" id="testMode" type="checkbox" <?= $hospitalInfo['test_mode'] ? "checked" : "";?>>
+                <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="testMode"><span></span></label>
+            </div>
+        </label>
+        <label for="appMode" class="field !flex-row toggle-field !px-6 py-2 rounded-full bg-white shadow-md">
+            <div class="flex flex-col w-full">
+                <div class="shrink">App Mode</div>
+                <div class="description !text-xs text-grey mr-4">Turn LIMS internal application on/off.</div>
+            </div>
+            <div class="checkbox-wrapper">
+                <input class="tgl" name="appMode" id="appMode" type="checkbox" <?= $hospitalInfo['app_mode'] ? "checked" : "";?>>
+                <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="appMode"><span></span></label>
+            </div>
+        </label>
     </div>
     <button class="btn smaller-btn" type="submit">Save Settings</button>
 </form>

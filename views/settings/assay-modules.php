@@ -16,7 +16,7 @@ $dateFormats = ["d M Y", "d F Y", "d/m/Y"];
     <p>This page is automatically updated every 10s with the latest information available about all Assay Modules in the network.</p>
 </section>
 
-<table id="instrumentsTable" class="my-4">
+<table id="instrumentsTable">
     <thead>
         <th></th>
         <th>Module ID</th>
@@ -41,4 +41,4 @@ $dateFormats = ["d M Y", "d F Y", "d/m/Y"];
     </tbody>
 </table>
 
-<script src="/js/instrumentCheck.js" />
+<script type="module" src="/js/instrumentCheck.js"></script>
