@@ -14,10 +14,11 @@ Init!
 
 #### 09/04/2024
 
-Settings...
+Settings... and main UI start
 
 -   Most settings now complete.
 -   Updated changelog styling!
+-   Started making the main big table...
 
 #### 08/04/2024
 

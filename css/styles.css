@@ -565,7 +565,7 @@ label:not(.toggle) {
 }
 
 #contentWrapper:not(.settings-wrapper) {
-    @apply p-8 xl:p-12 bg-primary-dark rounded-xl h-full shadow-[0px_0px_10px_#5F5F5F] w-full overflow-y-scroll flex flex-col gap-8;
+    @apply p-8 xl:p-12 bg-primary-dark rounded-xl h-full shadow-[0px_0px_10px_#5F5F5F] w-full overflow-y-scroll flex flex-col gap-2;
 }
 
 #contentOuterWrapper.settings-wrapper, #contentWrapper.settings-wrapper {

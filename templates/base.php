@@ -53,8 +53,8 @@ var_dump($_SESSION);
             if($settingsPage) : ?>
                 <?php include "templates/settings.php";?>
             <?php else : ?>
-                <div id="contentOuterWrapper" class="<?= $showMenu ? 'show-menu ' : '';?><?= $settings ? " settings-wrapper" : "";?>">
-                    <div id="contentWrapper" class="<?= $settings ? "settings-wrapper" : "";?>">
+                <div id="contentOuterWrapper" class="<?= $showMenu ? 'show-menu ' : '';?><?= isset($settings) && $settings ? " settings-wrapper" : "";?>">
+                    <div id="contentWrapper" class="<?= isset($settings) && $settings ? "settings-wrapper" : "";?>">
                         <?php include $route->view;?>
                     </div>
                 </div>

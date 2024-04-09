@@ -24,7 +24,7 @@ $settings = array_column($hospitalInfo, 'value', 'name');
             </svg>
         </div>
         <?php include_once "templates/settings-menu.php";?>
-        <div id="settingWrapper" class="h-full grow mx-auto container py-4 sm:py-6 flex flex-col overflow-scroll">
+        <div id="settingWrapper" class="h-full grow mx-auto container py-4 sm:py-6 flex flex-col overflow-y-scroll overflow-x-hidden">
             <h1 class="text-center sm:text-start mx-12 sm:mx-0 sm:mr-12 mb-2.5 sm:mb-1"><?= $route->title;?></h1>    
             <div class="bg-gradient-to-r from-transparent via-grey/75 sm:from-grey/75 to-transparent w-full mb-3 pb-0.5 rounded-full"></div>
             <?php include_once $route->view;?>

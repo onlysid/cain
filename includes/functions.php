@@ -138,3 +138,35 @@ function getInstrumentSnapshot($instrumentId = null) {
         return $cainDB->selectAll("SELECT * FROM instruments;");
     }
 }
+
+function getResults($params) {
+    global $cainDB;
+
+    // Get any query params
+    $searchFilter = isset($params['s']) ? $params['s'] : null;
+    $sortDirection = isset($params['sd']) ? "ASC" : "DESC";
+    $sortParam = isset($params['sp']) ? $params['sp'] : "testcompletetimestamp";
+    $pageNumber = isset($params['p']) ? $params['p'] : 1;
+    $itemsPerPage = isset($params['ipp']) ? $params['ipp'] : 10;
+    $offset = ($pageNumber - 1) * $itemsPerPage;
+
+    // Construct the SQL query
+    $query = "SELECT * FROM results";
+
+    $queryParams = [];
+
+    // Apply search filter if provided
+    if ($searchFilter !== null) {
+        $query .= " WHERE firstName LIKE :searchFilter";
+        $queryParams['searchFilter'] = "%$searchFilter%"; // Add wildcard characters for partial matching
+    }
+
+    // Apply sorting
+    $query .= " ORDER BY $sortParam $sortDirection";
+
+    // Apply pagination
+    $query .= " LIMIT $itemsPerPage OFFSET $offset";
+
+    // Get the relevant results
+    return $cainDB->selectAll($query, $queryParams);
+}

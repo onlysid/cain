@@ -12,7 +12,7 @@ function route($routes, $apiRoutes) {
     $settingsPage = false;
 
     // Get the current page
-    $currentPage = $_SERVER['REQUEST_URI'];
+    $currentPage = strtok($_SERVER["REQUEST_URI"], '?');
     $path = parse_url($currentPage, PHP_URL_PATH);
     
     // If we are not logged in, we need to check if we are allowed to be here
