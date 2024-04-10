@@ -212,7 +212,7 @@ a:not(.btn), .a-tag {
 
 /* Table Styles */
 table {
-    @apply w-full text-sm lg:text-base text-left rtl:text-right;
+    @apply w-full text-left rtl:text-right border-separate border-spacing-y-1 border-spacing-x-0 table;
 }
 
 table thead {
@@ -220,27 +220,49 @@ table thead {
 }
 
 table thead th {
-    @apply text-start lg:px-6 sm:px-4 px-2 py-3;
+    @apply text-start;
 }
 
 table tbody {
     @apply bg-gray-50;
 }
 
-table tbody tr {
-    @apply border-light-grey border;
+table > thead > tr,
+table:not(.result-explosion) tbody > tr {
+    @apply shadow-md shadow-dark/75 rounded-lg sm:px-6 transition-all;
 }
 
-table tbody tr td {
-    @apply lg:px-6 sm:px-4 px-2 py-2;
+table > thead > tr > th:first-of-type,
+table tbody > tr > th:first-of-type,
+table > thead > tr td:first-of-type,
+table tbody > tr td:first-of-type {
+    @apply rounded-l-lg pl-4 sm:pl-5;
 }
 
-table tbody tr td:last-of-type {
-    @apply w-0;
+table > thead > tr > th:last-of-type,
+table tbody > tr > th:last-of-type,
+table > thead > tr td:last-of-type,
+table tbody > tr td:last-of-type {
+    @apply rounded-r-lg border-hidden pr-4 sm:pr-5;
 }
+
+table > thead > tr > th,
+table tbody > tr > th,
+table > thead > tr > td,
+table tbody > tr > td {
+    @apply py-4 px-1.5 sm:px-2.5 xl:px-3 leading-none align-middle text-sm sm:text-base;
+}
+
+table:not(.result-explosion) tbody tr {
+    @apply border-light-grey border cursor-pointer shadow-lg transition-all duration-500 hover:bg-tirtiary/20 text-grey hover:text-black hover:shadow-tirtiary/20;
+}
+
+/* table tbody tr td {
+    @apply lg:px-6 sm:px-4 px-2 py-2 align-middle items-center;
+} */
 
 td .status-indicator {
-    @apply h-4 w-4 aspect-square rounded-full bg-red-500;
+    @apply h-4 w-4 aspect-square align-middle rounded-full bg-red-500;
 }
 
 td .status-indicator.active {
@@ -253,6 +275,26 @@ td .instrument-table-controls {
 
 td .instrument-table-controls svg  {
     @apply h-7;
+}
+
+td.end form {
+    @apply items-end
+}
+
+table.result-explosion {
+    @apply border-spacing-0.5;
+}
+
+table.result-explosion tr {
+    @apply bg-dark text-white;
+}
+
+table.result-explosion tr td:first-of-type {
+    @apply font-extrabold;
+}
+
+table.result-explosion td {
+    @apply py-2;
 }
 
 .table-button {
@@ -322,15 +364,11 @@ label:not(.toggle) {
 
 .form-fields .input-wrapper:not(.disabled):hover,
 .form-fields .input-wrapper:focus-within {
-    @apply border-secondary scale-105;
+    @apply border-secondary;
 }
 .form-fields .input-wrapper:hover > svg,
 .form-fields .input-wrapper:focus-within > svg {
     @apply fill-secondary scale-105;
-}
-
-.input-wrapper.select-wrapper {
-    @apply !px-2 md:px-4;
 }
 
 .tooltip {
@@ -338,12 +376,12 @@ label:not(.toggle) {
 }
 
 .tooltip::before {
-    @apply absolute bg-dark rounded-lg pointer-events-none text-white px-4 py-1 whitespace-nowrap z-10 bottom-[90%] left-1/2 -translate-x-1/2 opacity-0 transition-all duration-500;
+    @apply absolute bg-dark text-sm rounded-lg pointer-events-none scale-0 text-white px-2.5 py-1 whitespace-nowrap z-10 bottom-[90%] left-1/2 -translate-x-1/2 opacity-0 transition-all duration-300;
     content: attr(title);    
 }
 
 .tooltip:hover::before {
-    @apply opacity-100 bottom-full;
+    @apply opacity-100 bottom-full scale-90;
 }
 
 .checkbox-wrapper input[type="checkbox"] {
@@ -572,6 +610,22 @@ label:not(.toggle) {
     @apply w-full h-full;
 } 
 
+.result-modal {
+    @apply fixed transition-all duration-500 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50 bg-black/50;
+}
+
+.result-modal-backdrop {
+    @apply fixed opacity-0 backdrop-blur-lg w-screen h-screen top-0 left-0 bg-black/30 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 flex justify-center items-center;
+}
+
+.result-modal.active {
+    @apply pointer-events-auto;
+}
+
+.result-modal.active .result-modal-backdrop {
+    @apply opacity-100;
+}
+
 section {
     @apply mb-8;
 }
@@ -647,11 +701,11 @@ section p a {
     @apply bg-primary-dark rounded-2xl h-full shadow-2xl shadow-blue-200/50 flex relative justify-between overflow-hidden;
 }
 
-#limsOptions {
+#hl7Options, #cainOptions {
     @apply max-h-0 opacity-0 transition-all duration-500 pointer-events-none;
 }
 
-#limsOptions.active {
+#hl7Options.active, #cainOptions.active {
     @apply max-h-[30rem] opacity-100 pointer-events-auto;
 }
 

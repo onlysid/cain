@@ -11,7 +11,7 @@
 
 <?php // Some initialisation
 $showMenu = $route->showMenu;
-var_dump($_SESSION);
+// var_dump($_SESSION);
 ?>
 
 <body>

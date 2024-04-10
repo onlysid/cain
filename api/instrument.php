@@ -42,7 +42,7 @@ if($instrumentData['serial_number']) {
     $instrumentData['time_remaining'] = $data['timeRemaining'] ?? null;
     $instrumentData['fault_code'] = $data['faultCode'] ?? null;
     $instrumentData['version_number'] = $data['versionNumber'] ?? null;
-
+    
     $response = updateInstrument($instrumentData);
 }
 

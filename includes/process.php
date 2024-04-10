@@ -376,11 +376,11 @@ class Process {
 
         // Retrieve form data
         $protocol = $_POST['protocol'] == 0 ? "Cain" : "HL7";
-        $dmsIP = $_POST['dmsIP'];
-        $dmsPort = $_POST['dmsPort'];
-        $limsIP = $_POST['limsIP'];
-        $limsPort = $_POST['limsPort'];
-        $limsServerName = $_POST['limsServerName'];
+        $cainIP = $_POST['cainIP'];
+        $cainPort = $_POST['cainPort'];
+        $hl7IP = $_POST['hl7IP'];
+        $hl7Port = $_POST['hl7Port'];
+        $hl7ServerName = $_POST['hl7ServerName'];
         $patientId = ($_POST['patientId'] ?? null) == "on" ? 1 : 0;
 
         // Prepare and execute the query to update all settings in one go
@@ -388,11 +388,11 @@ class Process {
             // Prepare the query
             $query = "UPDATE settings SET `value` = CASE `name`
                 WHEN 'selected_protocol' THEN :protocol
-                WHEN 'dms_ip' THEN :dmsIP
-                WHEN 'dms_port' THEN :dmsPort
-                WHEN 'lims_ip' THEN :limsIP
-                WHEN 'lims_port' THEN :limsPort
-                WHEN 'lims_server_name' THEN :limsServerName
+                WHEN 'cain_server_ip' THEN :cainIP
+                WHEN 'cain_server_port' THEN :cainPort
+                WHEN 'hl7_server_ip' THEN :hl7IP
+                WHEN 'hly_server_port' THEN :hl7Port
+                WHEN 'hl7_server_dest' THEN :hl7ServerName
                 WHEN 'patient_id' THEN :patientId
                 ELSE `value`
             END;";
@@ -400,11 +400,11 @@ class Process {
             // Bind parameters
             $params = [
                 ':protocol' => $protocol,
-                ':dmsIP' => $dmsIP,
-                ':dmsPort' => $dmsPort,
-                ':limsIP' => $limsIP,
-                ':limsPort' => $limsPort,
-                ':limsServerName' => $limsServerName,
+                ':cainIP' => $cainIP,
+                ':cainPort' => $cainPort,
+                ':hl7IP' => $hl7IP,
+                ':hl7Port' => $hl7Port,
+                ':hl7ServerName' => $hl7ServerName,
                 ':patientId' => $patientId,
             ];
 

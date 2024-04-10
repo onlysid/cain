@@ -109,16 +109,49 @@ loadingBtns.forEach((btn) => {
 
 // In the settings menu, choose whether to show LIMS options
 var protocolDropdown = document.getElementById("protocol");
-var limsSection = document.getElementById("limsOptions");
+var hl7Section = document.getElementById("hl7Options");
+var cainSection = document.getElementById("cainOptions");
 
-if(protocolDropdown && limsOptions) {
+if(protocolDropdown && hl7Section && cainSection) {
     protocolDropdown.addEventListener('change', () => {
         console.log(protocolDropdown.value);
         if(protocolDropdown.value == 1) {
             // If the selected protocol is HL7, no need to show or require the LIMS settings
-            limsSection.classList.add("active");
+            hl7Section.classList.add("active");
+            cainSection.classList.remove("active");
         } else {
-            limsSection.classList.remove("active");
+            hl7Section.classList.remove("active");
+            cainSection.classList.add("active");
         }
     });
+}
+
+// We need to be able to pop open test resuults and display all the results details
+var resultsTable = document.getElementById('resultsTable');
+
+if(resultsTable) {
+    var resultRows = document.querySelectorAll('tr.result');
+    resultRows.forEach((result) => {
+        
+        result.addEventListener('click', () => {
+            var resultId = result.id;
+
+            // Get the result's corresponding modal
+            var resultModal = document.getElementById(resultId + "Modal");
+
+            // Show it!
+            resultModal.classList.add('active');
+
+            
+            resultModal.querySelector('.result-modal-backdrop').addEventListener('click', (e) => {
+                // Get the result details
+                var resultDetails = resultModal.querySelector('.result-details');
+                
+                if(!resultDetails.contains(e.target) || e.target.classList.contains('modal-close')) {
+                    resultModal.classList.remove('active');
+                }
+            })
+        });
+
+    })
 }

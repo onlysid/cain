@@ -12,6 +12,13 @@ Init!
 
 ### What's happened?
 
+#### 10/04/2024
+
+Table progress
+
+-   Tables rows now open and close.
+-   Table filtering now works.
+
 #### 09/04/2024
 
 Settings... and main UI start

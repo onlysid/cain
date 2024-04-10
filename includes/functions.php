@@ -79,10 +79,10 @@ function updateInstrument($instrumentData) {
     if($serialNumber) {
         // Get rid of this from the instrument data array as we have it stored separately
         unset($instrumentData['serial_number']);
-
+        
         // Check if the instrument already exists in the database
         $instrumentExists = $cainDB->query("SELECT id FROM instruments WHERE serial_number = '$serialNumber';");
-    
+        
         if(!$instrumentExists) {
             $query = "INSERT INTO instruments ";
             $query1 = "(serial_number, ";
@@ -90,7 +90,7 @@ function updateInstrument($instrumentData) {
         } else {
             $query = "UPDATE instruments SET ";
         }
-
+        
         $validDataCount = 0;
         foreach($instrumentData as $data) {
             if(isset($data)) {
@@ -150,23 +150,57 @@ function getResults($params) {
     $itemsPerPage = isset($params['ipp']) ? $params['ipp'] : 10;
     $offset = ($pageNumber - 1) * $itemsPerPage;
 
-    // Construct the SQL query
-    $query = "SELECT * FROM results";
-
+    // Construct the WHERE clause for searching across all columns
+    $searchConditions = '';
     $queryParams = [];
-
-    // Apply search filter if provided
     if ($searchFilter !== null) {
-        $query .= " WHERE firstName LIKE :searchFilter";
-        $queryParams['searchFilter'] = "%$searchFilter%"; // Add wildcard characters for partial matching
+        $searchTerms = explode(" ", $searchFilter);
+        $columns = ['firstName', 'lastName', 'hospitalId', 'nhsNumber', 'clinicId', 'operatorId', 'patientId', 'sampleId', 'trackingCode', 'patientLocation']; // Replace with your actual column names
+
+        $i = 0;
+        foreach($searchTerms as $filterString) {
+            $searchConditions .= "AND (";
+            $j = 0;
+            foreach ($columns as $column) {
+                $searchConditions .= ($j != 0 ? "OR " : "") . "$column LIKE :filterString$i ";
+                $queryParams[':filterString' . $i] = str_replace(' ', '%', $filterString) . '%';
+                $j++;
+            }
+            $searchConditions .= ") ";
+            $i++;
+        }
+        // Remove the leading 'OR' from the first condition
+        $searchConditions = ltrim($searchConditions, 'AND');
     }
 
-    // Apply sorting
-    $query .= " ORDER BY $sortParam $sortDirection";
+    // Build the SQL query
+    $query = "SELECT * FROM results ";
+    if (!empty($searchConditions)) {
+        $query .= "WHERE $searchConditions ";
+    }
+    $query .= "ORDER BY $sortParam $sortDirection ";
 
     // Apply pagination
     $query .= " LIMIT $itemsPerPage OFFSET $offset";
 
+    // Get the results
+    $results = $cainDB->selectAll($query, $queryParams);
+
+    // Get the count of all results
+    $count = $cainDB->select("SELECT COUNT(*) FROM results")["COUNT(*)"];
+
     // Get the relevant results
-    return $cainDB->selectAll($query, $queryParams);
+    return ["results" => $results, "count" => $count];
 }
+
+function truncate($string, $length = 100, $append = "&hellip;") {
+    $string = trim($string);
+  
+    if(strlen($string) > $length) {
+      $string = wordwrap($string, $length);
+      $string = explode("\n", $string, 2);
+      $string = $string[0] . $append;
+    }
+  
+    return $string;
+  }

@@ -42,12 +42,14 @@ function getInstrumentDetails() {
 getInstrumentDetails();
 
 // Get notifications via AJAX every 30 seconds
-var id = setInterval(getInstrumentDetails, 10000);
+var id = setInterval(getInstrumentDetails, 5000);
 
 // Function to update table rows with JSON data
 function updateTable(data) {
     const table = document.getElementById("instrumentsTable");
     const tableBody = document.getElementById("instrumentsTableBody");
+    const tableHead = table.querySelector("thead");
+
     tableBody.innerHTML = ""; // Clear existing rows
     
     data.forEach((item, index) => {
@@ -56,7 +58,7 @@ function updateTable(data) {
             <td>${index + 1}</td>
             <td>${item.serial_number}</td>
             <td>${getProcessText(item.status, item.progress, item.fault_condition)}</td>
-            <td>
+            <td class="end">
                 <form method="POST" action="/process">
                     <div class="instrument-table-controls">
                         <input type="hidden" name="action" value="delete-instrument">
@@ -78,7 +80,10 @@ function updateTable(data) {
     });
 
     if(!data.length) {
-        table.innerHTML = `<p>There are no instruments in the database. Please add some by connecting with the tablet.</p>`;
+        tableHead.classList.add('hidden');
+        tableBody.innerHTML = `<td>There are no instruments in the database. Please add some by connecting with the tablet.</td>`;
+    } else {
+        tableHead.classList.remove('hidden');
     }
 }
 
