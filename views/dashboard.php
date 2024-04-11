@@ -17,6 +17,8 @@ $totalPageCount = ceil($totalResultsCount / $itemsPerPage);
 $firstItemIndex = ceil(($itemsPerPage * $page) - $itemsPerPage + 1);
 $lastItemIndex = (($page * $itemsPerPage < $totalResultsCount) ? ($firstItemIndex + ($itemsPerPage - 1)) : ($totalResultsCount));
 
+$resultNumberText = (($totalResultsCount > $itemsPerPage) ? ($firstItemIndex . "-" . $lastItemIndex .  " of ") : "") . $totalResultsCount . " Result" . ($totalResultsCount == 1 ? "" : "s");
+
 // Fields we are interested in
 $listableFields = [
     "patientId" => "Patient ID",
@@ -41,7 +43,7 @@ unset($filters['p']);
 <h1 class="mb-2">Results</h1>
 
 <div id="tableInfoWrapper" class="w-full flex justify-between items-center">
-    <p class="hidden sm:block text-base md:text-lg"><?= $totalResultsCount ? $firstItemIndex . "-" . $lastItemIndex .  " of ": "";?><?= $totalResultsCount;?> Results</p>
+    <p class="hidden sm:block text-base md:text-lg"><?= $resultNumberText;?></p>
     <div id="filterSearchWrapper" class="flex items-center flex-col-reverse sm:flex-row w-full sm:w-auto justify-end">
         <form action="/" method="GET" id="searchForm" class="w-full sm:w-auto">
             <div class="form-fields">
@@ -58,7 +60,7 @@ unset($filters['p']);
             </div>
         </form>
         <div class="flex items-center w-full sm:w-auto">
-            <p class="grow sm:hidden text-base md:text-lg"><?= $totalResultsCount ? $firstItemIndex . "-" . $lastItemIndex .  " of ": "";?><?= $totalResultsCount;?> Results</p>
+            <p class="grow sm:hidden text-base md:text-lg"><?= $resultNumberText;?></p>
             <button id="filter" class="p-2 transition-all duration-500 hover:scale-110 hover:opacity-75 tooltip" title="Coming Soon...">
                 <svg class="h-7 fill-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                     <path d="M0 416c0 17.7 14.3 32 32 32l54.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48L480 448c17.7 0 32-14.3 32-32s-14.3-32-32-32l-246.7 0c-12.3-28.3-40.5-48-73.3-48s-61 19.7-73.3 48L32 384c-17.7 0-32 14.3-32 32zm128 0a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zM320 256a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm32-80c-32.8 0-61 19.7-73.3 48L32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l246.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48l54.7 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-54.7 0c-12.3-28.3-40.5-48-73.3-48zM192 128a32 32 0 1 1 0-64 32 32 0 1 1 0 64zm73.3-64C253 35.7 224.8 16 192 16s-61 19.7-73.3 48L32 64C14.3 64 0 78.3 0 96s14.3 32 32 32l86.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48L480 128c17.7 0 32-14.3 32-32s-14.3-32-32-32L265.3 64z"/>
@@ -115,7 +117,7 @@ unset($filters['p']);
                 <?php foreach($resultItems as $result) : ?>
                     <?php // We need to parse the result sensibly
                         // TODO: The way we present this is to be determined. For now, we just truncate.
-                        $positive = (strpos(strtolower($result['result']), "positive"));
+                        $positive = (strpos(strtolower($result['result']), "positive")) || strtolower($result['result']) == "positive";
                     ;?>
                     <tr id="result<?= $result['id'];?>" class="result">
                         <td><?= (new DateTime($result['testcompletetimestamp']))->format($hospitalInfoArray['date_format']);?></td>
@@ -189,7 +191,7 @@ if($totalPageCount > 1) : ?>
 // Results modals
 foreach($resultItems as $result) : ?>
     <?php 
-    $positive = (strpos(strtolower($result['result']), "positive"));
+    $positive = (strpos(strtolower($result['result']), "positive")) || strtolower($result['result']) == "positive";
     try {
         $dob = (new DateTime($result['dob']))->format($hospitalInfoArray['date_format']);
         // Further processing with $datetime
