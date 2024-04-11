@@ -4,40 +4,73 @@ $hospitalInfoArray = array_column($hospitalInfo, 'value', 'name');
 
 // Do we have any filters?
 $filters = $_GET;
-unset($filters['p']);
+$page = $filters['p'] ?? 1;
+$itemsPerPage = $filters['ipp'] ?? 10;
 
 // Get all the data
 $results = getResults($_GET);
 $resultItems = $results["results"];
 $totalResultsCount = $results["count"];
+
+// Get the pagination information
+$totalPageCount = ceil($totalResultsCount / $itemsPerPage);
+$firstItemIndex = ceil(($itemsPerPage * $page) - $itemsPerPage + 1);
+$lastItemIndex = (($page * $itemsPerPage < $totalResultsCount) ? ($firstItemIndex + ($itemsPerPage - 1)) : ($totalResultsCount));
+
+// Fields we are interested in
+$listableFields = [
+    "patientId" => "Patient ID",
+    "nhsNumber" => "NHS Number",
+    "firstName lastName" => "Name",
+    "result" => "Result",
+    "dob" => "Date of Birth",
+    "patientSex" => "Gender",
+    "patientAge" => "Age",
+    "sampleCollected" => "Sample Date",
+    "operatorId" => "Operator ID",
+    "patientLocation" => "Location",
+    "clinicId" => "Clinic ID",
+    "sampleReceived" => "Test Started",
+    "testcompletetimestamp" => "Test Finished",
+];
+
+unset($filters['p']);
+
 ?>
 
-    <h1 class="mb-2">Results</h1>
-    
-    <div id="tableInfoWrapper" class="w-full flex justify-between items-center">
-        <p class="text-lg">1-10 of <?= $totalResultsCount;?> Results</p>
-        <div id="filterSearchWrapper" class="flex items-center gap-2.5">
-            <form action="/" method="GET" id="searchForm">
-                <div class="form-fields">
-                    <div class="field">
-                        <div class="input-wrapper !py-1 !pr-1">
-                            <input required type="text" placeholder="Search..." name="s" value="<?= $_GET['s'] ?? "";?>">
-                            <button class="aspect-square rounded-full p-2 bg-dark transition-all duration-500 hover:scale-110 hover:opacity-75" type="submit">
-                                <svg class="h-4 w-auto fill-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                                    <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/>
-                                </svg>
-                            </button>
-                        </div>
+<h1 class="mb-2">Results</h1>
+
+<div id="tableInfoWrapper" class="w-full flex justify-between items-center">
+    <p class="hidden sm:block text-base md:text-lg"><?= $totalResultsCount ? $firstItemIndex . "-" . $lastItemIndex .  " of ": "";?><?= $totalResultsCount;?> Results</p>
+    <div id="filterSearchWrapper" class="flex items-center flex-col-reverse sm:flex-row w-full sm:w-auto justify-end">
+        <form action="/" method="GET" id="searchForm" class="w-full sm:w-auto">
+            <div class="form-fields">
+                <div class="field">
+                    <div class="input-wrapper !py-1 !pr-1">
+                        <input required type="text" placeholder="Search..." name="s" value="<?= $_GET['s'] ?? "";?>">
+                        <button class="aspect-square rounded-full p-2 bg-dark transition-all duration-500 hover:scale-110 hover:opacity-75" type="submit">
+                            <svg class="h-4 w-auto fill-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                                <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/>
+                            </svg>
+                        </button>
                     </div>
                 </div>
-            </form>
-            <button id="filter" class="transition-all duration-500 hover:scale-110 hover:opacity-75 tooltip" title="Coming Soon...">
+            </div>
+        </form>
+        <div class="flex items-center w-full sm:w-auto">
+            <p class="grow sm:hidden text-base md:text-lg"><?= $totalResultsCount ? $firstItemIndex . "-" . $lastItemIndex .  " of ": "";?><?= $totalResultsCount;?> Results</p>
+            <button id="filter" class="p-2 transition-all duration-500 hover:scale-110 hover:opacity-75 tooltip" title="Coming Soon...">
                 <svg class="h-7 fill-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                     <path d="M0 416c0 17.7 14.3 32 32 32l54.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48L480 448c17.7 0 32-14.3 32-32s-14.3-32-32-32l-246.7 0c-12.3-28.3-40.5-48-73.3-48s-61 19.7-73.3 48L32 384c-17.7 0-32 14.3-32 32zm128 0a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zM320 256a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm32-80c-32.8 0-61 19.7-73.3 48L32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l246.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48l54.7 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-54.7 0c-12.3-28.3-40.5-48-73.3-48zM192 128a32 32 0 1 1 0-64 32 32 0 1 1 0 64zm73.3-64C253 35.7 224.8 16 192 16s-61 19.7-73.3 48L32 64C14.3 64 0 78.3 0 96s14.3 32 32 32l86.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48L480 128c17.7 0 32-14.3 32-32s-14.3-32-32-32L265.3 64z"/>
                 </svg>
             </button>
+            <button onclick="window.location.reload()" class="p-2 transition-all duration-500 hover:scale-110 hover:opacity-75 tooltip" title="Refresh">
+                <svg class="h-7 fill-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                    <path d="M105.1 202.6c7.7-21.8 20.2-42.3 37.8-59.8c62.5-62.5 163.8-62.5 226.3 0L386.3 160H352c-17.7 0-32 14.3-32 32s14.3 32 32 32H463.5c0 0 0 0 0 0h.4c17.7 0 32-14.3 32-32V80c0-17.7-14.3-32-32-32s-32 14.3-32 32v35.2L414.4 97.6c-87.5-87.5-229.3-87.5-316.8 0C73.2 122 55.6 150.7 44.8 181.4c-5.9 16.7 2.9 34.9 19.5 40.8s34.9-2.9 40.8-19.5zM39 289.3c-5 1.5-9.8 4.2-13.7 8.2c-4 4-6.7 8.8-8.1 14c-.3 1.2-.6 2.5-.8 3.8c-.3 1.7-.4 3.4-.4 5.1V432c0 17.7 14.3 32 32 32s32-14.3 32-32V396.9l17.6 17.5 0 0c87.5 87.4 229.3 87.4 316.7 0c24.4-24.4 42.1-53.1 52.9-83.7c5.9-16.7-2.9-34.9-19.5-40.8s-34.9 2.9-40.8 19.5c-7.7 21.8-20.2 42.3-37.8 59.8c-62.5 62.5-163.8 62.5-226.3 0l-.1-.1L125.6 352H160c17.7 0 32-14.3 32-32s-14.3-32-32-32H48.4c-1.6 0-3.2 .1-4.8 .3s-3.1 .5-4.6 1z"/>
+                </svg>
+            </button>
             <?php if($filters): ?>
-                <a href="<?= strtok($currentURL, '?');?>" id="removeFilter" class="transition-all duration-500 hover:scale-110 hover:opacity-75 tooltip" title="Clear Filters">
+                <a href="<?= strtok($currentURL, '?');?>" id="removeFilter" class="p-2 transition-all duration-500 hover:scale-110 hover:opacity-75 tooltip" title="Clear Filters">
                     <svg class="h-7 fill-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                         <path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c-9.4 9.4-9.4 24.6 0 33.9l47 47-47 47c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l47-47 47 47c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-47-47 47-47c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-47 47-47-47c-9.4-9.4-24.6-9.4-33.9 0z"/>
                     </svg>
@@ -45,30 +78,39 @@ $totalResultsCount = $results["count"];
             <?php endif;?>
         </div>
     </div>
+</div>
 
+<?php if($totalResultsCount) : ?>
     <div class="grow w-full flex flex-col gap-2">
         <table id="resultsTable">
             <thead>
                 <tr>
                     <th>
-                        <button class="flex gap-1.5 items-center">
+                        <a href="<?= updateQueryString(["sp" => "", "sd" => (($filters['sd'] ?? "desc") == "desc" || $filters['sd'] == "" ? "asc" : "")]);?>" class="ignore-default flex gap-1.5 items-center">
                             <span>Date</span>
-                            <svg class="h-4 fill-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                                <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM385 231c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-71-71V376c0 13.3-10.7 24-24 24s-24-10.7-24-24V193.9l-71 71c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L239 119c9.4-9.4 24.6-9.4 33.9 0L385 231z"/>
-                            </svg>
-                        </button>
+                            <?php if(!isset($filters['sp']) || $filters['sp'] == "") : ?>
+                                <svg class="h-4 fill-dark <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                                    <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM385 231c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-71-71V376c0 13.3-10.7 24-24 24s-24-10.7-24-24V193.9l-71 71c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L239 119c9.4-9.4 24.6-9.4 33.9 0L385 231z"/>
+                                </svg>
+                            <?php endif;?>
+                        </a>
                     </th>
                     <th>
-                        <button class="flex gap-1.5 items-center">
+                        <a href="<?= updateQueryString(["sp" => "firstName", "sd" => (($filters['sd'] ?? "desc") == "desc" || ($filters['sd'] ?? "desc") == "" ? "asc" : "")]);?>" class="ignore-default flex gap-1.5 items-center">
                             <span>Name</span>
-                        </button>
+                            <?php if(isset($filters['sp']) && $filters['sp'] == "firstName") : ?>
+                                <svg class="h-4 fill-dark <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                                    <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM385 231c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-71-71V376c0 13.3-10.7 24-24 24s-24-10.7-24-24V193.9l-71 71c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L239 119c9.4-9.4 24.6-9.4 33.9 0L385 231z"/>
+                                </svg>
+                            <?php endif;?>
+                        </a>
                     </th>
-                    <th>Assay</th>
-                    <th>Result</th>
+                    <th class="hidden xs:table-cell">Assay</th>
+                    <th class="hidden sm:table-cell">Result</th>
                     <th></th>
                 </tr>
             </thead>
-    
+
             <tbody>
                 <?php foreach($resultItems as $result) : ?>
                     <?php // We need to parse the result sensibly
@@ -78,8 +120,8 @@ $totalResultsCount = $results["count"];
                     <tr id="result<?= $result['id'];?>" class="result">
                         <td><?= (new DateTime($result['testcompletetimestamp']))->format($hospitalInfoArray['date_format']);?></td>
                         <td><?= $result['firstName'];?> <?= $result['lastName'];?></td>
-                        <td><?= $result['product'];?></td>
-                        <td class="text-elipses"><?= truncate($result['result'], 30);?></td>
+                        <td class="hidden xs:table-cell"><?= $result['product'];?></td>
+                        <td class="text-elipses hidden sm:table-cell"><?= truncate($result['result'], 30);?></td>
                         <td>
                             <div class="h-full flex items-center gap-1.5 justify-end">
                                 <!-- Statuses and chevron -->
@@ -98,7 +140,7 @@ $totalResultsCount = $results["count"];
                                 ;?>
                                     <div class="status-indicator active tooltip" title="Sent to LIMS"></div>
                                 </button>
-                                <button class="relative h-5 w-auto transition-all duration-500 hover:scale-110 tooltip" title="View Details">
+                                <button class="!hidden xs:!block relative h-5 w-auto transition-all duration-500 hover:scale-110 tooltip" title="View Details">
                                     <svg class="h-5 fill-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
                                         <path d="M288 80c-65.2 0-118.8 29.6-159.9 67.7C89.6 183.5 63 226 49.4 256c13.6 30 40.2 72.5 78.6 108.3C169.2 402.4 222.8 432 288 432s118.8-29.6 159.9-67.7C486.4 328.5 513 286 526.6 256c-13.6-30-40.2-72.5-78.6-108.3C406.8 109.6 353.2 80 288 80zM95.4 112.6C142.5 68.8 207.2 32 288 32s145.5 36.8 192.6 80.6c46.8 43.5 78.1 95.4 93 131.1c3.3 7.9 3.3 16.7 0 24.6c-14.9 35.7-46.2 87.7-93 131.1C433.5 443.2 368.8 480 288 480s-145.5-36.8-192.6-80.6C48.6 356 17.3 304 2.5 268.3c-3.3-7.9-3.3-16.7 0-24.6C17.3 208 48.6 156 95.4 112.6zM288 336c44.2 0 80-35.8 80-80s-35.8-80-80-80c-.7 0-1.3 0-2 0c1.3 5.1 2 10.5 2 16c0 35.3-28.7 64-64 64c-5.5 0-10.9-.7-16-2c0 .7 0 1.3 0 2c0 44.2 35.8 80 80 80zm0-208a128 128 0 1 1 0 256 128 128 0 1 1 0-256z"/>
                                     </svg>
@@ -110,72 +152,85 @@ $totalResultsCount = $results["count"];
             </tbody>
         </table>
     </div>
-    <div class="w-full rounded-xl bg-tirtiary/50 p-4 flex items-center justify-center">
-        <h1 class="mb-0">THERE WILL BE PAGINATION</h1>
+<?php // No results found
+else : ?>
+    <div class="grow w-full flex items-center justify-center">
+        <div class="flex justify-center items-center p-8 rounded-lg bg-white max-w-3xl">
+            <h2>No results found. Please refine your search.</h2>
+        </div>
+    </div>
+<?php endif;
+
+// Pagination
+if($totalPageCount > 1) : ?>
+
+    <div id="pagination">
+        <a href="<?= $page == 1 ? "#" : updateQueryString(["p" => $page - 1]);?>" class="<?= $page == 1 ? "disabled" : "";?>"><</a>
+        <?php if($page - 1 > 1) : ?>
+            <a class="inner-pagination" href="<?= updateQueryString(["p" => 1]);?>">1</a>
+            <svg class="fill-dark inner-pagination h-3.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                <path d="M8 256a56 56 0 1 1 112 0A56 56 0 1 1 8 256zm160 0a56 56 0 1 1 112 0 56 56 0 1 1 -112 0zm216-56a56 56 0 1 1 0 112 56 56 0 1 1 0-112z"/>
+            </svg>
+        <?php endif;
+        for($i = (max($page - 1, 1)); $i <= min($totalPageCount, $page + 1); $i++) : ?>
+            <a class="inner-pagination <?= $page == $i ? "active" : "";?>" href="<?= updateQueryString(["p" => $i]);?>"><?= $i;?></a>
+        <?php endfor;
+        if($page + 1 < $totalPageCount) : ?>
+            <svg class="fill-dark inner-pagination h-3.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                <path d="M8 256a56 56 0 1 1 112 0A56 56 0 1 1 8 256zm160 0a56 56 0 1 1 112 0 56 56 0 1 1 -112 0zm216-56a56 56 0 1 1 0 112 56 56 0 1 1 0-112z"/>
+            </svg>
+            <a class="inner-pagination" href="<?= updateQueryString(["p" => $totalPageCount]);?>"><?= $totalPageCount;?></a>
+        <?php endif;?>
+        <a href="<?= $page == $totalPageCount ? "#" : updateQueryString(["p" => $page + 1]);?>" class="<?= $page == $totalPageCount ? "disabled" : "";?>">></a>
     </div>
 
-    <?php foreach($resultItems as $result) : ?>
-        <?php 
-        try {
-            $dob = (new DateTime($result['dob']))->format($hospitalInfoArray['date_format']);
-            // Further processing with $datetime
-        } catch (Exception $e) {
-            $dob = "Undefined";
-        }    
-        ;?>
-        <div id="result<?= $result['id'];?>Modal" class="result-modal">
-            <div class="result-modal-backdrop">
-                <div class="relative result-details bg-primary shadow-xl shadow-dark flex flex-col rounded-xl max-w-[40rem] max-h-[calc(min(40rem,_90vh))] h-full w-full m-8 p-8 overflow-y-scroll">
-                    <button class="modal-close absolute top-0 right-0 p-4 transition-all duration-500 hover:scale-110">
-                        <svg class="h-8 fill-dark pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
-                            <path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/>
-                        </svg>
-                    </button>
-                    <h2 class="mb-2"><?= (new DateTime($result['testcompletetimestamp']))->format($hospitalInfoArray['date_format']);?> - <?= $result['firstName'];?> <?= $result['lastName'];?></h2>
-                    <table class="result-explosion">
-                        <tr>
-                            <td>Patient ID</td>
-                            <td><?= $result['patientId'];?></td>
-                        </tr>
-                        <tr>
-                            <td>Name</td>
-                            <td><?= $result['firstName'];?> <?= $result['lastName'];?></td>
-                        </tr>
-                        <tr>
-                            <td>Results</td>
-                            <td><?= $result['result'];?></td>
-                        </tr>
-                        <tr>
-                            <td>Date of Birth</td>
-                            <td><?= $dob;?></td>
-                        </tr>
-                        <tr>
-                            <td>Gender</td>
-                            <td><?= $result['patientSex'];?></td>
-                        </tr>
-                        <tr>
-                            <td>Sample Date</td>
-                            <td><?= $result['patientId'];?></td>
-                        </tr>
-                        <tr>
-                            <td>Operator</td>
-                            <td><?= $result['patientId'];?></td>
-                        </tr>
-                        <tr>
-                            <td>Test Started</td>
-                            <td><?= $result['patientId'];?></td>
-                        </tr>
-                        <tr>
-                            <td>Test Finished</td>
-                            <td><?= $result['patientId'];?></td>
-                        </tr>
-                    </table>
+<?php endif;
 
-                    <!-- Graph! -->
-                    <div class="w-full h-16 bg-tirtiary/50 p-4 rounded-xl flex items-center justify-center">
-                        <h3 class="mb-0 text-dark">THERE WILL BE A GRAPH</h3>
-                    </div>
+// Results modals
+foreach($resultItems as $result) : ?>
+    <?php 
+    $positive = (strpos(strtolower($result['result']), "positive"));
+    try {
+        $dob = (new DateTime($result['dob']))->format($hospitalInfoArray['date_format']);
+        // Further processing with $datetime
+    } catch (Exception $e) {
+        $dob = "Undefined";
+    }    
+    ;?>
+    <div id="result<?= $result['id'];?>Modal" class="result-modal">
+        <div class="result-modal-backdrop">
+            <div class="relative result-details bg-primary shadow-xl shadow-dark flex flex-col rounded-xl max-w-[40rem] max-h-[calc(min(40rem,_90vh))] h-full w-full m-8 p-8 overflow-y-scroll">
+                <button class="modal-close absolute top-0 right-0 p-4 transition-all duration-500 hover:scale-110">
+                    <svg class="h-8 fill-dark pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
+                        <path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/>
+                    </svg>
+                </button>
+                <h2 class="text-center sm:text-start mx-12 sm:mx-0 sm:mr-12 mb-2.5 sm:mb-1"><?= (new DateTime($result['testcompletetimestamp']))->format($hospitalInfoArray['date_format']);?>: <?= $result['firstName'];?> <?= $result['lastName'];?></h2>
+                <div class="bg-gradient-to-r from-transparent via-grey/75 sm:from-grey/75 to-transparent w-full mb-3 pb-0.5 rounded-full"></div>
+
+                <p class="result-details <?= $positive ? "alert" : "";?>"><?= $result['product'];?>: <?= $positive ? "Positive" : "Negative";?></p>
+
+                <table class="result-explosion">
+                    <?php foreach($listableFields as $keyset => $value) :
+                        $keys = explode(" ", $keyset);
+                        if($result[$keys[0]]) : ?>
+                            <tr>
+                                <td><?= $value;?></td>
+                                <td>
+                                    <?php foreach($keys as $key) : ?>
+                                        <?= $result[$key];?> 
+                                    <?php endforeach;?>
+                                </td>   
+                            </tr>
+                        <?php endif;
+                    endforeach;?>
+                </table>
+
+                <!-- Graph! -->
+                <div class="w-full h-16 bg-tirtiary/50 p-4 rounded-xl flex items-center justify-center">
+                    <h3 class="mb-0 text-dark">THERE WILL BE A GRAPH</h3>
                 </div>
             </div>
         </div>
-    <?php endforeach;?>
+    </div>
+<?php endforeach;?>

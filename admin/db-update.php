@@ -134,6 +134,7 @@ function runUpdates($version, $dbVersion) {
         $resultsTableExists = $cainDB->select("SHOW TABLES LIKE 'results';");
         if($resultsTableExists) {
             $change[] = "ALTER TABLE results MODIFY flag int;";
+            $change[] = "ALTER TABLE results MODIFY post_timestamp BIGINT;";
         }
 
         // Adjustments to the users table
@@ -328,7 +329,7 @@ function runUpdates($version, $dbVersion) {
             $change[] = "CREATE TABLE qc_results (
                 id INT PRIMARY KEY AUTO_INCREMENT,
                 lot_id INT,
-                `timestamp` INT,
+                `timestamp` BIGINT,
                 `operator_id` varchar(50),
                 `instrument_id` INT,
                 `result` TINYINT,

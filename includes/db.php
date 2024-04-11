@@ -1,5 +1,4 @@
 <?php
-include 'db-config.php';
 
 class DB {
     public $conn;

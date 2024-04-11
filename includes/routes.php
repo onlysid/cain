@@ -73,7 +73,6 @@ $routes = [
     '/' => new PageRoute('views/dashboard.php', 'All Results'), // Main dashboard
     '/assay-modules' => new PageRoute('views/assay-modules.php', 'Assay Modules'), // Assay Modules List
     '/users' => new PageRoute('views/users.php', 'Users'), // User config
-    '/result-config' => new PageRoute('views/result-config.php', 'Result Configuration'), // Result config
     '/qc-policy' => new PageRoute('views/qc-policy.php', 'Quality Control Policy'), // QC Policy config
     '/logs' => new PageRoute('views/logs.php', 'Logs', true, ADMINISTRATIVE_CLINICIAN), // List of all logs
     '/versions' => new PageRoute('views/versions.php', 'Versions', true), // Versions & About

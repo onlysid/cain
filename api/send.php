@@ -104,7 +104,7 @@ $dbData = [
     "reserve2" => $data['reserve2'] ?? "",
     "sampleCollected" => $data['sampleCollected'] ?? "",
     "sampleReceived" => $data['sampleReceived'] ?? "",
-    "flag" => $data['flag'] ?? null,
+    "flag" => $data['flag'] ?? 100,
     "post_timestamp" => time(),
 ];
 

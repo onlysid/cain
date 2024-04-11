@@ -144,8 +144,8 @@ function getResults($params) {
 
     // Get any query params
     $searchFilter = isset($params['s']) ? $params['s'] : null;
-    $sortDirection = isset($params['sd']) ? "ASC" : "DESC";
-    $sortParam = isset($params['sp']) ? $params['sp'] : "testcompletetimestamp";
+    $sortDirection = isset($params['sd']) && ($params['sd'] != "" || $params['sd'] == "asc") ? "ASC" : "DESC";
+    $sortParam = isset($params['sp']) && $params['sp'] != "" ? $params['sp'] : "testcompletetimestamp";
     $pageNumber = isset($params['p']) ? $params['p'] : 1;
     $itemsPerPage = isset($params['ipp']) ? $params['ipp'] : 10;
     $offset = ($pageNumber - 1) * $itemsPerPage;
@@ -155,7 +155,7 @@ function getResults($params) {
     $queryParams = [];
     if ($searchFilter !== null) {
         $searchTerms = explode(" ", $searchFilter);
-        $columns = ['firstName', 'lastName', 'hospitalId', 'nhsNumber', 'clinicId', 'operatorId', 'patientId', 'sampleId', 'trackingCode', 'patientLocation']; // Replace with your actual column names
+        $columns = ['firstName', 'lastName', 'hospitalId', 'nhsNumber', 'clinicId', 'operatorId', 'patientId', 'sampleId', 'trackingCode', 'patientLocation', 'result', 'product']; // Replace with your actual column names
 
         $i = 0;
         foreach($searchTerms as $filterString) {
@@ -175,8 +175,10 @@ function getResults($params) {
 
     // Build the SQL query
     $query = "SELECT * FROM results ";
+    $countQuery = "SELECT COUNT(*) FROM results ";
     if (!empty($searchConditions)) {
         $query .= "WHERE $searchConditions ";
+        $countQuery .= "WHERE $searchConditions ";
     }
     $query .= "ORDER BY $sortParam $sortDirection ";
 
@@ -187,20 +189,55 @@ function getResults($params) {
     $results = $cainDB->selectAll($query, $queryParams);
 
     // Get the count of all results
-    $count = $cainDB->select("SELECT COUNT(*) FROM results")["COUNT(*)"];
+    $count = $cainDB->select($countQuery, $queryParams);
 
     // Get the relevant results
-    return ["results" => $results, "count" => $count];
+    return ["results" => $results, "count" => $count['COUNT(*)']];
 }
 
 function truncate($string, $length = 100, $append = "&hellip;") {
     $string = trim($string);
   
     if(strlen($string) > $length) {
-      $string = wordwrap($string, $length);
-      $string = explode("\n", $string, 2);
-      $string = $string[0] . $append;
+        $string = wordwrap($string, $length);
+        $string = explode("\n", $string, 2);
+        $string = $string[0] . $append;
     }
   
     return $string;
-  }
+}
+
+function updateQueryString($keyValues, $resetPage = false) {
+    // Get the current URL
+    $currentUrl = $_SERVER['REQUEST_URI'];
+
+    // Parse the URL to separate the path and query string
+    $parts = parse_url($currentUrl);
+
+    // Parse the query string into an associative array
+    $query = [];
+    if (isset($parts['query'])) {
+        parse_str($parts['query'], $query);
+    }
+
+    // Update or add the specified key-value pairs
+    foreach ($keyValues as $key => $value) {
+        $query[$key] = $value;
+    }
+
+    // Reset the page if requested
+    if ($resetPage && isset($query['p'])) {
+        unset($query['p']);
+    }
+
+    // Rebuild the query string
+    $queryString = http_build_query($query);
+
+    // Reassemble the URL
+    $newUrl = $parts['path'];
+    if (!empty($queryString)) {
+        $newUrl .= '?' . $queryString;
+    }
+
+    return $newUrl;
+}

@@ -12,6 +12,16 @@ Init!
 
 ### What's happened?
 
+#### 11/04/2024
+
+Table progress
+
+-   Table sorting and pagination now works.
+-   Added flags = 100 for results by default.
+-   Timestamps are now bigints.
+-   Config file gets automatically generated from the db-config-sample.php file.
+-   Dummy default text in many pages has been added.
+
 #### 10/04/2024
 
 Table progress

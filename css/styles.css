@@ -122,6 +122,10 @@ a:not(.btn), .a-tag {
     @apply text-secondary hover:text-tirtiary transition-all duration-500;
 }
 
+a.ignore-default {
+    @apply text-sm sm:text-base text-dark hover:text-dark;
+}
+
 @property --bgCol1 {
     syntax: '<color>';
     initial-value: #919090;
@@ -297,8 +301,36 @@ table.result-explosion td {
     @apply py-2;
 }
 
+.result-details {
+    @apply mb-3;
+}
+
+.result-details.alert {
+    @apply text-red-500;
+}
+
 .table-button {
     @apply transition-all duration-500 hover:scale-110;
+}
+
+#pagination {
+    @apply w-full mt-2 flex flex-row justify-center items-center gap-1;
+}
+
+#pagination a {
+    @apply flex justify-center items-center bg-dark text-white border-white border-2 rounded-md px-3 py-1 shadow-lg transition-all duration-500 hover:scale-105;
+}
+
+#pagination a.active {
+    @apply bg-blue-200 text-dark pointer-events-none;
+}
+
+#pagination a.disabled {
+    @apply bg-grey/50 cursor-not-allowed;
+}
+
+#pagination .inner-pagination:not(.active) {
+    @apply hidden xs:block;
 }
 
 /* Loading button */
