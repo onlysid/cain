@@ -12,6 +12,15 @@ Init!
 
 ### What's happened?
 
+#### 15/04/2024
+
+Small adjustments
+
+-   Settings adjustments (password required, session timeout)
+-   Icon / UI adjustments (login form, logout touchable area)
+-   About section completed
+-   Warning section added (db/result count warnings)
+
 #### 11/04/2024
 
 Table progress

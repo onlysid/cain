@@ -155,3 +155,32 @@ if(resultsTable) {
 
     })
 }
+
+// Within user settings, we need to display the modal depending on the checked state of the time user out field
+var userTimeoutCheckbox = document.getElementById('userTimeout');
+var userTimeoutInput = document.getElementById('sessionTimeout');
+var userTimeoutAmount = document.getElementById('userTimeoutAmount');
+
+if(userTimeoutCheckbox && userTimeoutInput && userTimeoutAmount) {
+    userTimeoutCheckbox.addEventListener('change', () => {
+        console.log(userTimeoutCheckbox.checked);
+        if(userTimeoutCheckbox.checked) {
+            userTimeoutAmount.classList.add('active');
+            userTimeoutInput.value = 30;
+        } else {
+            userTimeoutAmount.classList.remove('active');
+            userTimeoutInput.value = 0;
+        }
+    });
+
+    userTimeoutInput.addEventListener('change', () => {
+        console.log(userTimeoutInput.value);
+        if(userTimeoutInput.value == 0) {
+            userTimeoutCheckbox.checked = false;
+            userTimeoutAmount.classList.add('active');
+        } else {
+            userTimeoutCheckbox.checked = true;
+            userTimeoutAmount.classList.remove('active');
+        }
+    });
+}

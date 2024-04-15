@@ -38,12 +38,18 @@ $listableFields = [
 
 unset($filters['p']);
 
+foreach ($filters as $key => $value) {
+    if ($value === "") {
+        unset($filters[$key]);
+    }
+}
+
 ?>
 
 <h1 class="mb-2">Results</h1>
 
 <div id="tableInfoWrapper" class="w-full flex justify-between items-center">
-    <p class="hidden sm:block text-base md:text-lg"><?= $resultNumberText;?></p>
+    <p class="results-number"><?= $resultNumberText;?></p>
     <div id="filterSearchWrapper" class="flex items-center flex-col-reverse sm:flex-row w-full sm:w-auto justify-end">
         <form action="/" method="GET" id="searchForm" class="w-full sm:w-auto">
             <div class="form-fields">
@@ -107,8 +113,26 @@ unset($filters['p']);
                             <?php endif;?>
                         </a>
                     </th>
-                    <th class="hidden xs:table-cell">Assay</th>
-                    <th class="hidden sm:table-cell">Result</th>
+                    <th class="hidden xs:table-cell">
+                        <a href="<?= updateQueryString(["sp" => "product", "sd" => (($filters['sd'] ?? "desc") == "desc" || ($filters['sd'] ?? "desc") == "" ? "asc" : "")]);?>" class="ignore-default flex gap-1.5 items-center">
+                            <span>Assay</span>
+                            <?php if(isset($filters['sp']) && $filters['sp'] == "product") : ?>
+                                <svg class="h-4 fill-dark <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                                    <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM385 231c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-71-71V376c0 13.3-10.7 24-24 24s-24-10.7-24-24V193.9l-71 71c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L239 119c9.4-9.4 24.6-9.4 33.9 0L385 231z"/>
+                                </svg>
+                            <?php endif;?>
+                        </a>
+                    </th>
+                    <th class="hidden sm:table-cell">
+                        <a href="<?= updateQueryString(["sp" => "result", "sd" => (($filters['sd'] ?? "desc") == "desc" || ($filters['sd'] ?? "desc") == "" ? "asc" : "")]);?>" class="ignore-default flex gap-1.5 items-center">
+                            <span>Result</span>
+                            <?php if(isset($filters['sp']) && $filters['sp'] == "result") : ?>
+                                <svg class="h-4 fill-dark <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                                    <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM385 231c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-71-71V376c0 13.3-10.7 24-24 24s-24-10.7-24-24V193.9l-71 71c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L239 119c9.4-9.4 24.6-9.4 33.9 0L385 231z"/>
+                                </svg>
+                            <?php endif;?>
+                        </a>
+                    </th>
                     <th></th>
                 </tr>
             </thead>

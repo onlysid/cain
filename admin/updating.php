@@ -11,10 +11,6 @@ $areWeUpdating = checkForUpdates($version);
 if($areWeUpdating === true || $areWeUpdating === 100) : ?>
     <script src="/js/updateCheck.js" />
 <?php // Otherwise, we have some kind of corruption. Prompt the user to retry.
-elseif($areWeUpdating === 200) : ?>
-    <form action="process" method="POST" class="fixed bottom-0 z-50 bg-red-500 w-full flex justify-center py-5 px-4">
-        <input type="hidden" name="action" value="reset-db-version">
-        <input type="hidden" name="return-path" value="<?= $currentURL;?>">
-        <p class="text-white text-center">Warning: Database may be corrupted. Please speak with an admin or <button type="submit" class="!text-blue-100 underline hover:!text-green-100">try safely resetting (click here).</button></p>
-    </form>
-<?php endif;?>
+elseif($areWeUpdating === 200) :
+    SESSION::setWarning("db-error");
+endif; ?>

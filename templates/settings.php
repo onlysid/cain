@@ -7,7 +7,7 @@ $settings = array_column($hospitalInfo, 'value', 'name');
 // Page Setup ?>
 
 <div id="settings">
-    <h1 class="text-white text-center md:-mt-3">Cain Settings</h1>
+    <h1 class="text-white text-center md:-mt-3">Samba Hub Settings</h1>
     <div class="bg-primary-dark rounded-2xl h-full shadow-2xl shadow-blue-200/50 flex relative justify-between overflow-hidden">
         <a id="settingsBackLink" href="/">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">

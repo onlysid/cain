@@ -41,7 +41,7 @@ try {
     if($operatorId) {
         if($operatorExists) {
             $userType = $cainDB->getOperatorInfo($operatorId)['user_type'];
-            if($userType == 1 && !$passwordRequired) {
+            if(($passwordRequired < 2 && $userType == CLINICIAN) || (($passwordRequired == 0 || $passwordRequired == 2) && $userType == ADMINISTRATIVE_CLINICIAN)) {
                 $result = true;
             }
         } else {

@@ -270,7 +270,7 @@ function runUpdates($version, $dbVersion) {
                 ('comms_status', '0'),
                 ('patient_id', '1'),
                 ('data_expiration', '365'),
-                ('password_required', '0'),
+                ('password_required', '3'),
                 ('session_expiration', '30'),
                 ('test_mode', '0'),
                 ('field_behaviour', '0'),

@@ -11,7 +11,13 @@
 
 <?php // Some initialisation
 $showMenu = $route->showMenu;
-// var_dump($_SESSION);
+
+// Check to see if we are using too many results
+$resultsNum = checkResultCapacity();
+
+// Show warnings
+$warnings = Session::getWarnings();
+var_dump($_SESSION);
 ?>
 
 <body>
@@ -64,11 +70,29 @@ $showMenu = $route->showMenu;
             </div>
         <?php endif;
     
+        // Check for updates
+        require_once BASE_DIR . '/admin/updating.php';
+
+        if(SESSION::getWarnings()) : ?>
+            <div id="messageBoard" class="bg-red-500 w-full">
+                <div class="py-2 mx-auto contatiner px-8 text-center text-white flex justify-center items-center">
+                    <?php if(in_array('db-error', $warnings)) : ?>
+                        <form action="process" method="POST">
+                            <input type="hidden" name="action" value="reset-db-version">
+                            <input type="hidden" name="return-path" value="<?= $currentURL;?>">
+                            <p class="text-white text-center font-bold">Warning: Database may be corrupted. Please speak with an admin or <button type="submit" class="!text-blue-100 underline hover:!text-green-100">try safely resetting (click here).</button></p>
+                        </form>
+                    <?php elseif(in_array('max-results-reached', $warnings)) : ?>
+                        <p class="text-white text-center font-bold">Warning: The system has saved <?= $resultsNum;?>/<?= MAX_RESULTS;?> results. Please backup and clear results to ensure continued safe operation of the database.</p>
+                    <?php endif;?>
+                </div>
+            </div>
+        <?php endif;
+
         if($showMenu) {
             include 'templates/footer.php';
         }?>
     
-        <?php require_once BASE_DIR . '/admin/updating.php';?>
     </main>
 
 </body>
@@ -80,4 +104,5 @@ $showMenu = $route->showMenu;
 
 <?php // Housekeeping
 $form->clearErrors();
-Session::clearNotices();?>
+Session::clearNotices();
+Session::clearWarnings();?>

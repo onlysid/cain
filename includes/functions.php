@@ -4,7 +4,9 @@
 function isPasswordRequired() {
     global $cainDB;
     $setting = $cainDB->select("SELECT `value` FROM settings WHERE `name` = 'password_required';");
-    return $setting['value'] == 1 ? true : false;
+
+    // 0 = Not Required, 1 = Required only for Admins, 2 = Required only for Non-Admins, 3 = Required Globally
+    return intval($setting['value']);
 }
 
 // Function to check if a user exists in the local database
@@ -70,6 +72,12 @@ function userInfo() {
 function systemInfo() {
     global $cainDB;
     return $cainDB->selectAll("SELECT * FROM settings;");
+}
+
+// Retrieve LIMS connectivity status from db
+function limsConnectivity() {
+    global $cainDB;
+    return $cainDB->select("SELECT value FROM settings WHERE `name` = 'comms_status';");
 }
 
 function updateInstrument($instrumentData) {
@@ -240,4 +248,16 @@ function updateQueryString($keyValues, $resetPage = false) {
     }
 
     return $newUrl;
+}
+
+function checkResultCapacity() {
+    global $cainDB;
+
+    $resultsCount = $cainDB->select("SELECT COUNT(*) FROM results;")['COUNT(*)'];
+
+    if($resultsCount >= floor(MAX_RESULTS * 0.9)) {
+        Session::setWarning("max-results-reached");
+    }
+
+    return $resultsCount;
 }

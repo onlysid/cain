@@ -24,8 +24,6 @@ function getInstrumentDetails() {
             if (xhr.status === 200) {
                 // The response code/message
                 var data = JSON.parse(xhr.responseText);
-
-                console.log(data);
                 
                 updateTable(data);
             } else {

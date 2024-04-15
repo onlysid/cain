@@ -13,8 +13,6 @@ foreach ($hospitalInfo as $setting) {
         $officeName = $setting['value'];
     }
 }
-
-// var_dump($_SESSION);
 ?>
 
 <div id="footerWrapper">
@@ -42,17 +40,21 @@ foreach ($hospitalInfo as $setting) {
                 </div>
             </div>
 
-            <div id="userInfo" class="px-3 logout-trigger cursor-pointer flex flex-col md:items-start justify-center py-1 overflow-hidden truncate">
+            <div id="userInfo" class="px-3 cursor-pointer flex flex-col md:items-start justify-center py-1 overflow-hidden truncate">
                 <?php if($currentUser) : ?>
-                    <p class="font-bold text-white text-right xl:text-xl text-lg truncate overflow-hidden"><?= ucfirst($currentUser['first_name'][0] ?? "") . " " . ucfirst($currentUser['last_name'] ?? "");?></p>
+                    <p class="logout-trigger font-bold text-white text-right xl:text-xl text-lg truncate overflow-hidden"><?= $currentUser['first_name'] ? (ucfirst($currentUser['first_name'] ?? "") . " " . ucfirst($currentUser['last_name'] ?? "")) : ucfirst($currentUser['operator_id']);?></p>
                 <?php endif;?>
                 <p class="text-white font-medium text-base xl:text-lg truncate overflow-hidden"><?= $hospitalName;?> - <?= $officeName;?></p>
             </div>
         </div>
 
         <div class="md:flex items-center gap-4 hidden">
-            <div class="bg-primary rounded-xl w-64 h-12 flex justify-center items-center">
-                <p>Cain Medical</p>
+            <div class="bg-primary rounded-xl flex justify-center items-center gap-4 py-3 pl-6 pr-8">
+                <p class="text-lg">LIMS:</p>
+                <div id="limsStatus">
+                    <div class="icon animated-icon"></div>
+                    <div class="icon tooltip tooltip-alt" title="Connected"></div>
+                </div>
             </div>
         </div>
 
@@ -79,3 +81,5 @@ foreach ($hospitalInfo as $setting) {
         </div>
     </div>
 </div>
+
+<script type="module" src="/js/limsCheck.js"></script>

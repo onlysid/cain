@@ -32,3 +32,6 @@ define("GUEST", 0);
 
 // LIMS Timeout (how long until LIMS times out) (s)
 define("LIMS_TIMEOUT", 30);
+
+// Some constants
+define("MAX_RESULTS", 40);

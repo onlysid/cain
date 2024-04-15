@@ -8,6 +8,8 @@ class Session {
         $expirySetting = $cainDB->select("SELECT value FROM settings WHERE name = 'session_expiration';");
         if ($expirySetting) {
             self::$sessionExpiry = (int) $expirySetting['value'];
+        } else {
+            $sessionExpiry = false;
         }
         $this->start();
     }
@@ -57,6 +59,24 @@ class Session {
         self::remove('notices');
     }
 
+    // Set session warning
+    public static function setWarning($message) {
+        if (!self::exists('warnings')) {
+            self::set('warnings', []);
+        }
+        $_SESSION['warnings'][] = $message;
+    }
+
+    // Get session warnings
+    public static function getWarnings() {
+        return self::get('warnings') ?? [];
+    }
+
+    // Clear session warnings
+    public static function clearWarnings() {
+        self::remove('warnings');
+    }
+
     // Check if session variable exists
     public static function exists($key) {
         return isset($_SESSION[$key]);
@@ -80,7 +100,7 @@ class Session {
 
     // Check session expiry
     private static function checkExpiry() {
-        if (isset($_SESSION['last-activity']) && time() - $_SESSION['last-activity'] > self::$sessionExpiry * 60) {
+        if (isset($_SESSION['last-activity']) && self::$sessionExpiry && time() - $_SESSION['last-activity'] > self::$sessionExpiry * 60) {
             // Session expired, destroy it and go to login page
             self::destroy();
         } else {
@@ -102,13 +122,13 @@ class Session {
             $operatorInfo = $cainDB->select("SELECT * FROM `users` WHERE `operator_id` = :operatorId;", [':operatorId' => $operatorId]);
 
             // If the operator has been deactivated, show a message to say so
-            if($operatorInfo['status'] == 0) {
+            if($operatorInfo['status'] == '0') {
                 self::setNotice('This operator has been deactivated.');
                 return false;
             }
 
             // If we don't need a password generally and the operator is a clinician
-            if(!$passwordRequired && $operatorInfo['user_type'] === CLINICIAN) {
+            if(($passwordRequired < 2 && $operatorInfo['user_type'] == CLINICIAN) || (($passwordRequired == 0 || $passwordRequired == 2) && $operatorInfo['user_type'] == ADMINISTRATIVE_CLINICIAN)) {
                 return true;
             }
 

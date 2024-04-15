@@ -144,6 +144,11 @@ class Process {
             $errors['firstName'] = 'First name is required.';
         }
 
+        // Password validation
+        if (!preg_match('/^(?=.*[A-Z].*[A-Z])(?=.*[a-z].*[a-z])(?=.*\d.*\d)(?=.*[^\w\d\s]).{8,}$/', $password)) {
+            $errors['password'] = 'Password must contain at least 8 characters, 2 uppercase letters, 2 lowercase letters, 2 numbers, and 2 symbols.';
+        }
+        
         // If there are errors, set them in the form object
         if (!empty($errors)) {
             foreach ($errors as $field => $error) {
@@ -198,8 +203,6 @@ class Process {
         $officeName = $_POST['officeName'];
         $hospitalLocation = $_POST['hospitalLocation'];
         $dateFormat = $_POST['dateFormat'];
-        $testMode = $_POST['testMode'] == "on" ? 1 : 0;
-        $appMode = $_POST['appMode'] == "on" ? 1 : 0;
 
         // Prepare and execute the query to update all settings in one go
         try {
@@ -209,8 +212,6 @@ class Process {
                 WHEN 'office_name' THEN :officeName
                 WHEN 'hospital_location' THEN :hospitalLocation
                 WHEN 'date_format' THEN :dateFormat
-                WHEN 'test_mode' THEN :testMode
-                WHEN 'app_mode' THEN :appMode
                 ELSE `value`
             END;";
             
@@ -219,9 +220,7 @@ class Process {
                 ':hospitalName' => $hospitalName,
                 ':officeName' => $officeName,
                 ':hospitalLocation' => $hospitalLocation,
-                ':dateFormat' => $dateFormat,
-                ':testMode' => $testMode,
-                ':appMode' => $appMode
+                ':dateFormat' => $dateFormat
             ];
 
             // Execute the query
@@ -339,6 +338,7 @@ class Process {
         // Retrieve form data
         $sessionTimeout = $_POST['sessionTimeout'];
         $passwordRequired = $_POST['passwordRequired'] == "on" ? 1 : 0;
+        $adminPasswordRequired = $_POST['adminPasswordRequired'] == "on" ? 1 : 0;
 
         // Prepare and execute the query to update all settings in one go
         try {
@@ -352,7 +352,7 @@ class Process {
             // Bind parameters
             $params = [
                 ':sessionTimeout' => $sessionTimeout,
-                ':passwordRequired' => $passwordRequired,
+                ':passwordRequired' => $passwordRequired * 2 + $adminPasswordRequired,
             ];
 
             // Execute the query
@@ -382,6 +382,8 @@ class Process {
         $hl7Port = $_POST['hl7Port'];
         $hl7ServerName = $_POST['hl7ServerName'];
         $patientId = ($_POST['patientId'] ?? null) == "on" ? 1 : 0;
+        $testMode = $_POST['testMode'] == "on" ? 1 : 0;
+        $appMode = $_POST['appMode'] == "on" ? 1 : 0;
 
         // Prepare and execute the query to update all settings in one go
         try {
@@ -394,6 +396,8 @@ class Process {
                 WHEN 'hly_server_port' THEN :hl7Port
                 WHEN 'hl7_server_dest' THEN :hl7ServerName
                 WHEN 'patient_id' THEN :patientId
+                WHEN 'test_mode' THEN :testMode
+                WHEN 'app_mode' THEN :appMode
                 ELSE `value`
             END;";
             
@@ -406,6 +410,8 @@ class Process {
                 ':hl7Port' => $hl7Port,
                 ':hl7ServerName' => $hl7ServerName,
                 ':patientId' => $patientId,
+                ':testMode' => $testMode,
+                ':appMode' => $appMode
             ];
 
             // Execute the query

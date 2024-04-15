@@ -412,8 +412,40 @@ label:not(.toggle) {
     content: attr(title);    
 }
 
+.tooltip-alt::before {
+    @apply bg-black;
+}
+
 .tooltip:hover::before {
     @apply opacity-100 bottom-full scale-90;
+}
+
+#limsStatus {
+    @apply relative flex justify-center items-center;
+}
+
+#limsStatus .icon {
+    @apply top-1/2 left-1/2 -translate-y-1/2 -translate-x-1/2 absolute w-4 h-4 rounded-full bg-amber-500;
+}
+
+#limsStatus .icon.animated-icon {
+    @apply w-3.5 h-3.5 animate-ping origin-bottom-right;
+}
+
+#limsStatus.active .icon {
+    @apply bg-green-500;
+}
+
+#limsStatus.inactive .icon {
+    @apply bg-red-500;
+}
+
+#userTimeoutAmount {
+    @apply max-h-[0rem] transition-all duration-500 overflow-hidden opacity-0;
+}
+
+#userTimeoutAmount.active {
+    @apply max-h-[20rem] opacity-100;
 }
 
 .checkbox-wrapper input[type="checkbox"] {
@@ -675,7 +707,7 @@ section.notice svg {
     @apply w-8 h-auto shrink-0 py-1 fill-dark;
 }
 
-section p a {
+section p a, a.alt {
     @apply !text-blue-800 hover:!text-green-800;
 }
 
@@ -726,7 +758,7 @@ section p a {
 
 /* Settings Page */
 #settings {
-    @apply w-full h-full p-4 md:p-8 flex flex-col bg-black/75;
+    @apply w-full h-full p-4 md:p-8 flex flex-col bg-black/75 overflow-hidden;
 }
 
 #settingsWrapper {
