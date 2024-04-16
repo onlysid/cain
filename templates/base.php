@@ -24,8 +24,6 @@ var_dump($_SESSION);
     <div id="php2js" class="hidden" data-lims-timeout="<?= LIMS_TIMEOUT;?>"></div>
     <main>
         <?php // Some debugging goodies
-        // print_r($form->getErrors());
-        // print_r($_SESSION);
         if($showMenu) : ?>
             <div id="menuContentBind" class="flex items-stretch overflow-hidden grow w-full">
                 <div id="desktopMenuWrapper">
@@ -73,7 +71,7 @@ var_dump($_SESSION);
         // Check for updates
         require_once BASE_DIR . '/admin/updating.php';
 
-        if(SESSION::getWarnings()) : ?>
+        if(SESSION::getWarnings() && Session::isLoggedIn()) : ?>
             <div id="messageBoard" class="bg-red-500 w-full">
                 <div class="py-2 mx-auto contatiner px-8 text-center text-white flex justify-center items-center">
                     <?php if(in_array('db-error', $warnings)) : ?>

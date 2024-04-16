@@ -18,7 +18,7 @@ $operators = getOperators();
         <?php foreach($operators as $operator) : ?>
             <tr>
                 <td><?= $operator['operator_id'];?></td>
-                <td><?= $operator['first_name'] ? ucfirst($operator['first_name']) . " " . ucfirst($operator['last_name']) : "Unknown";?></td>
+                <td><?= $operator['first_name'] ? ucfirst($operator['first_name']) . " " . ucfirst($operator['last_name'] ?? "") : "Unknown";?></td>
                 <td></td>
                 <td class="end">
                     <div class="table-controls">
