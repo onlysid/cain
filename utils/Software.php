@@ -26,9 +26,8 @@ class Software {
 
 // Define all items
 $software = [
-    new Software(1, ["Restore Database" => "reset-db-version"], "/changelog"),
+    new Software(1, ["Repair Database" => "reset-db-version"], "/changelog"),
     new Software(2),
     new Software(3),
-    new Software(4, ["Update all intstruments" => "update-instruments"]),
-    new Software(5),
+    new Software(4),
 ];?>

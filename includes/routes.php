@@ -72,10 +72,9 @@ require_once 'utils/PageRoute.php';
 $routes = [
     '/' => new PageRoute('views/dashboard.php', 'All Results'), // Main dashboard
     '/assay-modules' => new PageRoute('views/assay-modules.php', 'Assay Modules'), // Assay Modules List
-    '/users' => new PageRoute('views/users.php', 'Users'), // User config
+    '/users' => new PageRoute('views/users.php', 'Users', true, ADMINISTRATIVE_CLINICIAN), // User config
     '/qc-policy' => new PageRoute('views/qc-policy.php', 'Quality Control Policy'), // QC Policy config
-    '/logs' => new PageRoute('views/logs.php', 'Logs', true, ADMINISTRATIVE_CLINICIAN), // List of all logs
-    '/versions' => new PageRoute('views/versions.php', 'Versions', true), // Versions & About
+    '/lots' => new PageRoute('views/lots.php', 'Lots'), // Versions & About
     '/login' => new PageRoute('auth/login.php', 'Login', false, GUEST), // Login page
     '/blocks' => new PageRoute('views/objects.php', 'Demo', true), // Demo blocks
     '/changelog' => new PageRoute('views/changelog.php', 'Changelog', true), // About this website
@@ -85,13 +84,13 @@ $routes = [
 // Define "settings" routes
 $settingsRoutes = [
     '/settings' => new PageRoute('views/settings/general.php', 'General', false),
-    '/settings/fields' => new PageRoute('views/settings/fields.php', 'Field Selection', false),
-    '/settings/assay-modules' => new PageRoute('views/settings/assay-modules.php', 'Assay Modules', false),
-    '/settings/qc' => new PageRoute('views/settings/qc.php', 'QC Settings', false),
-    '/settings/lots' => new PageRoute('views/settings/lots.php', 'Lot Settings', false),
-    '/settings/users' => new PageRoute('views/settings/users.php', 'User Settings', false),
-    '/settings/network' => new PageRoute('views/settings/network.php', 'Network Settings', false),
-    '/settings/logging' => new PageRoute('views/settings/logging.php', 'Scripts and Logging', false),
+    '/settings/account' => new PageRoute('views/settings/account.php', 'Account Settings', false),
+    '/settings/fields' => new PageRoute('views/settings/fields.php', 'Field Selection', false, ADMINISTRATIVE_CLINICIAN),
+    '/settings/qc' => new PageRoute('views/settings/qc.php', 'QC Settings', false, ADMINISTRATIVE_CLINICIAN),
+    '/settings/users' => new PageRoute('views/settings/users.php', 'User Settings', false, ADMINISTRATIVE_CLINICIAN),
+    '/settings/network' => new PageRoute('views/settings/network.php', 'Network Settings', false, ADMINISTRATIVE_CLINICIAN),
+    '/settings/versions' => new PageRoute('views/settings/versions.php', 'Versions', false, ADMINISTRATIVE_CLINICIAN),
+    '/settings/logs' => new PageRoute('views/settings/logs.php', 'Logs', false, ADMINISTRATIVE_CLINICIAN),
 ];
 
 // Add settings routes to general routes to combine logic

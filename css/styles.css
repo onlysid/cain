@@ -261,10 +261,6 @@ table:not(.result-explosion) tbody tr {
     @apply border-light-grey border cursor-pointer shadow-lg transition-all duration-500 hover:bg-tirtiary/20 text-grey hover:text-black hover:shadow-tirtiary/20;
 }
 
-/* table tbody tr td {
-    @apply lg:px-6 sm:px-4 px-2 py-2 align-middle items-center;
-} */
-
 td .status-indicator {
     @apply h-4 w-4 aspect-square align-middle rounded-full bg-red-500;
 }
@@ -273,16 +269,20 @@ td .status-indicator.active {
     @apply bg-green-500;
 }
 
-td .instrument-table-controls {
-    @apply flex gap-2.5 items-center;
+td .table-controls {
+    @apply flex gap-2.5 items-center justify-end;
 }
 
-td .instrument-table-controls svg  {
-    @apply h-7;
+td .table-controls form {
+    @apply flex flex-row items-center justify-end;
+}
+
+td .table-controls svg  {
+    @apply h-6;
 }
 
 td.end form {
-    @apply items-end
+    @apply items-center w-auto gap-2.5;
 }
 
 table.result-explosion {
@@ -301,6 +301,14 @@ table.result-explosion td {
     @apply py-2;
 }
 
+td .details {
+    @apply !hidden xs:!block relative h-5 w-auto transition-all duration-500 hover:scale-110;
+}
+
+td .details svg {
+    @apply h-5 fill-dark;
+}
+
 .result-details {
     @apply mb-3;
 }
@@ -311,6 +319,35 @@ table.result-explosion td {
 
 .table-button {
     @apply transition-all duration-500 hover:scale-110;
+}
+
+#instrumentModalWrapper {
+    @apply fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none;
+}
+
+#instrumentModalWrapper .instrument-modal .close-instrument-modal {
+    @apply w-8 h-8 cursor-pointer absolute top-4 right-4 transition-all duration-500 hover:scale-110;
+}
+
+#instrumentModalWrapper .instrument-modal .close-instrument-modal svg {
+    @apply pointer-events-none;
+}
+
+#instrumentModalWrapper::before {
+    @apply fixed w-[100vw] h-[100vh] left-0 backdrop-blur-md bg-dark/50 top-0 -translate-y-1/2 -translate-x-1/2 opacity-0 pointer-events-none transition-all duration-500;
+    content: "";
+}
+
+#instrumentModalWrapper:has(.active)::before {
+    @apply opacity-100 pointer-events-auto;
+}
+
+#instrumentModalWrapper .instrument-modal {
+    @apply fixed top-1/2 flex flex-col gap-2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none scale-75 opacity-0 p-8 rounded-lg bg-white shadow-xl transition-all duration-500 w-[clamp(20rem,40rem,90vw)];
+}
+
+#instrumentModalWrapper .instrument-modal.active {
+    @apply pointer-events-auto scale-100 opacity-100;
 }
 
 #pagination {
@@ -691,7 +728,7 @@ label:not(.toggle) {
 }
 
 section {
-    @apply mb-8;
+    @apply mb-4;
 }
 
 /* Notices and Generic Section Layouts */

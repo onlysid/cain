@@ -261,3 +261,10 @@ function checkResultCapacity() {
 
     return $resultsCount;
 }
+
+// Function to get all non-service admin operators
+function getOperators() {
+    global $cainDB;
+
+    return $cainDB->selectAll("SELECT * FROM users WHERE user_type < 3;");
+}

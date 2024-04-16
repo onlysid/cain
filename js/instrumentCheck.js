@@ -24,6 +24,7 @@ function getInstrumentDetails() {
             if (xhr.status === 200) {
                 // The response code/message
                 var data = JSON.parse(xhr.responseText);
+                console.log(data);
                 
                 updateTable(data);
             } else {
@@ -47,37 +48,86 @@ function updateTable(data) {
     const table = document.getElementById("instrumentsTable");
     const tableBody = document.getElementById("instrumentsTableBody");
     const tableHead = table.querySelector("thead");
+    const modalWrapper = document.getElementById("instrumentModalWrapper");
 
     tableBody.innerHTML = ""; // Clear existing rows
+    var legitInstruments = 0;
     
     data.forEach((item, index) => {
-        const row = document.createElement("tr");
-        row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${item.serial_number}</td>
-            <td>${getProcessText(item.status, item.progress, item.fault_condition)}</td>
-            <td class="end">
-                <form method="POST" action="/process">
-                    <div class="instrument-table-controls">
-                        <input type="hidden" name="action" value="delete-instrument">
-                        <input type="hidden" name="return-path" value="${window.location.href}">
-                        <input type="hidden" name="instrument-id" value="${item.id}">
+
+        if(item.status) {
+            legitInstruments++;
+            // Create the table row
+            const row = document.createElement("tr");
+            row.setAttribute("id", `instrument${item.serial_number}`);
+            row.setAttribute("class", "instrument")
+    
+            if((Date.now() / 1000) - (item.last_connected ?? 0) > 100) {
+                row.classList.add("lost");
+            }
+    
+            row.innerHTML = `
+                <td>${item.serial_number}</td>
+                <td>${item.module_id}</td>
+                <td>${getProcessText(item.status, item.progress, item.fault_condition)}</td>
+                <td class="end">
+                    <div class="table-controls">
                         <div class="tooltip" title="${getStatusText(item.status)}">
                             ${getStatusIcon(item.status)}
                         </div>
-                        <button class="table-button tooltip" title="Delete">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
-                                <path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/>
+                        <button class="details tooltip" title="View Details">
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
+                                <path d="M288 80c-65.2 0-118.8 29.6-159.9 67.7C89.6 183.5 63 226 49.4 256c13.6 30 40.2 72.5 78.6 108.3C169.2 402.4 222.8 432 288 432s118.8-29.6 159.9-67.7C486.4 328.5 513 286 526.6 256c-13.6-30-40.2-72.5-78.6-108.3C406.8 109.6 353.2 80 288 80zM95.4 112.6C142.5 68.8 207.2 32 288 32s145.5 36.8 192.6 80.6c46.8 43.5 78.1 95.4 93 131.1c3.3 7.9 3.3 16.7 0 24.6c-14.9 35.7-46.2 87.7-93 131.1C433.5 443.2 368.8 480 288 480s-145.5-36.8-192.6-80.6C48.6 356 17.3 304 2.5 268.3c-3.3-7.9-3.3-16.7 0-24.6C17.3 208 48.6 156 95.4 112.6zM288 336c44.2 0 80-35.8 80-80s-35.8-80-80-80c-.7 0-1.3 0-2 0c1.3 5.1 2 10.5 2 16c0 35.3-28.7 64-64 64c-5.5 0-10.9-.7-16-2c0 .7 0 1.3 0 2c0 44.2 35.8 80 80 80zm0-208a128 128 0 1 1 0 256 128 128 0 1 1 0-256z"/>
                             </svg>
                         </button>
+                        <form method="POST" action="/process">
+                            <input type="hidden" name="action" value="delete-instrument">
+                            <input type="hidden" name="return-path" value="${window.location.href}">
+                            <input type="hidden" name="instrument-id" value="${item.id}">
+                            <button class="table-button tooltip" title="Delete">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                                    <path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/>
+                                </svg>
+                            </button>
+                        </form>
                     </div>
-                </form>
-            </td>
-        `;
-        tableBody.appendChild(row);
+                </td>
+            `;
+            tableBody.appendChild(row);
+    
+            // Check if the modal exists
+            var modal = document.getElementById(`instrument${item.serial_number}Modal`);
+    
+            if(!modal) {
+                // Create the modal
+                modal = document.createElement("div");
+                modal.setAttribute("id", `instrument${item.serial_number}Modal`);
+                modal.setAttribute("class", 'instrument-modal');
+                modalWrapper.appendChild(modal);
+            }
+    
+            // Update the modal's innerHTML
+            modal.innerHTML = `
+                <div class="close-instrument-modal">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                        <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/>
+                    </svg>
+                </div>
+                <h2>Serial: ${item.serial_number}</h2>
+                ${item.module_id !== null ? `<p>Module ID: ${item.module_id}</p>` : ''}
+                ${item.status !== null ? `<p>Status: ${getProcessText(item.status, item.progress, item.fault_condition)}</p>` : ''}
+                ${item.progress !== null ? `<p>Progress: ${item.progress}</p>` : ''}
+                ${item.time_remaining !== null ? `<p>Time Remaining: ${item.time_remaining}</p>` : ''}
+                ${item.fault_code !== null ? `<p>Fault Code: ${item.fault_code}</p>` : ''}
+                ${item.version_number !== null ? `<p>Version Number: ${item.version_number}</p>` : ''}
+                ${item.last_connected !== null ? `<p>Last Connected: ${item.last_connected}</p>` : ''}
+                ${item.last_qc_pass !== null ? `<p>Last QC Pass: ${item.last_qc_pass}</p>` : ''}
+                ${item.qc_flag !== null ? `<p>QC Flag: ${item.qc_flag}</p>` : ''}
+            `;
+        }
     });
 
-    if(!data.length) {
+    if(!data.length || !legitInstruments) {
         tableHead.classList.add('hidden');
         tableBody.innerHTML = `<td>There are no instruments in the database. Please add some by connecting with the tablet.</td>`;
     } else {
@@ -87,15 +137,15 @@ function updateTable(data) {
 
 // Function to get status text based on status code and progress
 function getProcessText(status, progress, error) {
-    if (status === 1) {
+    if (status == 1) {
         return "Idle";
-    } else if (status === 2) {
+    } else if (status == 2) {
         return `Running (${progress}%)`;
-    } else if (status === 3) {
+    } else if (status == 3) {
         return "Test Aborted";
-    } else if (status === 4) {
+    } else if (status == 4) {
         return "Result Available";
-    } else if (status === 5) {
+    } else if (status == 5) {
         return "Error: " + error
     } else {
         return "Unknown";
@@ -104,10 +154,34 @@ function getProcessText(status, progress, error) {
 
 // Function to get status icon based on status code
 function getStatusIcon(status) {
-    return `<div class="status-indicator ${(status == 1 ? "active" : "")}"></div>`;
+    return `<div class="status-indicator ${(status != 0 ? "active" : "")}"></div>`;
 }
 
 // Function to get status icon based on status code
 function getStatusText(status) {
-    return (status === 1 ? "Active" : "Inactive");
+    return (status == 1 ? "Active" : "Inactive");
 }
+
+document.addEventListener('click', (e) => {
+    var target = e.target;
+    var closestInstrument = null;
+    var instrumentModals = document.querySelectorAll('.instrument-modal');
+
+    instrumentModals.forEach((modal) => {
+        if(!modal.contains(e.target) || target.classList.contains('close-instrument-modal')) {
+            modal.classList.remove('active');
+        }
+    });
+
+    while(target && !closestInstrument) {
+        if(target.classList.contains('instrument')) {
+            closestInstrument = target;
+        } else {
+            target = target.parentElement;
+        }
+    }
+
+    if(closestInstrument) {
+        document.getElementById(`${closestInstrument.id}Modal`).classList.add('active');
+    }
+})

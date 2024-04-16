@@ -7,10 +7,9 @@ require_once 'utils/MenuItem.php';
 $menuItems = [
     new MenuItem($routes['/'], null, 'list-icon'),
     new MenuItem($routes['/assay-modules']),
-    new MenuItem($routes['/users'], 'User Login Control'),
     new MenuItem($routes['/qc-policy']),
-    new MenuItem($routes['/logs']),
-    new MenuItem($routes['/versions']),
+    new MenuItem($routes['/lots']),
+    new MenuItem($routes['/users'], 'User Login Control'),
     new MenuItem($routes['/about']),
     new MenuItem($routes['/settings'], "Settings"),
     // Add more menu items above and sort as you like

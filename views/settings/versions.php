@@ -2,8 +2,6 @@
 require_once BASE_DIR . "/utils/Software.php";
 
 ?>
-
-<h1 class="text-center md:text-start">Latest Versions</h1>
 <div class="flex flex-wrap gap-2 w-full justify-center items-stretch">
     <?php foreach($software as $softwareItem) : ?>
         <div class="grow p-6 basis-1/4 min-w-60 flex flex-col gap-3 rounded-xl border-2 border-solid bg-white shadow-xl">

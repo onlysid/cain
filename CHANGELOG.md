@@ -12,6 +12,16 @@ Init!
 
 ### What's happened?
 
+#### 16/04/2024
+
+Shaking things about
+
+-   Moving some menu items around
+-   Assay modules are now more intricate
+-   Config now shows 10000 limit
+-   QC policy now displayed on the main menu
+-   User logins now displayed on the main menu
+
 #### 15/04/2024
 
 Small adjustments

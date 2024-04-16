@@ -34,4 +34,4 @@ define("GUEST", 0);
 define("LIMS_TIMEOUT", 30);
 
 // Some constants
-define("MAX_RESULTS", 40);
+define("MAX_RESULTS", 10000);

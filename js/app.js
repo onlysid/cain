@@ -163,7 +163,6 @@ var userTimeoutAmount = document.getElementById('userTimeoutAmount');
 
 if(userTimeoutCheckbox && userTimeoutInput && userTimeoutAmount) {
     userTimeoutCheckbox.addEventListener('change', () => {
-        console.log(userTimeoutCheckbox.checked);
         if(userTimeoutCheckbox.checked) {
             userTimeoutAmount.classList.add('active');
             userTimeoutInput.value = 30;
@@ -177,10 +176,10 @@ if(userTimeoutCheckbox && userTimeoutInput && userTimeoutAmount) {
         console.log(userTimeoutInput.value);
         if(userTimeoutInput.value == 0) {
             userTimeoutCheckbox.checked = false;
-            userTimeoutAmount.classList.add('active');
+            userTimeoutAmount.classList.remove('active');
         } else {
             userTimeoutCheckbox.checked = true;
-            userTimeoutAmount.classList.remove('active');
+            userTimeoutAmount.classList.add('active');
         }
     });
 }
