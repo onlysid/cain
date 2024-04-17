@@ -167,6 +167,18 @@ a.ignore-default {
     @apply py-3 px-7;
 }
 
+.btn svg {
+    @apply pointer-events-none;
+}
+
+.btn.deactivate {
+    @apply bg-gradient-to-r from-red-500 to-red-700 hover:text-white transition-all duration-500 hover:opacity-80 hover:scale-95 hover:shadow-lg hover:shadow-dark;
+}
+
+.btn.activate {
+    @apply bg-gradient-to-r from-green-500 to-green-700 hover:text-white transition-all duration-500 hover:opacity-80 hover:scale-95 hover:shadow-lg hover:shadow-dark;
+}
+
 #menu .btn {
     @apply justify-start;
 }
@@ -321,32 +333,36 @@ td .details svg {
     @apply transition-all duration-500 hover:scale-110;
 }
 
-#instrumentModalWrapper {
-    @apply fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none;
-}
-
-#instrumentModalWrapper .instrument-modal .close-instrument-modal {
-    @apply w-8 h-8 cursor-pointer absolute top-4 right-4 transition-all duration-500 hover:scale-110;
-}
-
-#instrumentModalWrapper .instrument-modal .close-instrument-modal svg {
+.table-button svg {
     @apply pointer-events-none;
 }
 
-#instrumentModalWrapper::before {
+#instrumentModalWrapper, #userModalWrapper {
+    @apply fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none;
+}
+
+#instrumentModalWrapper .instrument-modal .close-instrument-modal, #userModalWrapper .user-modal .close-user-modal:not(.no-styles) {
+    @apply w-8 h-8 cursor-pointer absolute top-4 right-4 transition-all duration-500 hover:scale-110;
+}
+
+#instrumentModalWrapper .instrument-modal .close-instrument-modal svg, #userModalWrapper .user-modal .close-user-modal svg {
+    @apply pointer-events-none;
+}
+
+#instrumentModalWrapper::before, #userModalWrapper::before {
     @apply fixed w-[100vw] h-[100vh] left-0 backdrop-blur-md bg-dark/50 top-0 -translate-y-1/2 -translate-x-1/2 opacity-0 pointer-events-none transition-all duration-500;
     content: "";
 }
 
-#instrumentModalWrapper:has(.active)::before {
+#instrumentModalWrapper:has(.active)::before, #userModalWrapper:has(.active)::before {
     @apply opacity-100 pointer-events-auto;
 }
 
-#instrumentModalWrapper .instrument-modal {
-    @apply fixed top-1/2 flex flex-col gap-2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none scale-75 opacity-0 p-8 rounded-lg bg-white shadow-xl transition-all duration-500 w-[clamp(20rem,40rem,90vw)];
+#instrumentModalWrapper .instrument-modal, #userModalWrapper .user-modal {
+    @apply fixed top-1/2 flex flex-col gap-2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none scale-75 opacity-0 p-8 rounded-lg bg-gray-100 shadow-xl transition-all duration-500 w-[clamp(20rem,40rem,90vw)];
 }
 
-#instrumentModalWrapper .instrument-modal.active {
+#instrumentModalWrapper .instrument-modal.active, #userModalWrapper .user-modal.active {
     @apply pointer-events-auto scale-100 opacity-100;
 }
 

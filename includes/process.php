@@ -38,6 +38,12 @@ class Process {
                 case('delete-instrument'):
                     $this->deleteInstrument();
                     break;
+                case('delete-operator'):
+                    $this->deleteOperator();
+                    break;
+                case('toggle-operator-status'):
+                    $this->toggleOperatorStatus();
+                    break;
                 case('network-settings'):
                     $this->updateNetworkSettings();
                     break;
@@ -284,6 +290,34 @@ class Process {
 
         if($instrumentId) { 
             $cainDB->query("DELETE FROM instruments WHERE id = :id", [":id" => $instrumentId]);
+        }
+    }
+
+    function deleteOperator() {
+        global $cainDB;
+
+        $operatorId = $_POST['id'] ?? null;
+
+        if($operatorId) {
+            $cainDB->query("DELETE FROM users WHERE id = :id", [":id" => $operatorId]);
+        }
+    }
+
+    function toggleOperatorStatus() {
+        global $cainDB;
+
+        $operatorId = $_POST['id'] ?? null;
+
+        if($operatorId) {
+            $status = $cainDB->select("SELECT status FROM users WHERE id = :id", [":id" => $operatorId])['status'];
+
+            var_dump($status);
+            $toggle = 0;
+            if($status == 0) {
+                $toggle = 1;
+            }
+
+            $cainDB->query("UPDATE users SET status = :toggle WHERE id = :id;", [":toggle" => $toggle, ":id" => $operatorId]);
         }
     }
 

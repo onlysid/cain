@@ -263,8 +263,12 @@ function checkResultCapacity() {
 }
 
 // Function to get all non-service admin operators
-function getOperators() {
+function getOperators($currentUserId = null) {
     global $cainDB;
 
-    return $cainDB->selectAll("SELECT * FROM users WHERE user_type < 3;");
+    if($currentUserId) {
+        return $cainDB->selectAll("SELECT * FROM users WHERE user_type < 3 AND id != :currentUser;", [":currentUser" => $currentUserId]);
+    } else {
+        return $cainDB->selectAll("SELECT * FROM users WHERE user_type <3;");
+    }
 }

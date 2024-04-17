@@ -40,6 +40,7 @@ if($instrumentData['serial_number']) {
     $instrumentData['status'] = $data['status'] ?? null;
     $instrumentData['progress'] = $data['progress'] ?? null;
     $instrumentData['time_remaining'] = $data['timeRemaining'] ?? null;
+    $instrumentData['last_connected'] = time();
     $instrumentData['fault_code'] = $data['faultCode'] ?? null;
     $instrumentData['version_number'] = $data['versionNumber'] ?? null;
     

@@ -183,3 +183,49 @@ if(userTimeoutCheckbox && userTimeoutInput && userTimeoutAmount) {
         }
     });
 }
+
+// User modal triggers
+var userModals = document.getElementById('usersTables');
+
+if(usersTable) {
+    document.addEventListener('click', (e) => {
+        var closestUser = null;
+        var target = e.target;
+        var userModals = document.querySelectorAll('.user-modal');
+
+        userModals.forEach((modal) => {
+            if(!modal.contains(e.target) || target.classList.contains('close-user-modal')) {
+                modal.classList.remove('active');
+            }
+        });
+
+        if(target.classList.contains('delete-user-button')) {
+            userModals.forEach((modal) => {
+                modal.classList.remove('active');
+            });
+            var operatorToDelete = target.dataset.operator;
+            var operatorId = target.dataset.id;
+            document.getElementById('operatorToDelete').innerHTML = operatorToDelete;
+            document.querySelectorAll('.form-operator-id').forEach((formId) => {
+                formId.value = operatorId;
+            });
+            document.getElementById('deleteUserModal').classList.add('active');
+        }
+
+        if(target.classList.contains('new-user-button')) {
+            document.getElementById('newUserModal').classList.add('active');
+        }
+    
+        while(target && !closestUser && !target.classList.contains('table-button')) {
+            if(target.classList.contains('user')) {
+                closestUser = target;
+            } else {
+                target = target.parentElement;
+            }
+        }
+    
+        if(closestUser) {
+            document.getElementById(`${closestUser.id}Modal`).classList.add('active');
+        }
+    })
+}

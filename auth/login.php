@@ -113,7 +113,7 @@ if($passwordRequired) {
         <button type="submit" class="btn alt trigger-loading"><?= $buttonText;?></button>
     </form>
     <?php if($passwordRequired) : ?>
-        <form action="process" method="POST" id="backToLogin">
+        <form action="process" method="POST" id="backToLogin" class="mt-3">
             <input required type="hidden" name="action" value="back-to-login">
             <p>Not <?= ucfirst($operatorFirstName ?? $operatorId);?>? <button type="submit" class="a-tag">Go back</button></p>
         </form>

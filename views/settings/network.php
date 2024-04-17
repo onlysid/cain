@@ -54,7 +54,7 @@ $networkInfo = array_intersect_key($settings, array_flip($networkInfoKeys));
         </label>
         <label for="appMode" class="field !flex-row toggle-field !px-6 py-2 rounded-full bg-white shadow-md">
             <div class="flex flex-col w-full">
-                <div class="shrink">App Mode</div>
+                <div class="shrink">Enable LIMS</div>
                 <div class="description !text-xs text-grey mr-4">Turn LIMS internal application on/off.</div>
             </div>
             <div class="checkbox-wrapper">
@@ -114,5 +114,6 @@ $networkInfo = array_intersect_key($settings, array_flip($networkInfoKeys));
             </div>
         </div>
     </div>
+    <h3 class="text-dark w-full text-center rounded-xl px-4 py-2 bg-blue-200/75 shadow-lg">Hub Information</h3>
     <button class="btn smaller-btn" type="submit">Save Settings</button>
 </form>

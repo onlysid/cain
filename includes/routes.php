@@ -83,8 +83,8 @@ $routes = [
 
 // Define "settings" routes
 $settingsRoutes = [
-    '/settings' => new PageRoute('views/settings/general.php', 'General', false),
-    '/settings/account' => new PageRoute('views/settings/account.php', 'Account Settings', false),
+    '/settings' => new PageRoute('views/settings/account.php', 'Account Settings', false),
+    '/settings/general' => new PageRoute('views/settings/general.php', 'General', false, ADMINISTRATIVE_CLINICIAN),
     '/settings/fields' => new PageRoute('views/settings/fields.php', 'Field Selection', false, ADMINISTRATIVE_CLINICIAN),
     '/settings/qc' => new PageRoute('views/settings/qc.php', 'QC Settings', false, ADMINISTRATIVE_CLINICIAN),
     '/settings/users' => new PageRoute('views/settings/users.php', 'User Settings', false, ADMINISTRATIVE_CLINICIAN),

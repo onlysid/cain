@@ -48,8 +48,8 @@ foreach ($filters as $key => $value) {
 
 <h1 class="mb-2">Results</h1>
 
-<div id="tableInfoWrapper" class="w-full flex justify-between items-center">
-    <p class="results-number"><?= $resultNumberText;?></p>
+<div id="tableInfoWrapper" class="w-full flex justify-between items-center gap-2">
+    <p class="results-number hidden sm:block"><?= $resultNumberText;?></p>
     <div id="filterSearchWrapper" class="flex items-center flex-col-reverse sm:flex-row w-full sm:w-auto justify-end">
         <form action="/" method="GET" id="searchForm" class="w-full sm:w-auto">
             <div class="form-fields">
@@ -191,6 +191,7 @@ else : ?>
 if($totalPageCount > 1) : ?>
 
     <div id="pagination">
+        <a href="<?= $page == 1 ? "#" : updateQueryString(["p" => 1]);?>" class="<?= $page == 1 ? "disabled" : "";?> !px-2 xs:!hidden"><<</a>
         <a href="<?= $page == 1 ? "#" : updateQueryString(["p" => $page - 1]);?>" class="<?= $page == 1 ? "disabled" : "";?>"><</a>
         <?php if($page - 1 > 1) : ?>
             <a class="inner-pagination" href="<?= updateQueryString(["p" => 1]);?>">1</a>
@@ -208,6 +209,7 @@ if($totalPageCount > 1) : ?>
             <a class="inner-pagination" href="<?= updateQueryString(["p" => $totalPageCount]);?>"><?= $totalPageCount;?></a>
         <?php endif;?>
         <a href="<?= $page == $totalPageCount ? "#" : updateQueryString(["p" => $page + 1]);?>" class="<?= $page == $totalPageCount ? "disabled" : "";?>">></a>
+        <a href="<?= $page == $totalPageCount ? "#" : updateQueryString(["p" => $totalPageCount]);?>" class="<?= $page == $totalPageCount ? "disabled" : "";?> !px-2 xs:!hidden">>></a>
     </div>
 
 <?php endif;
