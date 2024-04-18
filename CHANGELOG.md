@@ -12,6 +12,16 @@ Init!
 
 ### What's happened?
 
+#### 18/04/2024
+
+Assay/Operator API adjustments
+
+-   Changed Assay Modules to sort by time remaining and by last connected and to remove all items not associated with a tablet.
+-   Changed API for instruments to be sent in parallel.
+-   Added unfinished API to handle config settings communication between tablet and DMS.
+-   Adjusted Operator API to give more feedback to the tablet and to prompt authentication wherever possible.
+-   Operator API now passes back all operator info to the tablet.
+
 #### 16/04/2024
 
 Shaking things about

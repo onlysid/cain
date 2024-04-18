@@ -82,7 +82,7 @@ class DB {
     }
 
     // Get current user info
-    public function currentUserInfo($userId) {
+    public function userInfo($userId) {
         $query = "SELECT * FROM users WHERE user_id = ?;";
         $params = [$userId];
         $currentUser = $this->select($query, $params);

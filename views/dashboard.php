@@ -94,43 +94,35 @@ foreach ($filters as $key => $value) {
             <thead>
                 <tr>
                     <th>
-                        <a href="<?= updateQueryString(["sp" => "", "sd" => (($filters['sd'] ?? "desc") == "desc" || $filters['sd'] == "" ? "asc" : "")]);?>" class="ignore-default flex gap-1.5 items-center">
+                        <a href="<?= updateQueryString(["sp" => "", "sd" => ((($filters['sd'] ?? "desc") == "desc" && ($filters['sp'] ?? null) == "") || ($filters['sd'] ?? "empty") == "" ? "asc" : "")]);?>" class="ignore-default flex gap-1.5 items-center">
                             <span>Date</span>
-                            <?php if(!isset($filters['sp']) || $filters['sp'] == "") : ?>
-                                <svg class="h-4 fill-dark <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                                    <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM385 231c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-71-71V376c0 13.3-10.7 24-24 24s-24-10.7-24-24V193.9l-71 71c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L239 119c9.4-9.4 24.6-9.4 33.9 0L385 231z"/>
-                                </svg>
-                            <?php endif;?>
+                            <svg class="h-4 fill-dark <?= (!isset($filters['sp']) || $filters['sp'] == "") ? "" : "opacity-50 !rotate-180";?> <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                                <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM385 231c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-71-71V376c0 13.3-10.7 24-24 24s-24-10.7-24-24V193.9l-71 71c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L239 119c9.4-9.4 24.6-9.4 33.9 0L385 231z"/>
+                            </svg>
                         </a>
                     </th>
                     <th>
-                        <a href="<?= updateQueryString(["sp" => "firstName", "sd" => (($filters['sd'] ?? "desc") == "desc" || ($filters['sd'] ?? "desc") == "" ? "asc" : "")]);?>" class="ignore-default flex gap-1.5 items-center">
+                        <a href="<?= updateQueryString(["sp" => "firstName", "sd" => ((($filters['sd'] ?? "desc") == "desc" && ($filters['sp'] ?? null) == "firstName") || ($filters['sd'] ?? "desc") == "" ? "asc" : "")]);?>" class="ignore-default flex gap-1.5 items-center">
                             <span>Name</span>
-                            <?php if(isset($filters['sp']) && $filters['sp'] == "firstName") : ?>
-                                <svg class="h-4 fill-dark <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                                    <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM385 231c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-71-71V376c0 13.3-10.7 24-24 24s-24-10.7-24-24V193.9l-71 71c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L239 119c9.4-9.4 24.6-9.4 33.9 0L385 231z"/>
-                                </svg>
-                            <?php endif;?>
+                            <svg class="h-4 fill-dark <?= (isset($filters['sp']) && $filters['sp'] == "firstName") ? "" : "opacity-50 !rotate-180";?> <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                                <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM385 231c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-71-71V376c0 13.3-10.7 24-24 24s-24-10.7-24-24V193.9l-71 71c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L239 119c9.4-9.4 24.6-9.4 33.9 0L385 231z"/>
+                            </svg>
                         </a>
                     </th>
                     <th class="hidden xs:table-cell">
-                        <a href="<?= updateQueryString(["sp" => "product", "sd" => (($filters['sd'] ?? "desc") == "desc" || ($filters['sd'] ?? "desc") == "" ? "asc" : "")]);?>" class="ignore-default flex gap-1.5 items-center">
+                        <a href="<?= updateQueryString(["sp" => "product", "sd" => ((($filters['sd'] ?? "desc") == "desc" && ($filters['sp'] ?? null) == "product") || ($filters['sd'] ?? "desc") == "" ? "asc" : "")]);?>" class="ignore-default flex gap-1.5 items-center">
                             <span>Assay</span>
-                            <?php if(isset($filters['sp']) && $filters['sp'] == "product") : ?>
-                                <svg class="h-4 fill-dark <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                                    <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM385 231c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-71-71V376c0 13.3-10.7 24-24 24s-24-10.7-24-24V193.9l-71 71c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L239 119c9.4-9.4 24.6-9.4 33.9 0L385 231z"/>
-                                </svg>
-                            <?php endif;?>
+                            <svg class="h-4 fill-dark <?= (isset($filters['sp']) && $filters['sp'] == "product") ? "" : "opacity-50 !rotate-180";?> <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                                <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM385 231c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-71-71V376c0 13.3-10.7 24-24 24s-24-10.7-24-24V193.9l-71 71c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L239 119c9.4-9.4 24.6-9.4 33.9 0L385 231z"/>
+                            </svg>
                         </a>
                     </th>
                     <th class="hidden sm:table-cell">
-                        <a href="<?= updateQueryString(["sp" => "result", "sd" => (($filters['sd'] ?? "desc") == "desc" || ($filters['sd'] ?? "desc") == "" ? "asc" : "")]);?>" class="ignore-default flex gap-1.5 items-center">
+                        <a href="<?= updateQueryString(["sp" => "result", "sd" => ((($filters['sd'] ?? "desc") == "desc" && ($filters['sp'] ?? null) == "result") || ($filters['sd'] ?? "desc") == "" ? "asc" : "")]);?>" class="ignore-default flex gap-1.5 items-center">
                             <span>Result</span>
-                            <?php if(isset($filters['sp']) && $filters['sp'] == "result") : ?>
-                                <svg class="h-4 fill-dark <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                                    <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM385 231c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-71-71V376c0 13.3-10.7 24-24 24s-24-10.7-24-24V193.9l-71 71c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L239 119c9.4-9.4 24.6-9.4 33.9 0L385 231z"/>
-                                </svg>
-                            <?php endif;?>
+                            <svg class="h-4 fill-dark <?= (isset($filters['sp']) && $filters['sp'] == "result") ? "" : "opacity-50 !rotate-180";?> <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                                <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM385 231c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-71-71V376c0 13.3-10.7 24-24 24s-24-10.7-24-24V193.9l-71 71c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L239 119c9.4-9.4 24.6-9.4 33.9 0L385 231z"/>
+                            </svg>
                         </a>
                     </th>
                     <th></th>
@@ -228,7 +220,7 @@ foreach($resultItems as $result) : ?>
     <div id="result<?= $result['id'];?>Modal" class="result-modal">
         <div class="result-modal-backdrop">
             <div class="relative result-details bg-primary shadow-xl shadow-dark flex flex-col rounded-xl max-w-[40rem] max-h-[calc(min(40rem,_90vh))] h-full w-full m-8 p-8 overflow-y-scroll">
-                <button class="modal-close absolute top-0 right-0 p-4 transition-all duration-500 hover:scale-110">
+                <button class="modal-close absolute top-2 right-2 p-2 transition-all duration-500 hover:scale-110">
                     <svg class="h-8 fill-dark pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
                         <path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/>
                     </svg>

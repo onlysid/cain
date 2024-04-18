@@ -1,5 +1,8 @@
 <?php // Define all fields and their position in bitfields with the settings table of the database.
 
+// Behaviour = Tablet entry behaviour
+// Visibility = Hub visibility
+
 class Field {
     public $name;
     public $behaviourLock;
@@ -76,22 +79,21 @@ $dataFields = [
     new Field("First Name"),
     new Field("Last Name"),
     new Field("Date of Birth"),
-    new Field("Patient Age", true),
+    new Field("Patient Age"),
     new Field("Gender"),
-    new Field("Result", true, true),
     new Field("Hospital ID"),
     new Field("Site ID"),
     new Field("Clinic ID"),
     new Field("Patient Location"),
-    new Field("Sample ID"),
+    new Field("Sample ID", true, true),
     new Field("Sample Collected"),
-    new Field("Sample Run", true),
-    new Field("Assay Name", true, true),
-    new Field("Lot Number", true),
-    new Field("Test ID", true),
-    new Field("Test Purpose", true),
-    new Field("Test Complete Time", true),
-    new Field("Operator ID", true),
-    new Field("AM Serial No", true),
-    new Field("Record Status", true),
+    new Field("Sample Run"),
+    new Field("Assay Name"),
+    new Field("Lot Number"),
+    new Field("Test ID"),
+    new Field("Test Purpose"),
+    new Field("Test Complete Time"),
+    new Field("Operator ID"),
+    new Field("AM Serial No"),
+    new Field("Record Status"),
 ];

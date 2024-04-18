@@ -35,9 +35,6 @@ class Process {
                 case('user-general-settings'):
                     $this->updateGeneralUserSettings();
                     break;
-                case('delete-instrument'):
-                    $this->deleteInstrument();
-                    break;
                 case('delete-operator'):
                     $this->deleteOperator();
                     break;
@@ -281,16 +278,6 @@ class Process {
         $cainDB->query("UPDATE settings SET `value` = :updatedBehaviour WHERE `name` = 'field_behaviour';", [":updatedBehaviour" => $updatedBehaviour]);
         $cainDB->query("UPDATE settings SET `value` = :updatedVisibility WHERE `name` = 'field_visibility';", [":updatedVisibility" => $updatedVisibility]);
         
-    }
-
-    function deleteInstrument() {
-        global $cainDB;
-
-        $instrumentId = $_POST['instrument-id'] ?? null;
-
-        if($instrumentId) { 
-            $cainDB->query("DELETE FROM instruments WHERE id = :id", [":id" => $instrumentId]);
-        }
     }
 
     function deleteOperator() {

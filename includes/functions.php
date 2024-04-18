@@ -57,13 +57,13 @@ function checkForUpdates($version) {
 }
 
 // Get current user info
-function userInfo() {
+function userInfo($operatorId = null) {
     global $cainDB;
     if(!Session::isLoggedIn()) {
         return 0;
     }
-    $userId = Session::get('user-id');
-    $user = $cainDB->currentUserInfo($userId);
+    $userId = Session::get('user-id') ?? $operatorId;
+    $user = $cainDB->userInfo($userId);
 
     return $user;
 }
@@ -80,59 +80,128 @@ function limsConnectivity() {
     return $cainDB->select("SELECT value FROM settings WHERE `name` = 'comms_status';");
 }
 
-function updateInstrument($instrumentData) {
+function updateInstruments($tabletData) {
     global $cainDB;
-    $serialNumber = $instrumentData['serial_number'];
+    /*
+        We get a JSON object of ALL instruments for a given tablet {"tablet_id" => {"serial_number" => {Instrument Data}, {"serial_number" => {Instrument Data}}}
+        Each tablet can have up to 8 instruments (not really relevant for this section but important to understand globally)
+        Select all instruments in the db with the associated tablet.
+        Loop through the instruments in the JSON data and update any instruments in the db with its new data.
+        If an instrument in the JSON data does not have a corresponding db object, add it to the db. (may need additional serial number checks)
+        If an instrument in the db does not have a corresponding object in the JSON data, set its status to 0.
+    */
 
-    if($serialNumber) {
-        // Get rid of this from the instrument data array as we have it stored separately
-        unset($instrumentData['serial_number']);
-        
-        // Check if the instrument already exists in the database
-        $instrumentExists = $cainDB->query("SELECT id FROM instruments WHERE serial_number = '$serialNumber';");
-        
-        if(!$instrumentExists) {
-            $query = "INSERT INTO instruments ";
-            $query1 = "(serial_number, ";
-            $query2 = " VALUES ('$serialNumber', ";
-        } else {
-            $query = "UPDATE instruments SET ";
-        }
-        
-        $validDataCount = 0;
-        foreach($instrumentData as $data) {
-            if(isset($data)) {
-                $validDataCount++;
+    $tabletSerial = $tabletData['tablet_id'];
+    $tabletData = $tabletData['tablet_data'];
+
+    if($tabletSerial) {
+        // We have some data to parse! Start a transaction.
+        try {
+            $cainDB->beginTransaction();
+
+            // Get the tablet ID
+            $tabletId = $cainDB->select("SELECT id FROM tablets WHERE tablet_id = :tabletSerial;", [":tabletSerial" => $tabletSerial])['id'];
+
+            if(!$tabletId) {
+                // Insert the tablet into the database
+                $cainDB->query("INSERT INTO tablets (`tablet_id`) VALUES ('$tabletSerial');");
+
+                // Get the last inserted process ID
+                $tabletId = $cainDB->conn->lastInsertId();
             }
-        }
-    
-        $i = 1;
-        foreach($instrumentData as $dbCol => $data) {
-            if(isset($data)) {
+
+            // At this stage, we definitely have an ID for the tablet. Now we need to get a list of instrument IDs who have this tablet ID.
+            $oldTabletInstrumentsArray = $cainDB->selectAll("SELECT serial_number FROM instruments WHERE tablet = :tabletId;", [":tabletId" => $tabletId]);
+            $oldTabletInstruments = [];
+
+            // Make a standard array of old instrument serial numbers
+            foreach($oldTabletInstrumentsArray as $oldInstrument) {
+                $oldTabletInstruments[] = $oldInstrument['serial_number'];
+            }
+
+            // Similarly, get a list of all instruments
+            $allDbInstrumentsArray = $cainDB->selectAll("SELECT serial_number FROM instruments;");
+            $allDbInstruments = [];
+
+            // Make a standard array of old instrument serial numbers
+            foreach($allDbInstrumentsArray as $dbInstrument) {
+                $allDbInstruments[] = $dbInstrument['serial_number'];
+            }
+
+            // We know all the new data for instruments connected to the tablet (tabletData). Loop through them and update the ones still connected.
+            foreach($tabletData as $serialNumber => $data) {
+                $instrumentData['module_id'] = $data['frontPanelId'] ?? null;
+                $instrumentData['status'] = $data['status'] ?? null;
+                $instrumentData['progress'] = $data['progress'] ?? null;
+                $instrumentData['time_remaining'] = $data['timeRemaining'] ?? null;
+                $instrumentData['last_connected'] = time();
+                $instrumentData['fault_code'] = $data['faultCode'] ?? null;
+                $instrumentData['version_number'] = $data['versionNumber'] ?? null;
+                $instrumentData['tablet'] = $tabletId;
+
+                $instrumentExists = in_array($serialNumber, $allDbInstruments);
+
                 if(!$instrumentExists) {
-                    $query1 .= $dbCol . (($i < $validDataCount) ? ", " : ")");
-                    $query2 .= "'" . $data . "'" . (($i < $validDataCount) ? ", " : ");");
+                    $query = "INSERT INTO instruments ";
+                    $query1 = "(serial_number, ";
+                    $query2 = " VALUES ('$serialNumber', ";
                 } else {
-                    $query .= $dbCol . " = '" . $data . "'" . (($i < $validDataCount) ? ", " : "");
+                    $query = "UPDATE instruments SET ";
                 }
-                $i++;
-            }
-        }
-
+                
+                $validDataCount = 0;
+                foreach($instrumentData as $data) {
+                    if(isset($data)) {
+                        $validDataCount++;
+                    }
+                }
+            
+                $i = 1;
+                foreach($instrumentData as $dbCol => $data) {
+                    if(isset($data)) {
+                        if(!$instrumentExists) {
+                            $query1 .= $dbCol . (($i < $validDataCount) ? ", " : ")");
+                            $query2 .= "'" . $data . "'" . (($i < $validDataCount) ? ", " : ");");
+                        } else {
+                            $query .= $dbCol . " = '" . $data . "'" . (($i < $validDataCount) ? ", " : "");
+                        }
+                        $i++;
+                    }
+                }
+                
+                if($validDataCount > 0) {
+                    if($instrumentExists) {
+                        $query .= " WHERE serial_number = '$serialNumber';";
+                    } else {
+                        $query .= $query1 . $query2;
+                    }
         
-        if($validDataCount > 0) {
-            if($instrumentExists) {
-                $query .= " WHERE serial_number = '$serialNumber';";
-            } else {
-                $query .= $query1 . $query2;
+                    // Run the query
+                    $cainDB->query($query);
+                }
+
+                $oldTabletInstruments = array_diff($oldTabletInstruments, [$serialNumber]);
             }
 
-            // Run the query
-            $cainDB->query($query);
+            // Loop through the remaining instruments which were once associated with the tablet and dissociate them
+            foreach($oldTabletInstruments as $disconnectedInstrument) {
+                $cainDB->query("UPDATE instruments SET `status` = 0, tablet = null WHERE `serial_number` = :serialNumber;", [":serialNumber" => $disconnectedInstrument]);
+            }
+
+            // Commit the transaction
+            $cainDB->commit();
+
             return true;
+
+        } catch(PDOException $e) {
+            // Rollback the transaction on error
+            $cainDB->rollBack();
+            // Throw the exception for handling at a higher level
+            throw $e;
         }
     }
 
+    // Something has gone wrong!
     return false;
 }
 
@@ -141,9 +210,9 @@ function getInstrumentSnapshot($instrumentId = null) {
 
     // If the instrument ID is not passed, we get all instrument data
     if($instrumentId) {
-        return $cainDB->select("SELECT * FROM instruments WHERE ?", [$instrumentId]);
+        return $cainDB->select("SELECT * FROM instruments i INNER JOIN tablets t ON i.tablet = t.id WHERE ? ORDER BY last_connected DESC, time_remaining ASC;", [$instrumentId]);
     } else {
-        return $cainDB->selectAll("SELECT * FROM instruments;");
+        return $cainDB->selectAll("SELECT * FROM instruments i INNER JOIN tablets t ON i.tablet = t.id ORDER BY last_connected DESC, time_remaining ASC;");
     }
 }
 

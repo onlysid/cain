@@ -25,36 +25,66 @@ if(!$data) {
 
 // Main logic
 try {
-    // Check if password is required
-    $passwordRequired = isPasswordRequired();
-    
     // Get operatorId and password from POST request
     $operatorId = $data['operatorId'] ?? null;
+    $password = $data['password'] ?? null;
 
-    // Check if operator exists
-    $operatorExists = operatorExists($operatorId);
+    // If we have no operator ID, throw an error.
+    if(!$operatorId) {
+        echo json_encode(["status" => 42, "operatorId" => $operatorId, "operatorResult" => false, "message" => "No Operator ID Provided."]);
+        return;
+    } else {
+        // Check if the operator exists
+        $operatorExists = operatorExists($operatorId);
 
-    // Instantiate "result"
-    $result = false;
-
-    // If the operator exists, we check if they need a password
-    if($operatorId) {
-        if($operatorExists) {
-            $userType = $cainDB->getOperatorInfo($operatorId)['user_type'];
-            if(($passwordRequired < 2 && $userType == CLINICIAN) || (($passwordRequired == 0 || $passwordRequired == 2) && $userType == ADMINISTRATIVE_CLINICIAN)) {
-                $result = true;
-            }
-        } else {
-            // TODO: See if there's something specific we're meant to get back
-            // The user does not exist in the database. Request LIMS stuff!
-            $response = limsRequest(["operatorId" => $operatorId], 40, 42);
-            // Any repsonse will do (just that the response array is not empty)
-            if($response) {
-                $result = true;
+        // If the operator does not exist, check LIMS and create the operator locally if need be
+        if(!$operatorExists) {
+            // If we have a successful result in the operatorResult value, then LIMS has found the operator. Otherwise, no operator exists.
+            if(limsRequest(["operatorId" => $operatorId], 40, 42)['operatorResult']) {
+                // Add the operator to the database
+                $cainDB->query("INSERT INTO `users` (`operator_id`, `user_type`) VALUES (:operatorId, 1);", [':operatorId' => $operatorId]);
+            } else {
+                // There is no operator by that name, throw an error.
+                echo json_encode(["status" => 42, "operatorId" => $operatorId, "operatorResult" => false, "message" => "This operator does not exist."]);
+                return;
             }
         }
+        
+        // At this point, we have an operator. Get it!
+        $operator = $cainDB->getOperatorInfo($operatorId);
+
+        // Check if password is required
+        $passwordRequired = isPasswordRequired();
+
+        // If the password is not required at all, authentication is complete.
+        if(($passwordRequired < 2 && $operator['user_type'] == CLINICIAN) || (($passwordRequired == 0 || $passwordRequired == 2) && $operator['user_type'] == ADMINISTRATIVE_CLINICIAN)) {
+            echo json_encode(["status" => 42, "operatorId" => $operatorId, "operatorResult" => true, "operatos" => $operator, "message" => "No password required. Successfully authenticated."]);
+            return;
+        }
+
+        // At this point, we need a password. Start by checking that the user actually has a password.
+        if(!$operator['password']) {
+            echo json_encode(["status" => 42, "operatorId" => $operatorId, "operatorResult" => false, "operator" => $operator, "message" => "This operator has not been set up properly. Please create an account by logging into the DMS first."]);
+            return;
+        }
+
+        // Check if a password was supplied.
+        if(!$password) {
+            echo json_encode(["status" => 42, "operatorId" => $operatorId, "operatorResult" => false, "operator" => $operator, "message" => "Password required. Please enter a password."]);
+            return;
+        }
+
+        // We have a password, check authentication.
+        if(Session::authenticate($operatorId, $password)) {
+            // Password has been accepted
+            echo json_encode(["status" => 42, "operatorId" => $operatorId, "operatorResult" => true, "operator" => $operator, "message" => "Password accepted. Successfully authenticated."]);
+            return;
+        } else {
+            // Password has been rejected
+            echo json_encode(["status" => 42, "operatorId" => $operatorId, "operatorResult" => false, "operator" => $operator, "message" => "Password rejected. Authentication failed."]);
+            return;
+        }
     }
-    echo json_encode(["status" => 42, "operatorId" => $operatorId, "operatorResult" => $result]);
 } catch(PDOException $e) {
     // Handle database error
     http_response_code(500); // Internal Server Error

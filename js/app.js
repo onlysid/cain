@@ -187,7 +187,7 @@ if(userTimeoutCheckbox && userTimeoutInput && userTimeoutAmount) {
 // User modal triggers
 var userModals = document.getElementById('usersTables');
 
-if(usersTable) {
+if(userModals) {
     document.addEventListener('click', (e) => {
         var closestUser = null;
         var target = e.target;

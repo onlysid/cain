@@ -2,8 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
-
 /* Define fonts */
 @font-face {
     font-family: 'Roboto';
@@ -92,14 +90,31 @@
 /* General Styles */
 
 /* Hide scrollbar for Chrome, Safari and Opera */
-*::-webkit-scrollbar {
+*:not(.result-details)::-webkit-scrollbar {
     display: none;
 }
 
 /* Hide scrollbar for IE, Edge and Firefox */
-* {
+*:not(.result-details) {
     -ms-overflow-style: none;  /* IE and Edge */
     scrollbar-width: none;  /* Firefox */
+}
+
+.result-details::-webkit-scrollbar-track {
+    @apply rounded-r-xl;
+	background-color: #CCCCCC;
+}
+
+.result-details::-webkit-scrollbar {
+    @apply rounded-r-full;
+	width: 18px;
+	background-color: #F5F5F5;
+}
+
+.result-details::-webkit-scrollbar-thumb {
+    @apply rounded-r-xl;
+	background-color: #FFF;
+	background-image: -webkit-gradient(linear, 40% 0%, 75% 84%, from(#4D9C41), to(#199181), color-stop(.6,#54DE5D))
 }
 
 h1 {
@@ -266,7 +281,7 @@ table > thead > tr > th,
 table tbody > tr > th,
 table > thead > tr > td,
 table tbody > tr > td {
-    @apply py-4 px-1.5 sm:px-2.5 xl:px-3 leading-none align-middle text-sm sm:text-base;
+    @apply py-4 px-1.5 sm:px-2.5 xl:px-3 leading-none align-middle text-sm sm:text-base font-bold;
 }
 
 table:not(.result-explosion) tbody tr {
@@ -279,6 +294,10 @@ td .status-indicator {
 
 td .status-indicator.active {
     @apply bg-green-500;
+}
+
+td .status-indicator.pending {
+    @apply bg-amber-500;
 }
 
 td .table-controls {
@@ -364,6 +383,18 @@ td .details svg {
 
 #instrumentModalWrapper .instrument-modal.active, #userModalWrapper .user-modal.active {
     @apply pointer-events-auto scale-100 opacity-100;
+}
+
+tr.instrument.lost {
+    @apply bg-gray-200;
+}
+
+tr.instrument.lost td {
+    @apply text-light-grey
+}
+
+tr.instrument.lost td .status-indicator {
+    @apply bg-grey;
 }
 
 #pagination {

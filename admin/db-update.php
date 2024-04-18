@@ -295,6 +295,16 @@ function runUpdates($version, $dbVersion) {
         }
         $change = [];
 
+        // Add the tablets table
+        $tabletsTableExists = $cainDB->select("SHOW TABLES LIKE 'tablets';");
+        if(!$tabletsTableExists) {
+            $change[] = "CREATE TABLE tablets (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                tablet_id varchar(100) UNIQUE,
+                `app_version` varchar(100)
+            );";
+        }
+
         // Add the Instrument table
         $instrumentsTableExists = $cainDB->select("SHOW TABLES LIKE 'instruments';");
         if(!$instrumentsTableExists) {
@@ -309,7 +319,9 @@ function runUpdates($version, $dbVersion) {
                 `version_number` varchar(100),
                 `last_connected` int,
                 `last_qc_pass` int,
-                `qc_flag` tinyint
+                `qc_flag` tinyint,
+                `tablet` int,
+                FOREIGN KEY (tablet) REFERENCES tablets(id)
             );";
         }
 

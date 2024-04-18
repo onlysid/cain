@@ -103,6 +103,9 @@ class Session {
         if (isset($_SESSION['last-activity']) && self::$sessionExpiry && time() - $_SESSION['last-activity'] > self::$sessionExpiry * 60) {
             // Session expired, destroy it and go to login page
             self::destroy();
+
+            // Set a notice to let the use know why they're at the login page
+            self::setNotice('You have been timed out. Please log in to continue.');
         } else {
             // Update last activity timestamp
             $_SESSION['last-activity'] = time();
@@ -163,7 +166,7 @@ class Session {
         }
 
         // The operator doesn't exist locally. Check externally.
-        if(limsRequest(["operatorId" => $operatorId], 40, 42)) {
+        if(limsRequest(["operatorId" => $operatorId], 40, 42)['operatorResult']) {
             // If the operator exists externally, create a clinician and log them in.
             $cainDB->query("INSERT INTO `users` (`operator_id`, `user_type`) VALUES (:operatorId, 1);", [':operatorId' => $operatorId]);
 

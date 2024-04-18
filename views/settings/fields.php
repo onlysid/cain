@@ -23,8 +23,8 @@ $visibilityFields = getSettingsBitmap(count($dataFields), 2, $fieldInfo['field_v
         <table>
             <thead>
                 <th>Field</th>
-                <th>Behaviour</th>
-                <th>Visibility</th>
+                <th>Tablet Entry</th>
+                <th>Hub Visibility</th>
             </thead>
             <tbody>
                 <?php foreach($dataFields as $index => $dataField) : ?>

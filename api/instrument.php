@@ -1,7 +1,7 @@
 <?php // Send information about an instrument (Assay Module).
 
 /*
-Get moduleSerialNumber, frontPanelId, status, progress, timeRemaining, faultCode, versionNumber
+Get tabletId, instrumentDump => {moduleSerialNumber, frontPanelId, status, progress, timeRemaining, faultCode, versionNumber} for each instrument
 Codes:
     Status:
     - 0: UNKNOWN
@@ -33,23 +33,17 @@ if(!$data) {
 }
 
 // We have data! Clean it and add it to the instruments db if it is good.
-$instrumentData['serial_number'] = $data['moduleSerialNumber'] ?? null;
+$instrumentData['tablet_id'] = $data['tabletId'] ?? null;
 
-if($instrumentData['serial_number']) {
-    $instrumentData['module_id'] = $data['frontPanelId'] ?? null;
-    $instrumentData['status'] = $data['status'] ?? null;
-    $instrumentData['progress'] = $data['progress'] ?? null;
-    $instrumentData['time_remaining'] = $data['timeRemaining'] ?? null;
-    $instrumentData['last_connected'] = time();
-    $instrumentData['fault_code'] = $data['faultCode'] ?? null;
-    $instrumentData['version_number'] = $data['versionNumber'] ?? null;
+if($instrumentData['tablet_id']) {
+    $instrumentData['tablet_data'] = $data['tabletData'] ?? null;
     
-    $response = updateInstrument($instrumentData);
+    $response = updateInstruments($instrumentData);
 }
 
 
 // Provide the response
-if(isset($response)) {
+if(isset($response) && $response) {
     echo json_encode(["status" => 10]);
 } else {
     echo json_encode(["status" => 422]);

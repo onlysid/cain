@@ -10,7 +10,6 @@ $hospitalInfo = array_intersect_key($settings, array_flip($hospitalInfoKeys));
 
 // Accepted Date Formats
 $dateFormats = ["d M Y", "d F Y", "d/m/Y"];
-
 ?>
 
 <h1>Assay Modules</h1>
@@ -27,6 +26,7 @@ $dateFormats = ["d M Y", "d F Y", "d/m/Y"];
         <th>Serial No</th>
         <th>Module ID</th>
         <th>Status</th>
+        <th class="hidden lg:table-cell">Tablet</th>
         <th></th>
     </thead>
 
