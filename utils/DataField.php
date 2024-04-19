@@ -5,11 +5,13 @@
 
 class Field {
     public $name;
+    public $dbName;
     public $behaviourLock;
     public $visibilityLock;
 
-    public function __construct(string $name, bool $behaviourLock = false, bool $visibilityLock = false) {
+    public function __construct(string $name, string $dbName, bool $behaviourLock = false, bool $visibilityLock = false) {
         $this->name = $name;
+        $this->dbName = $dbName;
         $this->behaviourLock = $behaviourLock;
         $this->visibilityLock = $visibilityLock;
     }
@@ -74,26 +76,25 @@ $fieldInfo = array_intersect_key($settings, array_flip($hospitalInfoKeys));
 
 // Define all fields
 $dataFields = [
-    new Field("Patient ID"),
-    new Field("NHS Number"),
-    new Field("First Name"),
-    new Field("Last Name"),
-    new Field("Date of Birth"),
-    new Field("Patient Age"),
-    new Field("Gender"),
-    new Field("Hospital ID"),
-    new Field("Site ID"),
-    new Field("Clinic ID"),
-    new Field("Patient Location"),
-    new Field("Sample ID", true, true),
-    new Field("Sample Collected"),
-    new Field("Sample Run"),
-    new Field("Assay Name"),
-    new Field("Lot Number"),
-    new Field("Test ID"),
-    new Field("Test Purpose"),
-    new Field("Test Complete Time"),
-    new Field("Operator ID"),
-    new Field("AM Serial No"),
-    new Field("Record Status"),
+    new Field("Patient ID", "patientId"),
+    new Field("NHS Number", "nhsNumber"),
+    new Field("First Name", "firstName"),
+    new Field("Last Name", "lastName"),
+    new Field("Date of Birth", "dob"),
+    new Field("Patient Age", "patientAge"),
+    new Field("Gender", "patientSex"),
+    new Field("Result", "result", true, true),
+    new Field("Hospital ID", "hospitalId"),
+    new Field("Site ID", "site"),
+    new Field("Clinic ID", "clinicId"),
+    new Field("Patient Location", "patientLocation"),
+    new Field("Sample ID", "sampleid"),
+    new Field("Sample Collected", "sampleCollected"),
+    new Field("Sample Received", "sampleReceived"),
+    new Field("Assay Name", "product"),
+    new Field("Lot Number", "lot"),
+    new Field("Test Purpose", "testPurpose"),
+    new Field("Test Complete Time", "testcompletetimestamp"),
+    new Field("Operator ID", "operatorId"),
+    new Field("AM Serial No", "moduleSerialNumber"),
 ];

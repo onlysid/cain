@@ -23,18 +23,27 @@ $tabletId = $data['tabletId'] ?? null;
 $appVersion = $data['appVersion'] ?? null;
 
 if($tabletId) {
+    $hospitalInfo = systemInfo();
+
+    // Extract 'name' as keys and 'value' as values
+    $settings = array_column($hospitalInfo, 'value', 'name');
+
+    // Field Items
+    require_once 'utils/DataField.php';
+
+    // Get the bitmaps so we can use them to display the current DB values
+    $behaviourFields = getSettingsBitmap(count($dataFields), 3, $fieldInfo['field_behaviour']);
+
     // Create/update the tablet information in the database
     updateTablet($tabletId, $appVersion);
 
-    // Generate the config
-    $config = getConfigForTablet();
-
-    echo json_encode(["status" => 150, "config" => $config]);
+    // Get the config settings ready for the response
+    $response = getFieldBehaviourSettings($dataFields, $behaviourFields);
 }
 
 // Provide the response
 if(isset($response)) {
-    echo json_encode(["status" => 10]);
+    echo json_encode(["status" => 150, "config" => $response]);
 } else {
     echo json_encode(["status" => 422]);
 }

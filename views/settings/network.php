@@ -3,7 +3,7 @@
 // Hospital Info Settings Subset
 $networkInfoKeys = ['selected_protocol', 'cain_server_ip', 'cain_server_port', 'hl7_server_ip', 'hl7_server_port', 'hl7_server_dest', 'patient_id', 'test_mode', 'app_mode'];
 $networkInfo = array_intersect_key($settings, array_flip($networkInfoKeys));
-
+$macAddress = exec('ifconfig | grep -o -E \'([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}\'');
 ?>
 
 <section class="notice">
@@ -29,15 +29,23 @@ $networkInfo = array_intersect_key($settings, array_flip($networkInfoKeys));
             </div>
         </div>
         <div class="field">
-            <label for="cainIP">DMS IP Address/Hostname</label>
+            <label for="dmsMac">Hub Mac Address</label>
             <div class="input-wrapper disabled">
-                <input disabled required class="cursor-not-allowed" id="cainIP" type="text" name="cainIP" value="<?= $_SERVER['SERVER_NAME'];?>">
+                <input disabled id="dmsMac" name="dmsMac" class="cursor-not-allowed" value="<?= $macAddress;?>">
             </div>
         </div>
-        <div class="field">
-            <label for="cainPort">DMS Port</label>
-            <div class="input-wrapper disabled">
-                <input disabled required class="cursor-not-allowed" id="cainPort" type="number" name="cainPort" value="<?= $_SERVER['SERVER_PORT'];?>">
+        <div class="form-fields">
+            <div class="field">
+                <label for="dmsIp">DMS IP Address/Hostname</label>
+                <div class="input-wrapper disabled">
+                    <input disabled required class="cursor-not-allowed" id="dmsIp" type="text" name="dmsIp" value="<?= gethostbyname($_SERVER['SERVER_NAME']);?>">
+                </div>
+            </div>
+            <div class="field">
+                <label for="dmsPort">DMS Port</label>
+                <div class="input-wrapper disabled">
+                    <input disabled required class="cursor-not-allowed" id="dmsPort" type="number" name="dmsPort" value="<?= $_SERVER['SERVER_PORT'];?>">
+                </div>
             </div>
         </div>
     </div>
@@ -114,6 +122,5 @@ $networkInfo = array_intersect_key($settings, array_flip($networkInfoKeys));
             </div>
         </div>
     </div>
-    <h3 class="text-dark w-full text-center rounded-xl px-4 py-2 bg-blue-200/75 shadow-lg">Hub Information</h3>
     <button class="btn smaller-btn" type="submit">Save Settings</button>
 </form>

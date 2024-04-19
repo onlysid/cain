@@ -14,7 +14,7 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
 
 <table id="usersTable">
     <thead>
-        <th>Operator ID</th>
+        <th><span class="hidden sm:inline-block mr-1">Operator</span>ID</th>
         <th>Name</th>
         <th>Type</th>
         <th></th>
@@ -162,6 +162,63 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
             </svg>
         </div>
         <h2>Add a new user</h2>
+        <form action="/process" method="POST">
+            <input type="hidden" name="action" value="add-operator">
+            <input type="hidden" name="return-path" value="<?= $currentURL;?>">
+
+            <div class="form-fields">
+                <div class="field">
+                    <label>Operator ID</label>
+                    <div class="input-wrapper">
+                        <input type="text" name="operatorId" placeholder="eg. 012345678">
+                    </div>
+                </div>
+            </div>
+            <div class="form-fields">
+                <div class="field">
+                    <label>First Name</label>
+                    <div class="input-wrapper">
+                        <input type="text" name="firstName" placeholder="eg. Jane">
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Last Name</label>
+                    <div class="input-wrapper">
+                        <input type="text" name="lastName" placeholder="eg. Doe">
+                    </div>
+                </div>
+            </div>
+            <div class="form-fields">
+                <div class="field">
+                    <label>Change Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" name="password" placeholder="Enter a new password">
+                    </div>
+                </div>
+                <div class="field">
+                    <label>Repeat Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" name="password2" placeholder="Ensure matching passwords">
+                    </div>
+                </div>
+            </div>
+            <div class="form-fields">
+                <div class="field">
+                    <label>User Type</label>
+                    <div class="input-wrapper select-wrapper">
+                        <select required name="userType">
+                            <?php foreach($userTypes as $userType => $userTypeValue) : ?>
+                                <option value="<?= $userTypeValue;?>"><?= $userType;?></option>
+                            <?php endforeach;?>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="w-full flex justify-center items-center gap-3 mt-3">
+                <button type="submit" class="btn smaller-btn">Create Operator</button>
+                <div class="cursor-pointer btn smaller-btn close-user-modal no-styles">Cancel</div>
+            </div>
+        </form>
     </div>
 </div>
 

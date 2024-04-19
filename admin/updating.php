@@ -1,7 +1,7 @@
 <?php // Updating cover
-include BASE_DIR . '/includes/version.php';
 
 // Checks if we are updating the database and loads a loading screen until the update completes.
+include BASE_DIR . '/includes/version.php';
 
 // Check for Cain updates
 $areWeUpdating = false;
@@ -12,5 +12,5 @@ if($areWeUpdating === true || $areWeUpdating === 100) : ?>
     <script src="/js/updateCheck.js" />
 <?php // Otherwise, we have some kind of corruption. Prompt the user to retry.
 elseif($areWeUpdating === 200) :
-    SESSION::setWarning("db-error");
+    Session::setWarning("db-error");
 endif; ?>

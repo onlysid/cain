@@ -12,6 +12,17 @@ Init!
 
 ### What's happened?
 
+#### 19/04/2024
+
+User control completion, field selection visibility implementation and some bug fixes.
+
+-   Users can now be added, deleted, edited and deactivated.
+-   Field visibility now fully impacts the app.
+-   QC policy rebranded to make it clear that it is not editable.
+-   Implemented config API.
+-   Account settings now work.
+-   Some minor DB changes.
+
 #### 18/04/2024
 
 Assay/Operator API adjustments

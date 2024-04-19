@@ -15,8 +15,6 @@ $showMenu = $route->showMenu;
 // Check to see if we are using too many results
 $resultsNum = checkResultCapacity();
 
-// Show warnings
-$warnings = Session::getWarnings();
 var_dump($_SESSION);
 ?>
 
@@ -71,7 +69,10 @@ var_dump($_SESSION);
         // Check for updates
         require_once BASE_DIR . '/admin/updating.php';
 
-        if(SESSION::getWarnings() && Session::isLoggedIn()) : ?>
+        // Show warnings
+        $warnings = Session::getWarnings();
+
+        if(Session::getWarnings() && Session::isLoggedIn()) : ?>
             <div id="messageBoard" class="bg-red-500 w-full">
                 <div class="py-2 mx-auto contatiner px-8 text-center text-white flex justify-center items-center">
                     <?php if(in_array('db-error', $warnings)) : ?>

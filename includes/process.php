@@ -38,6 +38,12 @@ class Process {
                 case('delete-operator'):
                     $this->deleteOperator();
                     break;
+                case('edit-operator'):
+                    $this->editOperator();
+                    break;
+                case('add-operator'):
+                    $this->addOperator();
+                    break;
                 case('toggle-operator-status'):
                     $this->toggleOperatorStatus();
                     break;
@@ -287,6 +293,192 @@ class Process {
 
         if($operatorId) {
             $cainDB->query("DELETE FROM users WHERE id = :id", [":id" => $operatorId]);
+        }
+    }
+
+    function editOperator() {
+        global $cainDB, $form;
+
+        $id = $_POST['id'] ?? null;
+        $firstName = $_POST['firstName'] ?? null;
+        $lastName = $_POST['lastName'] ?? null;
+        $password = $_POST['password'] ?? null;
+        $password2 = $_POST['password2'] ?? null;
+        $firstName = $_POST['firstName'] ?? null;
+        $userType = $_POST['userType'] ?? null;
+
+        // Validate input values
+        $errors = array();
+
+        if (!$id) {
+            $errors['id'] = 'Operator ID is required.';
+        }
+
+        if ($password && $password !== $password2) {
+            $errors['password2'] = 'Passwords do not match.';
+        }
+
+        // Password validation
+        if ($password && !preg_match('/^(?=.*[A-Z].*[A-Z])(?=.*[a-z].*[a-z])(?=.*\d.*\d)(?=.*[^\w\d\s]).{8,}$/', $password)) {
+            $errors['password'] = 'Password must contain at least 8 characters, 2 uppercase letters, 2 lowercase letters, 2 numbers, and 2 symbols.';
+        }
+        
+        // If there are errors, set them in the form object
+        if (!empty($errors)) {
+            foreach ($errors as $field => $error) {
+                $form->setError($field, $error);
+            }
+            return; // Exit early if there are errors
+        }
+
+        // Hash the password if provided
+        $hashedPassword = $password ? password_hash($password, PASSWORD_BCRYPT) : null;
+
+        // Construct the query
+        $query = "UPDATE users SET ";
+        $updates = [];
+
+        if($userType) {
+            $updates[] = "`user_type` = :userType";
+        }
+
+        // Add password update if provided
+        if ($hashedPassword !== null) {
+            $updates[] = "`password` = :password";
+        }
+
+        // Add first name update if provided
+        if ($firstName) {
+            $updates[] = "`first_name` = :firstName";
+        }
+
+        // Add last name update if provided
+        if ($lastName) {
+            $updates[] = "`last_name` = :lastName";
+        }
+
+        // Construct the WHERE clause
+        $query .= implode(", ", $updates);
+        $query .= " WHERE id = :id;";
+
+        // Prepare parameters for query
+        $params = [
+            ':id' => $id,
+        ];
+        
+        if($userType) {
+            $params[':userType'] = $userType;
+        }
+
+        // Add password parameter if provided
+        if ($hashedPassword !== null) {
+            $params[':password'] = $hashedPassword;
+        }
+
+        // Add first name parameter if provided
+        if ($firstName) {
+            $params[':firstName'] = $firstName;
+        }
+
+        // Add last name parameter if provided
+        if ($lastName) {
+            $params[':lastName'] = $lastName;
+        }
+
+        var_dump($query);
+
+        // Execute the query
+        try {
+            $cainDB->query($query, $params);
+        } catch (Exception $e) {
+            // Error occurred while executing the query, handle appropriately
+            $form->setError('general', 'An error occurred while creating the account. Please try again later.');
+        }
+    }
+
+    function addOperator() {
+        global $cainDB, $form;
+
+        $operatorId = $_POST['operatorId'] ?? null;
+        $firstName = $_POST['firstName'] ?? null;
+        $lastName = $_POST['lastName'] ?? null;
+        $password = $_POST['password'] ?? null;
+        $password2 = $_POST['password2'] ?? null;
+        $firstName = $_POST['firstName'] ?? null;
+        $userType = $_POST['userType'] ?? null;
+
+        // Validate input values
+        $errors = array();
+
+        if (!$operatorId) {
+            $errors['operatorId'] = 'Operator ID is required.';
+        }
+
+        if ($password && $password !== $password2) {
+            $errors['password2'] = 'Passwords do not match.';
+        }
+
+        // Password validation
+        if ($password && !preg_match('/^(?=.*[A-Z].*[A-Z])(?=.*[a-z].*[a-z])(?=.*\d.*\d)(?=.*[^\w\d\s]).{8,}$/', $password)) {
+            $errors['password'] = 'Password must contain at least 8 characters, 2 uppercase letters, 2 lowercase letters, 2 numbers, and 2 symbols.';
+        }
+        
+        // If there are errors, set them in the form object
+        if (!empty($errors)) {
+            foreach ($errors as $field => $error) {
+                $form->setError($field, $error);
+            }
+            return; // Exit early if there are errors
+        }
+
+        // Hash the password if provided
+        $hashedPassword = $password ? password_hash($password, PASSWORD_BCRYPT) : null;
+
+        // Construct the query
+        $query = "INSERT INTO users (`operator_id`, `user_type`";
+        $params = [':operatorId' => $operatorId, ':userType' => $userType];
+
+        // Add password and its placeholder if provided
+        if ($hashedPassword !== null) {
+            $query .= ", `password`";
+            $params[':password'] = $hashedPassword;
+        }
+
+        // Add first name and its placeholder if provided
+        if ($firstName) {
+            $query .= ", `first_name`";
+            $params[':firstName'] = $firstName;
+        }
+
+        // Add last name and its placeholder if provided
+        if ($lastName) {
+            $query .= ", `last_name`";
+            $params[':lastName'] = $lastName;
+        }
+
+        // Complete the query
+        $query .= ") VALUES (:operatorId, :userType";
+
+        // Add placeholders for password, first name, and last name if provided
+        if ($hashedPassword !== null) {
+            $query .= ", :password";
+        }
+        if ($firstName) {
+            $query .= ", :firstName";
+        }
+        if ($lastName) {
+            $query .= ", :lastName";
+        }
+        $query .= ");";
+
+        var_dump($query);
+
+        // Execute the query
+        try {
+            $cainDB->query($query, $params);
+        } catch (Exception $e) {
+            // Error occurred while executing the query, handle appropriately
+            $form->setError('general', 'An error occurred while creating the account. Please try again later.');
         }
     }
 

@@ -20,38 +20,38 @@ $qcSettings = array_intersect_key($settings, array_flip($qcKeys));
     <p>These are the current default QC policy settings.</p>
 </section>
 
-<div class="form-fields">
-    <div class="field">
-        <label for="qcEnforcement">QC Enforcement</label>
-        <div class="input-wrapper select-wrapper !justify-start">
-            <div><?= ucfirst($qcSettings['qc_enforcement']);?></div>
+<div class="cain-grid">
+    <div class="cain-grid-item">
+        <div class="grid-title">
+            <h4>QC Enforcement:</h4>
+            <p>Is QC enforced before an instrument is able to be used?</p>
         </div>
     </div>
-</div>
-<div class="form-fields">
-    <div class="field">
-        <label for="posRequired">Successful Positive Tests Required</label>
-        <div class="input-wrapper !justify-start">
-            <div><?= $qcSettings['qc_positive_requirements'];?></div>
+    <p class="cain-grid-content"><?= ucfirst($qcSettings['qc_enforcement']);?></p>
+    <div class="cain-grid-item">
+        <div class="grid-title">
+            <h4>Successful Positive Tests:</h4>
+            <p>How many successful positive tests must be carried out before QC is passed.</p>
         </div>
     </div>
-    <div class="field">
-        <label for="negRequired">Successful Negative Tests Required</label>
-        <div class="input-wrapper !justify-start">
-            <div><?= $qcSettings['qc_negative_requirements'];?></div>
+    <p class="cain-grid-content"><?= ucfirst($qcSettings['qc_positive_requirements']);?></p>
+    <div class="cain-grid-item">
+        <div class="grid-title">
+            <h4>Successful Negative Tests:</h4>
+            <p>How many successful negative tests must be carried out before QC is passed.</p>
         </div>
     </div>
-</div>
-<div class="form-fields">
-    <label for="enableIndependence" class="field !flex-row toggle-field !px-6 py-2 rounded-full bg-white shadow-md">
-        <div class="flex flex-col w-full">
-            <div class="shrink">Enable Independence</div>
-            <div class="description !text-xs text-grey mr-4">Allow each instrument to have its own QC policy if necessary.</div>
+    <p class="cain-grid-content"><?= ucfirst($qcSettings['qc_negative_requirements']);?></p>
+    <div class="cain-grid-item">
+        <div class="grid-title">
+            <h4>Independence:</h4>
+            <p>Allow each instrument to have its own QC policy if necessary.</p>
         </div>
-        <div><?= $qcSettings['qc_enable_independence'] ? "ENABLED" : "DISABLED";?></div>
-    </label>
+    </div>
+    <p class="cain-grid-content"><?= $qcSettings['qc_enable_independence'] ? "ENABLED" : "DISABLED";?></p>
 </div>
 
-<div class="grow flex items-end">
+<!-- TODO: Make only accessible to admins -->
+<div class="flex items-end">
     <a href="/settings/qc" class="btn border-btn">Adjust QC Policy</a>
 </div>

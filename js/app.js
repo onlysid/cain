@@ -185,7 +185,7 @@ if(userTimeoutCheckbox && userTimeoutInput && userTimeoutAmount) {
 }
 
 // User modal triggers
-var userModals = document.getElementById('usersTables');
+var userModals = document.getElementById('usersTable');
 
 if(userModals) {
     document.addEventListener('click', (e) => {

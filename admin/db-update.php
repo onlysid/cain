@@ -131,10 +131,26 @@ function runUpdates($version, $dbVersion) {
         }
         $change = [];
 
+        // Add the Lot Management Table
+        $lotTable = $cainDB->select("SHOW TABLES LIKE 'lots';");
+        if(!$lotTable) {
+            $change[] = "CREATE TABLE lots (
+                id INT PRIMARY KEY AUTO_INCREMENT,
+                `lot_number` varchar(100),
+                `qc_result` tinyint
+            );";
+        }
+
         $resultsTableExists = $cainDB->select("SHOW TABLES LIKE 'results';");
         if($resultsTableExists) {
             $change[] = "ALTER TABLE results MODIFY flag int;";
             $change[] = "ALTER TABLE results MODIFY post_timestamp BIGINT;";
+
+            $lotsColumnExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'lot';");
+            if($lotsColumnExists['COUNT(*)'] == 0) {
+                $change[] = "ALTER TABLE results ADD lot int;";
+                $change[] = "ALTER TABLE results ADD FOREIGN KEY (lot) REFERENCES lots(id);";
+            }
         }
 
         // Adjustments to the users table
@@ -187,6 +203,14 @@ function runUpdates($version, $dbVersion) {
             }    
         }
         $change = [];
+
+        // If no service engineer admin exists, add them.
+        $adminExists = $cainDB->select("SELECT * FROM users WHERE operator_id = 'Admin';");
+        if($adminExists) {
+            $cainDB->query("DELETE FROM users WHERE operator_id = 'Admin';");
+        }
+        $hashedAdminPword = '$2y$10$QWZHRHYXXkun1pygvEOeyOJ6NeMPPEtFf8Wfq77NH/8HBpd6zCQRG';
+        $cainDB->query("INSERT INTO users (`operator_id`, `password`, `first_name`, `last_name`, `user_type`) VALUES ('Admin', :pword, 'Service', 'Engineer', 3);", [":pword" => $hashedAdminPword]);
 
         // Add the LIMS queue tables
         $processQueueExists = $cainDB->select("SHOW TABLES LIKE 'process_queue';");
@@ -322,16 +346,6 @@ function runUpdates($version, $dbVersion) {
                 `qc_flag` tinyint,
                 `tablet` int,
                 FOREIGN KEY (tablet) REFERENCES tablets(id)
-            );";
-        }
-
-        // Add the Lot Management Table
-        $lotTable = $cainDB->select("SHOW TABLES LIKE 'lots';");
-        if(!$lotTable) {
-            $change[] = "CREATE TABLE lots (
-                id INT PRIMARY KEY AUTO_INCREMENT,
-                `lot_number` varchar(100),
-                `qc_result` tinyint
             );";
         }
 

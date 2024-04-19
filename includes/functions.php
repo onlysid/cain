@@ -251,7 +251,7 @@ function getResults($params) {
     }
 
     // Build the SQL query
-    $query = "SELECT * FROM results ";
+    $query = "SELECT * FROM results r LEFT JOIN lots i ON i.id = r.lot ";
     $countQuery = "SELECT COUNT(*) FROM results ";
     if (!empty($searchConditions)) {
         $query .= "WHERE $searchConditions ";
@@ -340,4 +340,63 @@ function getOperators($currentUserId = null) {
     } else {
         return $cainDB->selectAll("SELECT * FROM users WHERE user_type <3;");
     }
+}
+
+// Function to get the behaviour of all fields (for the tablet)
+function getFieldBehaviourSettings($dataFields, $behaviourFields) {
+    $result = [];
+    foreach($dataFields as $index => $dataField) {
+        $behaviour = "Hidden";
+        switch($behaviourFields[$index]) {
+            case 1:
+                $behaviour = "Visible";
+                break;
+            case 2:
+                $behaviour = "Mandatory";
+                break;
+            default:
+                break;
+
+        }
+
+        // Account for data field overrides
+        if($field->behaviourLock) {
+            $behaviour = "Automatic";
+        }
+
+        $result[$dataField->name] = $behaviour;
+    }
+
+    return $result;
+}
+
+function getFieldVisibilitySettings($dataFields, $visibilityFields) {
+    $result = [];
+    foreach($dataFields as $index => $dataField) {
+        if($visibilityFields[$index] || $dataField->visibilityLock) {
+            $result[$dataField->dbName] = $dataField->name;
+        }
+    }
+
+    return $result;
+}
+
+function updateTablet($tabletId, $appVersion) {
+    global $cainDB;
+
+    if($tabletId) {
+        // Check if we have the tablet in the db
+        $tabletExists = $cainDB->select("SELECT * FROM tablets WHERE tablet_id = ?;", [$tabletId]);
+
+        // If it exists, update it. If not, create it.
+        if($tabletExists) {
+            $cainDB->query("UPDATE tablets SET app_version = ? WHERE tablet_id = ?;", [$appVersion, $tabletId]);
+            return true;
+        }
+
+        $cainDB->query("INSERT INTO tablets (tablet_id, app_version) VALUES (?, ?);", [$tabletId, $appVersion]);
+    }
+
+    // Something has gone wrong
+    return false;
 }

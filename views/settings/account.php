@@ -4,3 +4,41 @@
     </svg>
     <p>Change your login information and account details.</p>
 </section>
+
+<form action="/process" method="POST">
+    <input type="hidden" name="action" value="edit-operator">
+    <input type="hidden" name="return-path" value="<?= $currentURL;?>">
+    <input type="hidden" name="id" class="form-operator-id" value="<?= $currentUser['id'];?>">
+
+    <div class="form-fields">
+        <div class="field">
+            <label>First Name</label>
+            <div class="input-wrapper">
+                <input type="text" name="firstName" value="<?= $currentUser['first_name'];?>" placeholder="eg. Jane">
+            </div>
+        </div>
+        <div class="field">
+            <label>Last Name</label>
+            <div class="input-wrapper">
+                <input type="text" name="lastName" value="<?= $currentUser['last_name'];?>" placeholder="eg. Doe">
+            </div>
+        </div>
+    </div>
+    <div class="form-fields">
+        <div class="field">
+            <label>Change Password</label>
+            <div class="input-wrapper">
+                <input type="password" name="password" placeholder="Enter a new password">
+            </div>
+        </div>
+        <div class="field">
+            <label>Repeat Password</label>
+            <div class="input-wrapper">
+                <input type="password" name="password2" placeholder="Ensure matching passwords">
+            </div>
+        </div>
+    </div>
+    <div class="w-full flex justify-center items-center gap-3 mt-3">
+        <button type="submit" class="btn smaller-btn">Save Settings</button>
+    </div>
+</form>

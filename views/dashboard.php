@@ -19,22 +19,17 @@ $lastItemIndex = (($page * $itemsPerPage < $totalResultsCount) ? ($firstItemInde
 
 $resultNumberText = (($totalResultsCount > $itemsPerPage) ? ($firstItemIndex . "-" . $lastItemIndex .  " of ") : "") . $totalResultsCount . " Result" . ($totalResultsCount == 1 ? "" : "s");
 
+// Extract 'name' as keys and 'value' as values
+$settings = array_column($hospitalInfo, 'value', 'name');
+
+// Field Items
+require_once 'utils/DataField.php';
+
+// Get the bitmaps so we can use them to display the current DB values
+$visibilityFields = getSettingsBitmap(count($dataFields), 2, $fieldInfo['field_visibility']);
+
 // Fields we are interested in
-$listableFields = [
-    "patientId" => "Patient ID",
-    "nhsNumber" => "NHS Number",
-    "firstName lastName" => "Name",
-    "result" => "Result",
-    "dob" => "Date of Birth",
-    "patientSex" => "Gender",
-    "patientAge" => "Age",
-    "sampleCollected" => "Sample Date",
-    "operatorId" => "Operator ID",
-    "patientLocation" => "Location",
-    "clinicId" => "Clinic ID",
-    "sampleReceived" => "Test Started",
-    "testcompletetimestamp" => "Test Finished",
-];
+$listableFields = getFieldVisibilitySettings($dataFields, $visibilityFields);
 
 unset($filters['p']);
 

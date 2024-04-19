@@ -783,8 +783,12 @@ section.notice {
     @apply px-6 py-4 rounded-xl bg-blue-200 flex flex-col md:flex-row items-start lg:items-center gap-1 md:gap-3;
 }
 
-section.notice p {
+section.notice p, section.notice a {
     @apply text-base md:text-lg;
+}
+
+section.notice a {
+    @apply font-bold;
 }
 
 section.notice svg {
@@ -870,6 +874,10 @@ section p a, a.alt {
     @apply text-base text-grey uppercase -mt-2 font-extrabold;
 }
 
+h4 {
+    @apply text-lg xl:text-xl font-bold text-dark;
+}
+
 ul {
     @apply mb-9 relative text-dark px-6 py-4 rounded-lg bg-white;
 }
@@ -881,6 +889,31 @@ ul::after {
 
 ul li {
     @apply list-disc ml-3;
+}
+
+/* Generic Grid Table */
+.cain-grid {
+    @apply grid grid-cols-3 rounded-xl p-2 xl:p-3 w-full grow bg-grey shadow-white/30 shadow-xl mb-4 gap-1 lg:gap-2
+}
+
+.cain-grid .cain-grid-item {
+    @apply flex items-center gap-3 col-span-2 shadow-white/30 shadow-lg bg-blue-200 rounded-l-lg p-4;
+}
+
+.cain-grid-item .grid-title {
+    @apply flex flex-col;
+}
+
+.cain-grid-item .grid-title h4 {
+    @apply underline;
+}
+
+.cain-grid-item .grid-title p {
+    @apply text-base;
+}
+
+.cain-grid-content {
+    @apply bg-white shadow-white/30 shadow-lg rounded-r-lg p-4 text-center content-center font-extrabold;
 }
 
 /* Loader */
