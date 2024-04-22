@@ -41,6 +41,8 @@ foreach ($filters as $key => $value) {
 
 ?>
 
+<script src="js/chartJs/dist/chart.umd.js"></script>
+
 <h1 class="mb-2">Results</h1>
 
 <div id="tableInfoWrapper" class="w-full flex justify-between items-center gap-2">
@@ -106,7 +108,7 @@ foreach ($filters as $key => $value) {
                     </th>
                     <th class="hidden xs:table-cell">
                         <a href="<?= updateQueryString(["sp" => "product", "sd" => ((($filters['sd'] ?? "desc") == "desc" && ($filters['sp'] ?? null) == "product") || ($filters['sd'] ?? "desc") == "" ? "asc" : "")]);?>" class="ignore-default flex gap-1.5 items-center">
-                            <span>Assay</span>
+                            <span>Test</span>
                             <svg class="h-4 fill-dark <?= (isset($filters['sp']) && $filters['sp'] == "product") ? "" : "opacity-50 !rotate-180";?> <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                                 <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM385 231c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-71-71V376c0 13.3-10.7 24-24 24s-24-10.7-24-24V193.9l-71 71c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L239 119c9.4-9.4 24.6-9.4 33.9 0L385 231z"/>
                             </svg>
@@ -127,18 +129,17 @@ foreach ($filters as $key => $value) {
             <tbody>
                 <?php foreach($resultItems as $result) : ?>
                     <?php // We need to parse the result sensibly
-                        // TODO: The way we present this is to be determined. For now, we just truncate.
-                        $positive = (strpos(strtolower($result['result']), "positive")) || strtolower($result['result']) == "positive";
+                        $resultInfo = parseResult($result["result"]);
                     ;?>
-                    <tr id="result<?= $result['id'];?>" class="result">
+                    <tr id="result<?= $result['result_id'];?>" class="result">
                         <td><?= (new DateTime($result['testcompletetimestamp']))->format($hospitalInfoArray['date_format']);?></td>
                         <td><?= $result['firstName'];?> <?= $result['lastName'];?></td>
                         <td class="hidden xs:table-cell"><?= $result['product'];?></td>
-                        <td class="text-elipses hidden sm:table-cell"><?= truncate($result['result'], 30);?></td>
+                        <td class="text-elipses hidden sm:table-cell"><?= $resultInfo["posCount"] > 0 ? "Positive (" . $resultInfo["posCount"] . " target)" : "Negative";?></td>
                         <td>
                             <div class="h-full flex items-center gap-1.5 justify-end">
                                 <!-- Statuses and chevron -->
-                                <?php if($positive) : ?>
+                                <?php if($resultInfo["posCount"] > 0) : ?>
                                 <button class="flex items-center tooltip" title="Positive Result">
                                     <svg class="h-5 fill-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
                                         <path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"/>
@@ -210,11 +211,15 @@ foreach($resultItems as $result) : ?>
         // Further processing with $datetime
     } catch (Exception $e) {
         $dob = "Undefined";
-    }    
-    ;?>
-    <div id="result<?= $result['id'];?>Modal" class="result-modal">
+    }
+    // Result info
+    $resultInfo = parseResult($result['result']);
+
+    // Get the result information
+    ?>
+    <div id="result<?= $result['result_id'];?>Modal" class="result-modal">
         <div class="result-modal-backdrop">
-            <div class="relative result-details bg-primary shadow-xl shadow-dark flex flex-col rounded-xl max-w-[40rem] max-h-[calc(min(40rem,_90vh))] h-full w-full m-8 p-8 overflow-y-scroll">
+            <div class="relative result-details bg-primary shadow-xl shadow-dark flex flex-col rounded-xl max-w-[40rem] max-h-[calc(min(40rem,_90vh))] h-full w-full m-4 lg:m-8 p-4 lg:p-8 overflow-y-scroll">
                 <button class="modal-close absolute top-2 right-2 p-2 transition-all duration-500 hover:scale-110">
                     <svg class="h-8 fill-dark pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
                         <path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/>
@@ -223,7 +228,23 @@ foreach($resultItems as $result) : ?>
                 <h2 class="text-center sm:text-start mx-12 sm:mx-0 sm:mr-12 mb-2.5 sm:mb-1"><?= (new DateTime($result['testcompletetimestamp']))->format($hospitalInfoArray['date_format']);?>: <?= $result['firstName'];?> <?= $result['lastName'];?></h2>
                 <div class="bg-gradient-to-r from-transparent via-grey/75 sm:from-grey/75 to-transparent w-full mb-3 pb-0.5 rounded-full"></div>
 
-                <p class="result-details <?= $positive ? "alert" : "";?>"><?= $result['product'];?>: <?= $positive ? "Positive" : "Negative";?></p>
+                <div class="flex result-details flex-wrap gap-2 items-stretch">
+                    <?php if(gettype($resultInfo["result"]) === "boolean") : ?>
+                        <div class="result-info <?= $resultInfo["result"] ? "pos" : "";?>">
+                            <h4><?= $result["product"];?></h4>
+                            <p><?= $resultInfo["result"] ? "Positive" : "Negative";?></p>
+                        </div>
+                    <?php else : ?>
+
+                        <?php foreach($resultInfo["result"] as $resultKey => $resultData) : ?>
+                            <div class="<?= $resultData ? "pos" : "";?> result-info">
+                                <h4><?= $resultKey;?></h4>
+                                <p><?= $resultData ? "Positive" : "Negative";?></p>
+                            </div>
+                        <?php endforeach;?>
+
+                    <?php endif;?>
+                </div>
 
                 <table class="result-explosion">
                     <?php foreach($listableFields as $keyset => $value) :
@@ -249,3 +270,27 @@ foreach($resultItems as $result) : ?>
         </div>
     </div>
 <?php endforeach;?>
+<!-- <canvas id="myChart"></canvas>
+
+<script>
+  const ctx = document.getElementById('myChart');
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
+      datasets: [{
+        label: '# of Votes',
+        data: [12, 19, 3, 5, 2, 3],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  });
+</script> -->

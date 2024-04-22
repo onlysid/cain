@@ -12,6 +12,15 @@ Init!
 
 ### What's happened?
 
+#### 22/04/2024
+
+Graph library added, small styling changes and bug fixes.
+
+-   Results now correctly load when you click on them.
+-   ChartJS integrated.
+-   Added parsed results to the result modals.
+-   Added example API JSON files.
+
 #### 19/04/2024
 
 User control completion, field selection visibility implementation and some bug fixes.

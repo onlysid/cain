@@ -277,6 +277,16 @@ table tbody > tr td:last-of-type {
     @apply rounded-r-lg border-hidden pr-4 sm:pr-5;
 }
 
+table.result-explosion > thead > tr td:first-of-type,
+table.result-explosion tbody > tr td:first-of-type {
+    @apply rounded-l-md;
+}
+
+table.result-explosion > thead > tr td:last-of-type,
+table.result-explosion tbody > tr td:last-of-type {
+    @apply rounded-r-md font-normal;
+}
+
 table > thead > tr > th,
 table tbody > tr > th,
 table > thead > tr > td,
@@ -772,6 +782,18 @@ label:not(.toggle) {
 
 .result-modal.active .result-modal-backdrop {
     @apply opacity-100;
+}
+
+.result-modal .result-info {
+    @apply basis-[10rem] grow flex flex-col p-4 rounded-md bg-white shadow-xl shadow-dark/30;
+}
+
+.result-modal .result-info.pos {
+    @apply bg-gradient-to-r from-red-800 to-red-500;
+}
+
+.result-modal .result-info.pos h4, .result-modal .result-info.pos p {
+    @apply text-white;
 }
 
 section {

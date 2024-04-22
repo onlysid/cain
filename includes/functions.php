@@ -251,7 +251,7 @@ function getResults($params) {
     }
 
     // Build the SQL query
-    $query = "SELECT * FROM results r LEFT JOIN lots i ON i.id = r.lot ";
+    $query = "SELECT *, r.id AS result_id FROM results r LEFT JOIN lots i ON i.id = r.lot ";
     $countQuery = "SELECT COUNT(*) FROM results ";
     if (!empty($searchConditions)) {
         $query .= "WHERE $searchConditions ";
@@ -373,7 +373,7 @@ function getFieldBehaviourSettings($dataFields, $behaviourFields) {
 function getFieldVisibilitySettings($dataFields, $visibilityFields) {
     $result = [];
     foreach($dataFields as $index => $dataField) {
-        if($visibilityFields[$index] || $dataField->visibilityLock) {
+        if($visibilityFields[$index] && !$dataField->visibilityLock) {
             $result[$dataField->dbName] = $dataField->name;
         }
     }
@@ -399,4 +399,32 @@ function updateTablet($tabletId, $appVersion) {
 
     // Something has gone wrong
     return false;
+}
+
+// Turn a test result into an array of useful information about the test
+function parseResult($result) {
+    // First we must create the response object
+    $parsedResult = ["posCount" => 0];
+
+    // Now we must fill it. Begin by exploding by comma
+    $resultArray = explode(", ", $result);
+
+    // This function can handle if we are given multiplex results like SARS-CoV-2: 1Negative, RSV: 2Positive OR just simply positive and negative strings.
+    if(count($resultArray) >= 2) {
+        foreach($resultArray as $resultItem) {
+            $resultKeyValue = explode(": ", $resultItem);
+            $resultValue = stripos($resultKeyValue[1], "Positive") !== false ? true : false;
+            $parsedResult["result"][$resultKeyValue[0]] = $resultValue;
+            if($resultValue) {
+                $parsedResult["posCount"]++;
+            } 
+        }
+    } else {
+        $parsedResult["result"] = stripos($result, "Positive") !== false ? true : false;
+        if($parsedResult["result"]) {
+            $parsedResult["posCount"]++;
+        }
+    }
+
+    return $parsedResult;
 }

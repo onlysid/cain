@@ -114,7 +114,6 @@ var cainSection = document.getElementById("cainOptions");
 
 if(protocolDropdown && hl7Section && cainSection) {
     protocolDropdown.addEventListener('change', () => {
-        console.log(protocolDropdown.value);
         if(protocolDropdown.value == 1) {
             // If the selected protocol is HL7, no need to show or require the LIMS settings
             hl7Section.classList.add("active");
@@ -136,13 +135,15 @@ if(resultsTable) {
         result.addEventListener('click', () => {
             var resultId = result.id;
 
+            var id = resultId.replace("result", "");
+
             // Get the result's corresponding modal
             var resultModal = document.getElementById(resultId + "Modal");
 
             // Show it!
             resultModal.classList.add('active');
 
-            
+            // Hide it!
             resultModal.querySelector('.result-modal-backdrop').addEventListener('click', (e) => {
                 // Get the result details
                 var resultDetails = resultModal.querySelector('.result-details');
@@ -151,6 +152,38 @@ if(resultsTable) {
                     resultModal.classList.remove('active');
                 }
             })
+
+            // Load a graph (if it is not already loaded)
+            var phpFileUrl = '/scripts/graph-check.php';
+            
+            // Create a new XMLHttpRequest object
+            var xhr = new XMLHttpRequest();
+
+            // Open a GET request to the PHP file
+            xhr.open('POST', phpFileUrl, true);
+            xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+            // When the file is ready
+            xhr.onreadystatechange = function() {
+                // If the file has been successfully opened, watch it for progress
+                if (xhr.readyState === 4) {
+
+                    // If we got a valid response, interpret it
+                    if (xhr.status === 200) {
+                        // The response code/message
+                        var data = JSON.parse(xhr.responseText);
+                        
+                        // Build the graph in a canvas on the bottom of the result modal
+                        console.log(data);
+                    } else {
+                        // Handle error
+                        statusSpan.innerHTML = 'Error updating. Please refresh and try again.';
+                    }
+                }
+            };
+
+            // Send the AJAX request
+            xhr.send('id=' + encodeURIComponent(id));
         });
 
     })
@@ -173,7 +206,6 @@ if(userTimeoutCheckbox && userTimeoutInput && userTimeoutAmount) {
     });
 
     userTimeoutInput.addEventListener('change', () => {
-        console.log(userTimeoutInput.value);
         if(userTimeoutInput.value == 0) {
             userTimeoutCheckbox.checked = false;
             userTimeoutAmount.classList.remove('active');

@@ -20,7 +20,7 @@ $qcSettings = array_intersect_key($settings, array_flip($qcKeys));
     <p>These are the current default QC policy settings.</p>
 </section>
 
-<div class="cain-grid">
+<div class="cain-grid max-w-4xl mx-auto">
     <div class="cain-grid-item">
         <div class="grid-title">
             <h4>QC Enforcement:</h4>
@@ -52,6 +52,6 @@ $qcSettings = array_intersect_key($settings, array_flip($qcKeys));
 </div>
 
 <!-- TODO: Make only accessible to admins -->
-<div class="flex items-end">
+<div class="flex items-end max-w-4xl mx-auto">
     <a href="/settings/qc" class="btn border-btn">Adjust QC Policy</a>
 </div>
