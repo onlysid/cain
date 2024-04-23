@@ -240,7 +240,7 @@ function getResults($params) {
             $j = 0;
             foreach ($columns as $column) {
                 $searchConditions .= ($j != 0 ? "OR " : "") . "$column LIKE :filterString$i ";
-                $queryParams[':filterString' . $i] = str_replace(' ', '%', $filterString) . '%';
+                $queryParams[':filterString' . $i] = '%' . str_replace(' ', '%', $filterString) . '%';
                 $j++;
             }
             $searchConditions .= ") ";

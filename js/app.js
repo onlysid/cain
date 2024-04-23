@@ -153,37 +153,153 @@ if(resultsTable) {
                 }
             })
 
-            // Load a graph (if it is not already loaded)
-            var phpFileUrl = '/scripts/graph-check.php';
-            
-            // Create a new XMLHttpRequest object
-            var xhr = new XMLHttpRequest();
+            // Check if we have a graph already
+            var canvas = document.getElementById(`${id}Canvas`);
 
-            // Open a GET request to the PHP file
-            xhr.open('POST', phpFileUrl, true);
-            xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+            if(!canvas) {
+                // Load a graph (if it is not already loaded)
+                var phpFileUrl = '/scripts/graph-check.php';
+                
+                // Create a new XMLHttpRequest object
+                var xhr = new XMLHttpRequest();
+    
+                // Open a GET request to the PHP file
+                xhr.open('POST', phpFileUrl, true);
+                xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    
+                // When the file is ready
+                xhr.onreadystatechange = function() {
+                    // If the file has been successfully opened, watch it for progress
+                    if (xhr.readyState === 4) {
+                        // Could add a loading state here (if necessary)
+    
+                        // If we got a valid response, interpret it
+                        if (xhr.status === 200) {
+                            // The response code/message
+                            var data = JSON.parse(xhr.responseText);
+                            var resultDetailsSection = resultModal.querySelector('.result-details');
+    
+                            // If we have an error in our JSON, display the error.
+                            if(data.error) {
+                                // Render an error div with relevant information.
+                                var errorDiv = document.createElement('div');
+                                errorDiv.id = id + "Canvas";
+                                errorDiv.classList.add("error");
 
-            // When the file is ready
-            xhr.onreadystatechange = function() {
-                // If the file has been successfully opened, watch it for progress
-                if (xhr.readyState === 4) {
+                                errorDiv.innerHTML = `
+                                    <p>No Graph Data Found.</p>
+                                `;
 
-                    // If we got a valid response, interpret it
-                    if (xhr.status === 200) {
-                        // The response code/message
-                        var data = JSON.parse(xhr.responseText);
-                        
-                        // Build the graph in a canvas on the bottom of the result modal
-                        console.log(data);
-                    } else {
-                        // Handle error
-                        statusSpan.innerHTML = 'Error updating. Please refresh and try again.';
+                                resultDetailsSection.appendChild(errorDiv);
+                            } else {
+                                var canvasWrapper = document.createElement('div');
+                                canvasWrapper.classList.add('canvas-wrapper');
+
+                                // Create a canvas
+                                canvas = document.createElement('canvas');
+
+                                // Build the graph in a canvas on the bottom of the result modal
+                                canvas.id = id + "Canvas";
+
+                                // Add it to the DOM
+                                resultDetailsSection.appendChild(canvasWrapper);
+                                canvasWrapper.appendChild(canvas);
+
+                                // We need to know the number of cycles required.
+                                var numCyclesRequired = 0;
+
+                                // Create the datasets
+                                var dataSets = [];
+                                data.forEach((dataSet) => {
+                                    // Shift the label off the array
+                                    var label = dataSet.shift();
+
+                                    // See how many points on the x axis we need
+                                    numCyclesRequired = Math.max(dataSet.length, numCyclesRequired);
+                                    dataSets.push({
+                                        label: label.y,
+                                        data: dataSet,
+                                        borderWidth: 2,
+                                        pointRadius: 4,
+                                        pointHoverRadius: 6,
+                                    });
+                                });
+
+                                const graphData = {
+                                    datasets: dataSets
+                                };
+
+                                new Chart(canvas, {
+                                    type: 'line',
+                                    data: graphData,
+                                    options: {
+                                        responsive: false,
+                                        maintainAspectRatio: false,
+                                        plugins: {
+                                          title: {
+                                            display: true,
+                                            text: 'Result Data',
+                                            font: {
+                                                size: 26,
+                                                weight: 600,
+
+                                            }
+                                          },
+                                          legend: {
+                                            labels: {
+                                                font: {
+                                                    size: 15,
+                                                    weight: 600
+                                                }
+                                            }
+                                          }
+                                        },
+                                        responsive: true,
+                                        interatction: {
+                                            mode: 'index',
+                                            intersect: false
+                                        },
+                                        scales: {
+                                            y: {
+                                                type: 'linear',
+                                                display: true,
+                                                title: {
+                                                    display: true,
+                                                    text: "Intensity",
+                                                    font: {
+                                                        size: 14
+                                                    }
+                                                },
+                                            },
+                                            x: {
+                                                title: {
+                                                    display: true,
+                                                    text: "Cycles",
+                                                    font: {
+                                                        size: 14
+                                                    }
+                                                },
+                                            }
+                                        },
+                                        elements: {
+                                            line: {
+                                                tension: 0.2
+                                            }
+                                        }
+                                    }
+                                });
+                            }
+                            
+                        } else {
+                            // Handle error
+                            statusSpan.innerHTML = 'Error updating. Please refresh and try again.';
+                        }
                     }
-                }
-            };
-
-            // Send the AJAX request
-            xhr.send('id=' + encodeURIComponent(id));
+                };
+    
+                // Send the AJAX request
+                xhr.send('id=' + encodeURIComponent(id));
+            }
         });
 
     })

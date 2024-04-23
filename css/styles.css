@@ -322,12 +322,28 @@ td .table-controls svg  {
     @apply h-6;
 }
 
+td.active {
+    @apply text-red-500;
+}
+
+.result-details .canvas-wrapper {
+    @apply min-w-[450px] min-h-[400px] overflow-scroll;
+}
+
+.result-details .canvas-wrapper, .result-details .error {
+    @apply p-2 md:p-4 bg-white rounded-xl shadow-xl;
+}
+
+.result-details .error p {
+    @apply text-center font-bold;
+}
+
 td.end form {
     @apply items-center w-auto gap-2.5;
 }
 
 table.result-explosion {
-    @apply border-spacing-0.5;
+    @apply border-spacing-0.5 mb-4;
 }
 
 table.result-explosion tr {

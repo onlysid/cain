@@ -1004,8 +1004,16 @@ video {
   max-height: 30rem;
 }
 
-.max-h-\[calc\(min\(40rem\2c _90vh\)\)\] {
-  max-height: calc(min(40rem, 90vh));
+.max-h-\[calc\(min\(45rem\2c _90vh\)\)\] {
+  max-height: calc(min(45rem, 90vh));
+}
+
+.min-h-\[400px\] {
+  min-height: 400px;
+}
+
+.\!w-full {
+  width: 100% !important;
 }
 
 .w-0 {
@@ -1072,6 +1080,10 @@ video {
   min-width: 200px;
 }
 
+.min-w-\[450px\] {
+  min-width: 450px;
+}
+
 .min-w-full {
   min-width: 100%;
 }
@@ -1109,8 +1121,8 @@ video {
   max-width: 30rem;
 }
 
-.max-w-\[40rem\] {
-  max-width: 40rem;
+.max-w-\[50rem\] {
+  max-width: 50rem;
 }
 
 .max-w-lg {
@@ -1168,6 +1180,12 @@ video {
 .border-spacing-0 {
   --tw-border-spacing-x: 0px;
   --tw-border-spacing-y: 0px;
+  border-spacing: var(--tw-border-spacing-x) var(--tw-border-spacing-y);
+}
+
+.border-spacing-0\.5 {
+  --tw-border-spacing-x: 0.125rem;
+  --tw-border-spacing-y: 0.125rem;
   border-spacing: var(--tw-border-spacing-x) var(--tw-border-spacing-y);
 }
 
@@ -1475,6 +1493,10 @@ video {
   overflow-y: visible;
 }
 
+.overflow-x-scroll {
+  overflow-x: scroll;
+}
+
 .overflow-y-scroll {
   overflow-y: scroll;
 }
@@ -1719,10 +1741,6 @@ video {
 .bg-tirtiary {
   --tw-bg-opacity: 1;
   background-color: rgb(119 223 255 / var(--tw-bg-opacity));
-}
-
-.bg-tirtiary\/50 {
-  background-color: rgb(119 223 255 / 0.5);
 }
 
 .bg-transparent {
@@ -3133,6 +3151,38 @@ td .table-controls svg {
   height: 1.5rem;
 }
 
+td.active {
+  --tw-text-opacity: 1;
+  color: rgb(239 68 68 / var(--tw-text-opacity));
+}
+
+.result-details .canvas-wrapper {
+  min-height: 400px;
+  min-width: 450px;
+  overflow: scroll;
+}
+
+.result-details .canvas-wrapper, .result-details .error {
+  border-radius: 0.75rem;
+  --tw-bg-opacity: 1;
+  background-color: rgb(255 255 255 / var(--tw-bg-opacity));
+  padding: 0.5rem;
+  --tw-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1), 0 8px 10px -6px rgb(0 0 0 / 0.1);
+  --tw-shadow-colored: 0 20px 25px -5px var(--tw-shadow-color), 0 8px 10px -6px var(--tw-shadow-color);
+  box-shadow: var(--tw-ring-offset-shadow, 0 0 #0000), var(--tw-ring-shadow, 0 0 #0000), var(--tw-shadow);
+}
+
+@media (min-width: 782px) {
+  .result-details .canvas-wrapper, .result-details .error {
+    padding: 1rem;
+  }
+}
+
+.result-details .error p {
+  text-align: center;
+  font-weight: 700;
+}
+
 td.end form {
   width: auto;
   align-items: center;
@@ -3140,6 +3190,7 @@ td.end form {
 }
 
 table.result-explosion {
+  margin-bottom: 1rem;
   --tw-border-spacing-x: 0.125rem;
   --tw-border-spacing-y: 0.125rem;
   border-spacing: var(--tw-border-spacing-x) var(--tw-border-spacing-y);
@@ -5036,6 +5087,10 @@ ul li {
 
   .md\:p-0 {
     padding: 0px;
+  }
+
+  .md\:p-4 {
+    padding: 1rem;
   }
 
   .md\:p-8 {

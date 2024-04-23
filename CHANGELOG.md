@@ -12,6 +12,14 @@ Init!
 
 ### What's happened?
 
+#### 23/04/2024
+
+Graphs implemented
+
+-   Results now load graphs if there is a valid CSV file.
+-   Sorting now resets pagination.
+-   Adjusted the API for retrieving data for the curves for results.
+
 #### 22/04/2024
 
 Graph library added, small styling changes and bug fixes.

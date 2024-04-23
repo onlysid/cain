@@ -36,9 +36,10 @@ Get: {
 	"flag": ""
     
 	The following is not to be saved in the DB, only in a CSV!
-    "curve_data_1": "0.123,0.1241,0.32121,0.2132141,0.213213,…",
-	"curve_data_2": "0.123,0.1241,0.32121,0.2132141,0.213213,…",
-	"curve_index": "123567", (/var/www/html/curves/123567.csv)
+    "curveData": {
+        "SCoV": "0.123,0.1241,0.32121,0.2132141,0.213213,…",
+        "FluA": "0.123,0.1241,0.32121,0.2132141,0.213213,…",
+    }
 }
 Return status
 
@@ -141,38 +142,48 @@ if($errors) {
 } else {
     // Add the CSV data: we may have up to 6 curves.
     $csvData = [];
-    for($i = 1; $i < 7; $i++) {
-        if(isset($data["curve_data_$i"])) {
-            $csvData[$i] = $data["curve_data_$i"];
+
+    // Max data points
+    $maxDataPoints = 0;
+
+    if(isset($data["curveData"])) {
+        foreach($data["curveData"] as $curveTitle => $curveData) {
+            // Parse curve data into an array
+            $curveValues = explode(",", $curveData);
+
+            // Set the max data points to be the larger of itself or the length of the curve values
+            $maxDataPoints = max($maxDataPoints, count($curveValues));
+            
+            // Add curve data to $csvData array
+            $csvData[$curveTitle] = $curveValues;
         }
     }
 
     if($csvData) {
         // Directory to store CSV files
         $directory = BASE_DIR . '/curves';
-    
+
         // Ensure the directory exists
         if (!file_exists($directory)) {
             mkdir($directory, 0777, true); // Create directory recursively
         }
-    
+
         // Define file path
         $filePath = "$directory/$resultId.csv";
-    
+
         // Open file for writing
         $file = fopen($filePath, "w");
-    
+
         // Write CSV header
-        fputcsv($file, range(1, 45));
-    
-    
-        // Save CSV files
-        foreach ($csvData as $curveNumber => $curveData) {
-            // Write curve data as CSV rows
-            $rows = explode(",", $curveData); // Assuming comma-separated values
-            fputcsv($file, $rows);
+        fputcsv($file, array_merge(["0"], range(1, $maxDataPoints))); // Adding "Curve" as the first column header
+
+        // Write CSV rows
+        foreach ($csvData as $curveTitle => $curveValues) {
+            // Combine curve title with its values
+            $rowData = array_merge([$curveTitle], $curveValues);
+            fputcsv($file, $rowData);
         }
-    
+
         // Close file
         fclose($file);
     }
