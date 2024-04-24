@@ -12,6 +12,16 @@ Init!
 
 ### What's happened?
 
+#### 24/04/2024
+
+Lots, notices and and form errors sorted.
+
+-   Lots now display on the /lots page.
+-   Operator lookup now fails instantly if LIMS is not switched on.
+-   Sent to LIMS now works.
+-   Form fields now provide ample feedback with some UI changes.
+-   Notices now pop up.
+
 #### 23/04/2024
 
 Graphs implemented

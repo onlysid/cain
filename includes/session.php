@@ -41,12 +41,12 @@ class Session {
         return $_SESSION[$key] ?? null;
     }
 
-    // Set session notice
-    public static function setNotice($message) {
+    // Set session notice (0 = standard, 1 = warning, 2 = alert)
+    public static function setNotice($message, $severity = 0) {
         if (!self::exists('notices')) {
             self::set('notices', []);
         }
-        $_SESSION['notices'][] = $message;
+        $_SESSION['notices'][] = [$message, $severity];
     }
 
     // Get session notices
@@ -166,7 +166,8 @@ class Session {
         }
 
         // The operator doesn't exist locally. Check externally.
-        if(limsRequest(["operatorId" => $operatorId], 40, 42)['operatorResult']) {
+        $limsResponse = limsRequest(["operatorId" => $operatorId], 40, 42);
+        if(isset($limsResponse['operatorResult']) ? $limsResponse['operatorResult'] == 'true' : false) {
             // If the operator exists externally, create a clinician and log them in.
             $cainDB->query("INSERT INTO `users` (`operator_id`, `user_type`) VALUES (:operatorId, 1);", [':operatorId' => $operatorId]);
 

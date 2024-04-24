@@ -92,7 +92,7 @@ $dataFields = [
     new Field("Sample Collected", "sampleCollected"),
     new Field("Sample Received", "sampleReceived"),
     new Field("Assay Name", "product"),
-    new Field("Lot Number", "lot"),
+    new Field("Lot Number", "lot_number"),
     new Field("Test Purpose", "testPurpose"),
     new Field("Test Complete Time", "testcompletetimestamp"),
     new Field("Operator ID", "operatorId"),

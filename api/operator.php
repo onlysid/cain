@@ -12,8 +12,6 @@ Returns:
     - 40: Request received but not yet processed
     - 41: Request being processed
     - 42: Request is processed
-
-TODO: We may need to add password generation logic here from the tablet
 */
 
 // Firstly, if we have no data, quit.
@@ -40,7 +38,8 @@ try {
         // If the operator does not exist, check LIMS and create the operator locally if need be
         if(!$operatorExists) {
             // If we have a successful result in the auth value, then LIMS has found the operator. Otherwise, no operator exists.
-            if(limsRequest(["operatorId" => $operatorId], 40, 42)['auth']) {
+            $limsResponse = limsRequest(["operatorId" => $operatorId], 40, 42);
+            if(isset($limsResponse['operatorResult']) ? $limsResponse['operatorResult'] == 'true' : false) {
                 // Add the operator to the database
                 $cainDB->query("INSERT INTO `users` (`operator_id`, `user_type`) VALUES (:operatorId, 1);", [':operatorId' => $operatorId]);
             } else {

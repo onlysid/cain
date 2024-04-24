@@ -259,7 +259,7 @@ table tbody {
 }
 
 table > thead > tr,
-table:not(.result-explosion) tbody > tr {
+table:not(.result-explosion):not(.lot-explosion) tbody > tr {
     @apply shadow-md shadow-dark/75 rounded-lg sm:px-6 transition-all;
 }
 
@@ -294,7 +294,7 @@ table tbody > tr > td {
     @apply py-4 px-1.5 sm:px-2.5 xl:px-3 leading-none align-middle text-sm sm:text-base font-bold;
 }
 
-table:not(.result-explosion) tbody tr {
+table:not(.result-explosion):not(.lot-explosion) tbody tr {
     @apply border-light-grey border cursor-pointer shadow-lg transition-all duration-500 hover:bg-tirtiary/20 text-grey hover:text-black hover:shadow-tirtiary/20;
 }
 
@@ -342,19 +342,19 @@ td.end form {
     @apply items-center w-auto gap-2.5;
 }
 
-table.result-explosion {
+table.result-explosion, table.lot-explosion {
     @apply border-spacing-0.5 mb-4;
 }
 
-table.result-explosion tr {
+table.result-explosion tr, table.lot-explosion tr {
     @apply bg-dark text-white;
 }
 
-table.result-explosion tr td:first-of-type {
+table.result-explosion tr td:first-of-type, table.lot-explosion tr td:first-of-type {
     @apply font-extrabold;
 }
 
-table.result-explosion td {
+table.result-explosion td, table.lot-explosion td {
     @apply py-2;
 }
 
@@ -366,11 +366,11 @@ td .details svg {
     @apply h-5 fill-dark;
 }
 
-.result-details {
+.result-details, .lot-details {
     @apply mb-3;
 }
 
-.result-details.alert {
+.result-details.alert, .lot-details.alert {
     @apply text-red-500;
 }
 
@@ -465,7 +465,7 @@ form {
 }
 
 .form-error {
-    @apply text-center text-base -mt-2.5 -mb-1 text-red-500;
+    @apply text-center text-base text-red-500;
 }
 
 .form-fields {
@@ -482,6 +482,10 @@ label:not(.toggle) {
 
 .form-fields .input-wrapper {
     @apply transition-all duration-500 w-full flex justify-center bg-white text-dark rounded-full px-4 py-2 border-light border-solid border items-center gap-2.5 md:gap-3;
+}
+
+.form-fields .input-wrapper.error {
+    @apply border-2 !border-red-500 border-dashed;
 }
 
 #login .form-fields .input-wrapper {
@@ -502,6 +506,10 @@ label:not(.toggle) {
 
 .form-fields .input-wrapper > svg {
     @apply transition-all duration-500 h-7 md:h-8 fill-grey;
+}
+
+.form-fields .input-wrapper.error > svg {
+    @apply !fill-red-500;
 }
 
 .form-fields .input-wrapper:not(.disabled):hover,
@@ -784,31 +792,35 @@ label:not(.toggle) {
     @apply w-full h-full;
 } 
 
-.result-modal {
+.result-modal, .lot-modal {
     @apply fixed transition-all duration-500 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50 bg-black/50;
 }
 
-.result-modal-backdrop {
+.result-modal-backdrop, .lot-modal-backdrop {
     @apply fixed opacity-0 backdrop-blur-lg w-screen h-screen top-0 left-0 bg-black/30 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 flex justify-center items-center;
 }
 
-.result-modal.active {
+.result-modal.active, .lot-modal.active {
     @apply pointer-events-auto;
 }
 
-.result-modal.active .result-modal-backdrop {
+.result-modal.active .result-modal-backdrop, .lot-modal.active .lot-modal-backdrop {
     @apply opacity-100;
 }
 
-.result-modal .result-info {
+.result-modal .result-info, .lot-modal .lot-info {
     @apply basis-[10rem] grow flex flex-col p-4 rounded-md bg-white shadow-xl shadow-dark/30;
 }
 
-.result-modal .result-info.pos {
+.result-modal .result-info.pos, .lot-modal .lot-info.neg {
     @apply bg-gradient-to-r from-red-800 to-red-500;
 }
 
-.result-modal .result-info.pos h4, .result-modal .result-info.pos p {
+.lot-modal .lot-info.pos {
+    @apply bg-gradient-to-r from-green-800 to-green-500;
+}
+
+.result-modal .result-info.pos h4, .result-modal .result-info.pos p, .lot-modal .lot-info.pos h4, .lot-modal .lot-info.pos p, .lot-modal .lot-info.neg h4, .lot-modal .lot-info.neg p {
     @apply text-white;
 }
 
@@ -819,6 +831,10 @@ section {
 /* Notices and Generic Section Layouts */
 section.notice {
     @apply px-6 py-4 rounded-xl bg-blue-200 flex flex-col md:flex-row items-start lg:items-center gap-1 md:gap-3;
+}
+
+section.notice.error {
+    @apply bg-red-200;
 }
 
 section.notice p, section.notice a {
@@ -916,17 +932,70 @@ h4 {
     @apply text-lg xl:text-xl font-bold text-dark;
 }
 
-ul {
-    @apply mb-9 relative text-dark px-6 py-4 rounded-lg bg-white;
+ul.form-errors {
+    @apply w-full rounded-lg shadow-dark/30 shadow-md py-4 px-6 border border-solid border-red-500 bg-red-50;
 }
 
-ul::after {
-    @apply absolute -bottom-3 left-0 w-full h-0.5 bg-dark rounded-full;
-    content: "";
+ul.form-errors li {
+    @apply font-bold text-red-700;
 }
 
-ul li {
-    @apply list-disc ml-3;
+/* Notices */
+#notices {
+    @apply fixed right-0 bottom-0 flex justify-end p-2.5 md:p-4 flex-col-reverse;
+}
+
+#notices .notice {
+    @apply relative sm:w-[min(20rem,_100vw)] bg-green-200 cursor-pointer rounded-lg shadow-xl shadow-black/50 p-3.5 md:p-4 my-1.5;
+    opacity: 0;
+}
+  
+#notices .notice.animate-in {
+    animation: fadeInRight 0.5s ease-out forwards;
+}
+
+#notices .notice.animate-out {
+    animation: fadeOutShrink 0.5s ease-out forwards;
+}
+
+#notices .notice p {
+    @apply text-dark;
+}
+
+#notices .notice.alert {
+    @apply bg-red-600;
+}
+
+#notices .notice.warn {
+    @apply bg-orange-400;
+}
+
+#notices .notice.alert p, #notices .notice.warn p {
+    @apply text-white;
+}
+
+@keyframes fadeInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes fadeOutShrink {
+    0% {
+        opacity: 1;
+    }
+    99% {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+    100% {
+        display: none;
+    }
 }
 
 /* Generic Grid Table */

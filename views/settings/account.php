@@ -6,6 +6,13 @@
 </section>
 
 <form action="/process" method="POST">
+    <?php if($form->getErrors()) : ?>
+        <ul class="form-errors">
+            <?php foreach($form->getErrors() as $errorKey => $error) : ?>
+                <li><?= $error;?></li>
+            <?php endforeach;?>
+        </ul>
+    <?php endif;?>
     <input type="hidden" name="action" value="edit-operator">
     <input type="hidden" name="return-path" value="<?= $currentURL;?>">
     <input type="hidden" name="id" class="form-operator-id" value="<?= $currentUser['id'];?>">
@@ -13,13 +20,13 @@
     <div class="form-fields">
         <div class="field">
             <label>First Name</label>
-            <div class="input-wrapper">
+            <div class="input-wrapper <?= $form->getError('firstName') ? "error" : "";?>">
                 <input type="text" name="firstName" value="<?= $currentUser['first_name'];?>" placeholder="eg. Jane">
             </div>
         </div>
         <div class="field">
             <label>Last Name</label>
-            <div class="input-wrapper">
+            <div class="input-wrapper <?= $form->getError('lastName') ? "error" : "";?>">
                 <input type="text" name="lastName" value="<?= $currentUser['last_name'];?>" placeholder="eg. Doe">
             </div>
         </div>
@@ -27,13 +34,13 @@
     <div class="form-fields">
         <div class="field">
             <label>Change Password</label>
-            <div class="input-wrapper">
+            <div class="input-wrapper <?= $form->getError('password') ? "error" : "";?>">
                 <input type="password" name="password" placeholder="Enter a new password">
             </div>
         </div>
         <div class="field">
             <label>Repeat Password</label>
-            <div class="input-wrapper">
+            <div class="input-wrapper <?= $form->getError('password2') ? "error" : "";?>">
                 <input type="password" name="password2" placeholder="Ensure matching passwords">
             </div>
         </div>

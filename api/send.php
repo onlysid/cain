@@ -23,7 +23,7 @@ Get: {
     "product": "HIV-1 Blood Qual",
     "result": "TBD",
     "testPurpose": "1",
-    ?"lotNumber": "",? What is this
+    "lotNumber": "",
 	"sender": "",
 	"version": "",
 	"sequenceNumber": "",
@@ -71,7 +71,13 @@ if(!$data) {
 
 $errors = null;
 
-// Firstly, we need to check that the result isn't already in the database
+// TODO: Firstly, we need to check that the result isn't already in the database
+
+// TODO: We likely also need to verify the purpose of the test (and understand how this should be parsed by our db insertion)
+
+// TODO: We also probably need to check that the moduleSerialNumber exists as an instrument's serial_number AND that the lotNumber exists as a lot's lot_number for foreign key checks
+
+// TODO: If these do not exist, we likely need to add these to the database first (with null unnecessary data)
 
 // We have data! Now we must clean it, add the result to the results table and make a CSV file. Separate what needs to go in the db and what needs to be a CSV.
 $dbData = [
@@ -106,6 +112,7 @@ $dbData = [
     "sampleCollected" => $data['sampleCollected'] ?? "",
     "sampleReceived" => $data['sampleReceived'] ?? "",
     "flag" => $data['flag'] ?? 100,
+    "lot_number" => $data['lotNumber'] ?? null,
     "post_timestamp" => time(),
 ];
 

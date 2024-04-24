@@ -8,7 +8,7 @@ $page = $filters['p'] ?? 1;
 $itemsPerPage = $filters['ipp'] ?? 10;
 
 // Get all the data
-$results = getResults($_GET);
+$results = getResults($_GET, $itemsPerPage);
 $resultItems = $results["results"];
 $totalResultsCount = $results["count"];
 
@@ -148,11 +148,28 @@ foreach ($filters as $key => $value) {
                                 <?php endif;?>
                                 <button id="sendResult<?= $result['id'];?>" class="flex items-center">
                                 <?php 
-                                // Set to green (sent) 102
-                                // Set to amber (sending) 101
-                                // Set to red (not sent) 100
-                                ;?>
-                                    <div class="status-indicator active tooltip" title="Sent to LIMS"></div>
+                                // We need to determine if the result has been sent to LIMS. If we aren't connected to LIMS we don't need to display anything (unless it is flagged as sent)
+                                $limsConnection = $settings['app_mode'] == 1 ? true : false;
+
+                                // Determine the symbol (if any) to display
+                                $limsStatus = false;
+                                $limsStatusMessage = "Not sent to LIMS";
+
+                                if($limsConnection) {
+                                    $limsStatus = 'unsent';
+                                }
+
+                                if($result['flag'] == 102) {
+                                    $limsStatus = 'active';
+                                    $limsStatusMessage = "Sent to LIMS";
+                                } else if($result['flag'] == 101 && $limsStatus) {
+                                    $limsStatus = 'pending';
+                                    $limsStatusMessage = "Sending to LIMS";
+                                }
+
+                                if($limsStatus !== false) : ?>
+                                    <div class="status-indicator <?= $limsStatus;?> tooltip" title="<?= $limsStatusMessage;?>"></div>
+                                <?php endif;?>
                                 </button>
                                 <button class="details tooltip" title="View Details">
                                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">

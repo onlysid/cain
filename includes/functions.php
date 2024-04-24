@@ -216,7 +216,7 @@ function getInstrumentSnapshot($instrumentId = null) {
     }
 }
 
-function getResults($params) {
+function getResults($params, $itemsPerPage) {
     global $cainDB;
 
     // Get any query params
@@ -224,7 +224,6 @@ function getResults($params) {
     $sortDirection = isset($params['sd']) && ($params['sd'] != "" || $params['sd'] == "asc") ? "ASC" : "DESC";
     $sortParam = isset($params['sp']) && $params['sp'] != "" ? $params['sp'] : "testcompletetimestamp";
     $pageNumber = isset($params['p']) ? $params['p'] : 1;
-    $itemsPerPage = isset($params['ipp']) ? $params['ipp'] : 10;
     $offset = ($pageNumber - 1) * $itemsPerPage;
 
     // Construct the WHERE clause for searching across all columns
@@ -232,7 +231,7 @@ function getResults($params) {
     $queryParams = [];
     if ($searchFilter !== null) {
         $searchTerms = explode(" ", $searchFilter);
-        $columns = ['firstName', 'lastName', 'hospitalId', 'nhsNumber', 'clinicId', 'operatorId', 'patientId', 'sampleId', 'trackingCode', 'patientLocation', 'result', 'product']; // Replace with your actual column names
+        $columns = ['firstName', 'lastName', 'hospitalId', 'nhsNumber', 'clinicId', 'operatorId', 'patientId', 'sampleId', 'trackingCode', 'patientLocation', 'result', 'product'];
 
         $i = 0;
         foreach($searchTerms as $filterString) {
@@ -251,7 +250,7 @@ function getResults($params) {
     }
 
     // Build the SQL query
-    $query = "SELECT *, r.id AS result_id FROM results r LEFT JOIN lots i ON i.id = r.lot ";
+    $query = "SELECT *, r.id AS result_id FROM results r LEFT JOIN lots i ON i.lot_number = r.lot_number ";
     $countQuery = "SELECT COUNT(*) FROM results ";
     if (!empty($searchConditions)) {
         $query .= "WHERE $searchConditions ";
@@ -270,6 +269,69 @@ function getResults($params) {
 
     // Get the relevant results
     return ["results" => $results, "count" => $count['COUNT(*)']];
+}
+
+function getLots($params, $itemsPerPage) {
+    global $cainDB;
+
+    // Get any query params
+    $searchFilter = isset($params['s']) ? $params['s'] : null;
+    $sortDirection = isset($params['sd']) && ($params['sd'] != "" || $params['sd'] == "asc") ? "ASC" : "DESC";
+    $sortParam = isset($params['sp']) && $params['sp'] != "" ? $params['sp'] : "id";
+    $pageNumber = isset($params['p']) ? $params['p'] : 1;
+    $offset = ($pageNumber - 1) * $itemsPerPage;
+
+    // Construct the WHERE clause for searching across all columns
+    $searchConditions = '';
+    $queryParams = [];
+    if ($searchFilter !== null) {
+        $searchTerms = explode(" ", $searchFilter);
+        $columns = ['lot_number', 'production_year', 'expiration_year', 'expiration_month', 'assay_type', 'production_run', 'sub_lot', 'assay_sub_type', 'check_digit'];
+
+        $i = 0;
+        foreach($searchTerms as $filterString) {
+            $searchConditions .= "AND (";
+            $j = 0;
+            foreach ($columns as $column) {
+                $searchConditions .= ($j != 0 ? "OR " : "") . "$column LIKE :filterString$i ";
+                $queryParams[':filterString' . $i] = '%' . str_replace(' ', '%', $filterString) . '%';
+                $j++;
+            }
+            $searchConditions .= ") ";
+            $i++;
+        }
+        // Remove the leading 'OR' from the first condition
+        $searchConditions = ltrim($searchConditions, 'AND');
+    }
+
+    // Build the SQL query
+    $query = "SELECT * FROM lots ";
+    $countQuery = "SELECT COUNT(*) FROM lots ";
+    if (!empty($searchConditions)) {
+        $query .= "WHERE $searchConditions ";
+        $countQuery .= "WHERE $searchConditions ";
+    }
+    $query .= "ORDER BY $sortParam $sortDirection ";
+
+    // Apply pagination
+    $query .= " LIMIT $itemsPerPage OFFSET $offset";
+
+    // Get the lots
+    $lots = $cainDB->selectAll($query, $queryParams);
+
+    // Get the count of all lots
+    $count = $cainDB->select($countQuery, $queryParams);
+
+    // Get the relevant results
+    return ["lots" => $lots, "count" => $count['COUNT(*)']];
+}
+
+// Function to sanitize and validate input data
+function testInput($data) {
+    $data = trim($data);
+    $data = stripslashes($data);
+    $data = htmlspecialchars($data);
+    return $data;
 }
 
 function truncate($string, $length = 100, $append = "&hellip;") {
@@ -395,6 +457,28 @@ function updateTablet($tabletId, $appVersion) {
         }
 
         $cainDB->query("INSERT INTO tablets (tablet_id, app_version) VALUES (?, ?);", [$tabletId, $appVersion]);
+        return true;
+    }
+
+    // Something has gone wrong
+    return false;
+}
+
+// Add a Lot to the db
+function updateLot($lotNumber, $qcResult = null) {
+    global $cainDB;
+
+    if($lotNumber) {
+        // Check if we have the lot number in the DB
+        $lotExists = $cainDB->select("SELECT * FROM lots WHERE lot_number = ?;", [$lotNumber]);
+
+        if($lotExists) {
+            $cainDB->query("UPDATE lots SET qc_result = ? WHERE lot_number = ?;", [$qcResult, $lotNumber]);
+            return true;
+        }
+
+        $cainDB->query("INSERT INTO lots (lot_number, qc_result) VALUES (?, ?);", [$lotNumber, $qcResult]);
+        return true;
     }
 
     // Something has gone wrong

@@ -377,3 +377,54 @@ if(userModals) {
         }
     })
 }
+
+// We need to be able to pop open lot information and display all the lots details
+var lotsTable = document.getElementById('lotsTable');
+
+if(lotsTable) {
+    var lotsRows = document.querySelectorAll('tr.lot');
+    lotsRows.forEach((lot) => {
+        
+        lot.addEventListener('click', () => {
+            var lotId = lot.id;
+
+            var id = lotId.replace("lot", "");
+
+            // Get the lot's corresponding modal
+            var lotModal = document.getElementById(lotId + "Modal");
+
+            // Show it!
+            lotModal.classList.add('active');
+
+            // Hide it!
+            lotModal.querySelector('.lot-modal-backdrop').addEventListener('click', (e) => {
+                // Get the lot details
+                var lotDetails = lotModal.querySelector('.lot-details');
+                
+                if(!lotDetails.contains(e.target) || e.target.classList.contains('modal-close')) {
+                    lotModal.classList.remove('active');
+                }
+            });
+        });
+    })
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const notices = document.querySelectorAll('#notices .notice');
+    
+    // Loop through each notice
+    notices.forEach((notice, index) => {
+        // Calculate delay for each notice
+        const delay = index * 200; // Adjust the delay time as needed
+        
+        // Add animation with delay
+        setTimeout(() => {
+            notice.classList.add('animate-in');
+        }, delay);
+        
+        // Add click event listener to toggle animate-out
+        notice.addEventListener('click', function() {
+            notice.classList.toggle('animate-out');
+        });
+    });
+  });

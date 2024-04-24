@@ -97,7 +97,7 @@ class Process {
                 $form->setError('password', 'Incorrect password');
             } else {
                 // Check if there are any notices
-                if(!Session::getNotices()) {
+                if(!Session::get('password-required')) {
                     $form->setError('operatorId', 'Operator ID not recognised.');
                 }
             }
@@ -149,8 +149,15 @@ class Process {
         }
 
         // Check if first name is !isset
-        if (!isset($firstName)) {
+        if (!isset($firstName) || empty($firstName)) {
             $errors['firstName'] = 'First name is required.';
+        } else {
+            // Validate firstName
+            $firstName = testInput($firstName);
+            // Check if firstName contains only letters, whitespace, and apostrophes
+            if (!preg_match("/^[a-zA-Z]+(?:[ '][a-zA-Z]+)*$/",$firstName)) {
+                $errors['firstName'] = 'First name not valid.';
+            }
         }
 
         // Password validation
@@ -205,13 +212,33 @@ class Process {
     }
 
     function updateGeneralSettings() {
-        global $cainDB;
+        global $cainDB, $form;
 
         // Retrieve form data
         $hospitalName = $_POST['hospitalName'];
         $officeName = $_POST['officeName'];
         $hospitalLocation = $_POST['hospitalLocation'];
         $dateFormat = $_POST['dateFormat'];
+
+        if(!testInput($hospitalName)) {
+            $errors['hospitalName'] = "Hospital name cannot be empty.";
+        }
+
+        if(!testInput($officeName)) {
+            $errors['officeName'] = "Office name cannot be empty.";
+        }
+
+        if(!testInput($hospitalLocation)) {
+            $errors['hospitalLocation'] = "Hospital Location cannot be empty.";
+        }
+
+        // If there are errors, set them in the form object
+        if (!empty($errors)) {
+            foreach ($errors as $field => $error) {
+                $form->setError($field, $error);
+            }
+            return; // Exit early if there are errors
+        }
 
         // Prepare and execute the query to update all settings in one go
         try {
@@ -322,9 +349,25 @@ class Process {
         if ($password && !preg_match('/^(?=.*[A-Z].*[A-Z])(?=.*[a-z].*[a-z])(?=.*\d.*\d)(?=.*[^\w\d\s]).{8,}$/', $password)) {
             $errors['password'] = 'Password must contain at least 8 characters, 2 uppercase letters, 2 lowercase letters, 2 numbers, and 2 symbols.';
         }
+
+        // Check if first name is !isset
+        if (!isset($firstName) || empty($firstName)) {
+            $errors['firstName'] = 'First name is required.';
+        } else {
+            // Validate firstName
+            $firstName = testInput($firstName);
+            // Check if firstName contains only letters, whitespace, and apostrophes
+            if (!preg_match("/^[a-zA-Z]+(?:[ '][a-zA-Z]+)*$/",$firstName)) {
+                $errors['firstName'] = 'First name not valid.';
+            }
+        }
         
         // If there are errors, set them in the form object
         if (!empty($errors)) {
+            if($id) {
+                $form->setValue("form", "edit");
+                $form->setValue("id", $id);
+            }
             foreach ($errors as $field => $error) {
                 $form->setError($field, $error);
             }
@@ -385,11 +428,10 @@ class Process {
             $params[':lastName'] = $lastName;
         }
 
-        var_dump($query);
-
         // Execute the query
         try {
             $cainDB->query($query, $params);
+            Session::setNotice("Successfully updated account settings");
         } catch (Exception $e) {
             // Error occurred while executing the query, handle appropriately
             $form->setError('general', 'An error occurred while creating the account. Please try again later.');
@@ -412,6 +454,8 @@ class Process {
 
         if (!$operatorId) {
             $errors['operatorId'] = 'Operator ID is required.';
+        } else {
+            $form->setValue('operatorId', $operatorId);
         }
 
         if ($password && $password !== $password2) {
@@ -422,9 +466,32 @@ class Process {
         if ($password && !preg_match('/^(?=.*[A-Z].*[A-Z])(?=.*[a-z].*[a-z])(?=.*\d.*\d)(?=.*[^\w\d\s]).{8,}$/', $password)) {
             $errors['password'] = 'Password must contain at least 8 characters, 2 uppercase letters, 2 lowercase letters, 2 numbers, and 2 symbols.';
         }
+
+        // Check if first name is !isset
+        if (!isset($firstName) || empty($firstName)) {
+            $errors['firstName'] = 'First name is required.';
+        } else {
+            // Validate firstName
+            $firstName = testInput($firstName);
+            // Check if firstName contains only letters, whitespace, and apostrophes
+            if (!preg_match("/^[a-zA-Z]+(?:[ '][a-zA-Z]+)*$/",$firstName)) {
+                $errors['firstName'] = 'First name not valid.';
+            } else {
+                $form->setValue('firstName', $firstName);
+            }
+        }
+
+        if($lastName) {
+            $form->setValue('lastName', $lastName);
+        }
+
+        if($userType) {
+            $form->setValue('userType', $userType);
+        }
         
         // If there are errors, set them in the form object
         if (!empty($errors)) {
+            $form->setValue("form", "add");
             foreach ($errors as $field => $error) {
                 $form->setError($field, $error);
             }

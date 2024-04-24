@@ -136,7 +136,15 @@ function runUpdates($version, $dbVersion) {
         if(!$lotTable) {
             $change[] = "CREATE TABLE lots (
                 id INT PRIMARY KEY AUTO_INCREMENT,
-                `lot_number` varchar(100),
+                `lot_number` varchar(100) UNIQUE,
+                `production_year` smallint,
+                `expiration_year` smallint,
+                `expiration_month` tinyint,
+                `assay_type` varchar(256),
+                `production_run` varchar(100),
+                `sub_lot` varchar(100),
+                `assay_sub_type` varchar(256),
+                `check_digit` varchar(100),
                 `qc_result` tinyint
             );";
         }
@@ -146,10 +154,10 @@ function runUpdates($version, $dbVersion) {
             $change[] = "ALTER TABLE results MODIFY flag int;";
             $change[] = "ALTER TABLE results MODIFY post_timestamp BIGINT;";
 
-            $lotsColumnExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'lot';");
+            $lotsColumnExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'lot_number';");
             if($lotsColumnExists['COUNT(*)'] == 0) {
-                $change[] = "ALTER TABLE results ADD lot int;";
-                $change[] = "ALTER TABLE results ADD FOREIGN KEY (lot) REFERENCES lots(id);";
+                $change[] = "ALTER TABLE results ADD lot_number varchar(100);";
+                $change[] = "ALTER TABLE results ADD FOREIGN KEY (lot_number) REFERENCES lots(lot_number);";
             }
         }
 
@@ -297,8 +305,8 @@ function runUpdates($version, $dbVersion) {
                 ('password_required', '3'),
                 ('session_expiration', '30'),
                 ('test_mode', '0'),
-                ('field_behaviour', '0'),
-                ('field_visibility', '0'),
+                ('field_behaviour', '1466015520085'),
+                ('field_visibility', '2097023'),
                 ('app_mode', '1'),
                 ('app_version', 'v2.0.0'),
                 ('qc_enforcement', 'off'),
@@ -359,8 +367,8 @@ function runUpdates($version, $dbVersion) {
                 `operator_id` varchar(50),
                 `instrument_id` INT,
                 `result` TINYINT,
-                FOREIGN KEY (lot_id) REFERENCES lots(id)
-
+                FOREIGN KEY (lot_id) REFERENCES lots(id),
+                FOREIGN KEY (instrument_id) REFERENCES instruments(id)
             );";
         }
 

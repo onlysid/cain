@@ -51,6 +51,7 @@ class Form {
 
     public function clearValues() {
         $this->values = [];
+        $this->session->set('form-values', $this->errors);
     }
 
     public function clearErrors() {

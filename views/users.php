@@ -58,8 +58,11 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
 <div id="userModalWrapper">
     <div class="overlay"></div>
     <?php // Create the user 
-    foreach($operators as $operator) : ?>
-        <div id="user<?= $operator['id'];?>Modal" class="user-modal">
+    foreach($operators as $operator) : 
+        // Check for errors in this user's editing
+        $hasErrors = $form->getValue("form") == "edit" && $form->getValue("id") == $operator['id'];
+        ?>
+        <div id="user<?= $operator['id'];?>Modal" class="user-modal <?= $hasErrors ? "active" : "";?>">
             <div class="close-user-modal">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                     <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/>
@@ -67,6 +70,13 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
             </div>
             <h2 class="mb-3"><?= $operator['operator_id'];?></h2>
             <form action="/process" method="POST">
+                <?php if($hasErrors) : ?>
+                    <ul class="form-errors">
+                        <?php foreach($form->getErrors() as $errorKey => $error) : ?>
+                            <li><?= $error;?></li>
+                        <?php endforeach;?>
+                    </ul>
+                <?php endif;?>
                 <input type="hidden" name="action" value="edit-operator">
                 <input type="hidden" name="return-path" value="<?= $currentURL;?>">
                 <input type="hidden" name="id" class="form-operator-id" value="<?= $operator['id'];?>">
@@ -74,13 +84,13 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
                 <div class="form-fields">
                     <div class="field">
                         <label>First Name</label>
-                        <div class="input-wrapper">
-                            <input type="text" name="firstName" value="<?= $operator['first_name'];?>" placeholder="eg. Jane">
+                        <div class="input-wrapper <?= ($hasErrors && $form->getError('password2')) ? "error" : "";?>">
+                            <input required type="text" name="firstName" value="<?= $operator['first_name'];?>" placeholder="eg. Jane">
                         </div>
                     </div>
                     <div class="field">
                         <label>Last Name</label>
-                        <div class="input-wrapper">
+                        <div class="input-wrapper <?= ($hasErrors && $form->getError('password2')) ? "error" : "";?>">
                             <input type="text" name="lastName" value="<?= $operator['last_name'];?>" placeholder="eg. Doe">
                         </div>
                     </div>
@@ -88,13 +98,13 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
                 <div class="form-fields">
                     <div class="field">
                         <label>Change Password</label>
-                        <div class="input-wrapper">
+                        <div class="input-wrapper <?= ($hasErrors && $form->getError('password2')) ? "error" : "";?>">
                             <input type="password" name="password" placeholder="Enter a new password">
                         </div>
                     </div>
                     <div class="field">
                         <label>Repeat Password</label>
-                        <div class="input-wrapper">
+                        <div class="input-wrapper <?= ($hasErrors && $form->getError('password2')) ? "error" : "";?>">
                             <input type="password" name="password2" placeholder="Ensure matching passwords">
                         </div>
                     </div>
@@ -155,7 +165,8 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
         </form>
     </div>
 
-    <div id="newUserModal" class="user-modal">
+    <?php $addUserError = $form->getValue("form") == "add";?>
+    <div id="newUserModal" class="user-modal <?= $addUserError ? "active" : "";?>">
         <div class="close-user-modal">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                 <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/>
@@ -163,52 +174,59 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
         </div>
         <h2>Add a new user</h2>
         <form action="/process" method="POST">
+            <?php if($addUserError) : ?>
+                <ul class="form-errors">
+                    <?php foreach($form->getErrors() as $errorKey => $error) : ?>
+                        <li><?= $error;?></li>
+                    <?php endforeach;?>
+                </ul>
+            <?php endif;?>
             <input type="hidden" name="action" value="add-operator">
             <input type="hidden" name="return-path" value="<?= $currentURL;?>">
 
             <div class="form-fields">
                 <div class="field">
                     <label>Operator ID</label>
-                    <div class="input-wrapper">
-                        <input type="text" name="operatorId" placeholder="eg. 012345678">
+                    <div class="input-wrapper <?= $form->getError('operatorId') ? "error" : "";?>">
+                        <input required type="text" name="operatorId" value="<?= $form->getValue('operatorId');?>" placeholder="eg. 012345678">
                     </div>
                 </div>
             </div>
             <div class="form-fields">
                 <div class="field">
                     <label>First Name</label>
-                    <div class="input-wrapper">
-                        <input type="text" name="firstName" placeholder="eg. Jane">
+                    <div class="input-wrapper <?= $form->getError('firstName') ? "error" : "";?>">
+                        <input required type="text" name="firstName" value="<?= $form->getValue('firstName');?>" placeholder="eg. Jane">
                     </div>
                 </div>
                 <div class="field">
                     <label>Last Name</label>
-                    <div class="input-wrapper">
-                        <input type="text" name="lastName" placeholder="eg. Doe">
+                    <div class="input-wrapper <?= $form->getError('lastName') ? "error" : "";?>">
+                        <input type="text" name="lastName" value="<?= $form->getValue('lastName');?>" placeholder="eg. Doe">
                     </div>
                 </div>
             </div>
             <div class="form-fields">
                 <div class="field">
-                    <label>Change Password</label>
-                    <div class="input-wrapper">
-                        <input type="password" name="password" placeholder="Enter a new password">
+                    <label>Password</label>
+                    <div class="input-wrapper <?= $form->getError('password') ? "error" : "";?>">
+                        <input type="password" name="password" placeholder="Enter a password">
                     </div>
                 </div>
                 <div class="field">
                     <label>Repeat Password</label>
-                    <div class="input-wrapper">
-                        <input type="password" name="password2" placeholder="Ensure matching passwords">
+                    <div class="input-wrapper <?= $form->getError('password2') ? "error" : "";?>">
+                        <input type="password" name="password2" placeholder="Enter password again">
                     </div>
                 </div>
             </div>
             <div class="form-fields">
                 <div class="field">
                     <label>User Type</label>
-                    <div class="input-wrapper select-wrapper">
+                    <div class="input-wrapper <?= $form->getError('userType') ? "error" : "";?> select-wrapper">
                         <select required name="userType">
                             <?php foreach($userTypes as $userType => $userTypeValue) : ?>
-                                <option value="<?= $userTypeValue;?>"><?= $userType;?></option>
+                                <option <?= $form->getValue('userType') == $userTypeValue ? "selected" : "";?> value="<?= $userTypeValue;?>"><?= $userType;?></option>
                             <?php endforeach;?>
                         </select>
                     </div>

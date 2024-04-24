@@ -34,51 +34,59 @@ function deleteProcessData($processId) {
 function limsRequest($data, $statusCode, $confirmationCode) {
     global $cainDB;
 
-    try {
-        // Start a transaction to ensure data consistency across tables
-        $cainDB->beginTransaction();
+    // Check if LIMS is available
+    $limsAvailability = $cainDB->select("SELECT `value` FROM settings WHERE `name` = 'app_mode';")['value'] == 1 ? true : false;
 
-        // Insert the process into the process queue
-        $cainDB->query("INSERT INTO process_queue (status) VALUES (:statusCode)", [":statusCode" => $statusCode]);
-
-        // Get the last inserted process ID
-        $processId = $cainDB->conn->lastInsertId();
-
-        // Prepare the SQL query template
-        $query = "INSERT INTO process_data (process_id, `key`, value) VALUES ";
-
-        // Initialize an array to hold the query placeholders and parameter values
-        $params = [];
-        $values = [];
-
-        // Iterate over each key-value pair in the data object
-        foreach ($data as $key => $value) {
-            // Add the placeholders for the current key-value pair to the query
-            $query .= "(?, ?, ?), ";
-            
-            // Add the parameters for the current key-value pair to the array
-            $params[] = $processId; // process_id
-            $params[] = $key; // key
-            $params[] = $value; // value
+    // If LIMS is not available, fail instantly
+    if($limsAvailability) {
+        try {
+            // Start a transaction to ensure data consistency across tables
+            $cainDB->beginTransaction();
+    
+            // Insert the process into the process queue
+            $cainDB->query("INSERT INTO process_queue (status) VALUES (:statusCode)", [":statusCode" => $statusCode]);
+    
+            // Get the last inserted process ID
+            $processId = $cainDB->conn->lastInsertId();
+    
+            // Prepare the SQL query template
+            $query = "INSERT INTO process_data (process_id, `key`, value) VALUES ";
+    
+            // Initialize an array to hold the query placeholders and parameter values
+            $params = [];
+            $values = [];
+    
+            // Iterate over each key-value pair in the data object
+            foreach ($data as $key => $value) {
+                // Add the placeholders for the current key-value pair to the query
+                $query .= "(?, ?, ?), ";
+                
+                // Add the parameters for the current key-value pair to the array
+                $params[] = $processId; // process_id
+                $params[] = $key; // key
+                $params[] = $value; // value
+            }
+    
+            // Remove the trailing comma and space from the query
+            $query = rtrim($query, ', ');
+    
+            // Execute the query
+            $cainDB->query($query, $params);
+    
+            // Commit the transaction
+            $cainDB->commit();
+    
+            // Call a separate function to handle polling and status check
+            return pollProcessStatus($processId, $confirmationCode);
+    
+        } catch(PDOException $e) {
+            // Rollback the transaction on error
+            $cainDB->rollBack();
+            throw $e;
         }
-
-        // Remove the trailing comma and space from the query
-        $query = rtrim($query, ', ');
-
-        // Execute the query
-        $cainDB->query($query, $params);
-
-        // Commit the transaction
-        $cainDB->commit();
-
-        // Call a separate function to handle polling and status check
-        return pollProcessStatus($processId, $confirmationCode);
-
-    } catch(PDOException $e) {
-        // Rollback the transaction on error
-        $cainDB->rollBack();
-        throw $e;
     }
+
+    return false;
 }
 
 // Function to poll process status and handle deletion
