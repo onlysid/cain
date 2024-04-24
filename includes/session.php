@@ -152,6 +152,7 @@ class Session {
                 return false;
             }
 
+            
             // Otherwise, Authenticate username and password
             if(password_verify($password, $operatorInfo['password'])) {
                 // Update the user's password with a new salty hash (salt auto-generated)

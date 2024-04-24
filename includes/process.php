@@ -120,8 +120,8 @@ class Process {
 
         // Get and sanitize input values
         $operatorId = htmlspecialchars($_POST['operatorId']);
-        $password = htmlspecialchars($_POST['password']);
-        $password2 = htmlspecialchars($_POST['password2']);
+        $password = $_POST['password'];
+        $password2 = $_POST['password2'];
         $firstName = htmlspecialchars($_POST['firstName']);
         $lastName = htmlspecialchars($_POST['lastName']);
 
@@ -538,8 +538,6 @@ class Process {
         }
         $query .= ");";
 
-        var_dump($query);
-
         // Execute the query
         try {
             $cainDB->query($query, $params);
@@ -557,7 +555,6 @@ class Process {
         if($operatorId) {
             $status = $cainDB->select("SELECT status FROM users WHERE id = :id", [":id" => $operatorId])['status'];
 
-            var_dump($status);
             $toggle = 0;
             if($status == 0) {
                 $toggle = 1;

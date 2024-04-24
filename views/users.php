@@ -85,13 +85,13 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
                     <div class="field">
                         <label>First Name</label>
                         <div class="input-wrapper <?= ($hasErrors && $form->getError('password2')) ? "error" : "";?>">
-                            <input required type="text" name="firstName" value="<?= $operator['first_name'];?>" placeholder="eg. Jane">
+                            <input required spellcheck="false" type="text" name="firstName" value="<?= $operator['first_name'];?>" placeholder="eg. Jane">
                         </div>
                     </div>
                     <div class="field">
                         <label>Last Name</label>
                         <div class="input-wrapper <?= ($hasErrors && $form->getError('password2')) ? "error" : "";?>">
-                            <input type="text" name="lastName" value="<?= $operator['last_name'];?>" placeholder="eg. Doe">
+                            <input type="text" spellcheck="false" name="lastName" value="<?= $operator['last_name'];?>" placeholder="eg. Doe">
                         </div>
                     </div>
                 </div>
@@ -99,13 +99,13 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
                     <div class="field">
                         <label>Change Password</label>
                         <div class="input-wrapper <?= ($hasErrors && $form->getError('password2')) ? "error" : "";?>">
-                            <input type="password" name="password" placeholder="Enter a new password">
+                            <input type="password" spellcheck="false" name="password" placeholder="Enter a new password">
                         </div>
                     </div>
                     <div class="field">
                         <label>Repeat Password</label>
                         <div class="input-wrapper <?= ($hasErrors && $form->getError('password2')) ? "error" : "";?>">
-                            <input type="password" name="password2" placeholder="Ensure matching passwords">
+                            <input type="password" spellcheck="false" name="password2" placeholder="Ensure matching passwords">
                         </div>
                     </div>
                 </div>
@@ -188,7 +188,7 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
                 <div class="field">
                     <label>Operator ID</label>
                     <div class="input-wrapper <?= $form->getError('operatorId') ? "error" : "";?>">
-                        <input required type="text" name="operatorId" value="<?= $form->getValue('operatorId');?>" placeholder="eg. 012345678">
+                        <input required spellcheck="false" type="text" name="operatorId" value="<?= $form->getValue('operatorId');?>" placeholder="eg. 012345678">
                     </div>
                 </div>
             </div>
@@ -196,13 +196,13 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
                 <div class="field">
                     <label>First Name</label>
                     <div class="input-wrapper <?= $form->getError('firstName') ? "error" : "";?>">
-                        <input required type="text" name="firstName" value="<?= $form->getValue('firstName');?>" placeholder="eg. Jane">
+                        <input required spellcheck="false" type="text" name="firstName" value="<?= $form->getValue('firstName');?>" placeholder="eg. Jane">
                     </div>
                 </div>
                 <div class="field">
                     <label>Last Name</label>
                     <div class="input-wrapper <?= $form->getError('lastName') ? "error" : "";?>">
-                        <input type="text" name="lastName" value="<?= $form->getValue('lastName');?>" placeholder="eg. Doe">
+                        <input type="text" spellcheck="false" name="lastName" value="<?= $form->getValue('lastName');?>" placeholder="eg. Doe">
                     </div>
                 </div>
             </div>
@@ -210,13 +210,13 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
                 <div class="field">
                     <label>Password</label>
                     <div class="input-wrapper <?= $form->getError('password') ? "error" : "";?>">
-                        <input type="password" name="password" placeholder="Enter a password">
+                        <input type="password" spellcheck="false" name="password" placeholder="Enter a password">
                     </div>
                 </div>
                 <div class="field">
                     <label>Repeat Password</label>
                     <div class="input-wrapper <?= $form->getError('password2') ? "error" : "";?>">
-                        <input type="password" name="password2" placeholder="Enter password again">
+                        <input type="password" spellcheck="false" name="password2" placeholder="Enter password again">
                     </div>
                 </div>
             </div>

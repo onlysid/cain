@@ -942,11 +942,11 @@ ul.form-errors li {
 
 /* Notices */
 #notices {
-    @apply fixed right-0 bottom-0 flex justify-end p-2.5 md:p-4 flex-col-reverse;
+    @apply fixed right-0 bottom-0 flex justify-end p-2.5 md:p-4 flex-col-reverse z-50;
 }
 
 #notices .notice {
-    @apply relative sm:w-[min(20rem,_100vw)] bg-green-200 cursor-pointer rounded-lg shadow-xl shadow-black/50 p-3.5 md:p-4 my-1.5;
+    @apply relative sm:w-[min(20rem,_100vw)] bg-blue-200 cursor-pointer rounded-lg shadow-xl shadow-black/50 p-3.5 md:p-4 my-1.5;
     opacity: 0;
 }
   
