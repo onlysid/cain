@@ -3,7 +3,7 @@
 class Process {
     function __construct() {
         // ! Auto-redirect override (for debugging only, to remain on process page)
-        $redirectOverride = true;
+        $redirectOverride = false;
 
         if(isset($_POST['action'])) {
             switch($_POST['action']) {
@@ -124,10 +124,6 @@ class Process {
         $password2 = $_POST['password2'];
         $firstName = htmlspecialchars($_POST['firstName']);
         $lastName = htmlspecialchars($_POST['lastName']);
-
-        var_dump($password);
-        echo('<br><br>');
-        var_dump($password2);
 
         // Validate input values
         $errors = array();
