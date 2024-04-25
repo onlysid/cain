@@ -10,6 +10,7 @@ function route($routes, $apiRoutes) {
     
     // Are we a settings page?
     $settingsPage = false;
+    $loginPage = false;
 
     // Get the current page
     $currentPage = strtok($_SERVER["REQUEST_URI"], '?');

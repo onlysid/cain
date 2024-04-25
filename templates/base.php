@@ -16,7 +16,7 @@ $showMenu = $route->showMenu;
 $resultsNum = checkResultCapacity();
 ?>
 
-<body>
+<body class="<?= $showMenu ? "show-menu" : "";?>">
     <div id="php2js" class="hidden" data-lims-timeout="<?= LIMS_TIMEOUT;?>"></div>
     <main>
         <?php // Some debugging goodies

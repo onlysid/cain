@@ -43,7 +43,7 @@ foreach ($filters as $key => $value) {
 
 <script src="js/chartJs/dist/chart.umd.js"></script>
 
-<h1 class="mb-2">Results</h1>
+<h1 class="mb-0 md:mb-2">Results</h1>
 
 <div id="tableInfoWrapper" class="w-full flex justify-between items-center gap-2">
     <p class="results-number hidden sm:block"><?= $resultNumberText;?></p>

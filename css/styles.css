@@ -460,6 +460,10 @@ body, main {
     @apply bg-primary flex grow flex-col font-roboto items-center fixed justify-center h-svh w-full;
 }
 
+body.show-menu, body.show-menu main {
+    @apply bg-primary-dark md:bg-primary;
+}
+
 form {
     @apply max-w-lg md:max-w-2xl self-center w-full flex flex-col items-center gap-4;
 }
@@ -780,12 +784,20 @@ label:not(.toggle) {
     @apply overflow-y-scroll z-10 p-4 flex justify-center min-w-full md:min-w-[550px];
 }
 
+body.show-menu #contentOuterWrapper:not(.settings-wrapper) {
+    @apply p-0 md:p-4;
+}
+
 #contentOuterWrapper.show-menu:not(.settings-wrapper) {
     @apply md:-ml-4 w-full;
 }
 
 #contentWrapper:not(.settings-wrapper) {
-    @apply p-8 xl:p-12 bg-primary-dark rounded-xl h-full shadow-[0px_0px_10px_#5F5F5F] w-full overflow-y-scroll flex flex-col gap-2;
+    @apply p-4 xs:p-6 md:p-8 xl:p-12 bg-primary-dark rounded-xl h-full shadow-[0px_0px_10px_#5F5F5F] w-full overflow-y-scroll flex flex-col gap-1 md:gap-2;
+}
+
+body.show-menu #contentWrapper:not(.settings-wrapper) {
+    @apply rounded-none md:rounded-xl shadow-none md:shadow-[0px_0px_10px_#5F5F5F];
 }
 
 #contentOuterWrapper.settings-wrapper, #contentWrapper.settings-wrapper {
