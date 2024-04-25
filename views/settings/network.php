@@ -122,5 +122,5 @@ $macAddress = exec('ifconfig | grep -o -E \'([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{
             </div>
         </div>
     </div>
-    <button class="btn smaller-btn" type="submit">Save Settings</button>
+    <button class="btn smaller-btn trigger-loading" type="submit">Save Settings</button>
 </form>

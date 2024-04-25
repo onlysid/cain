@@ -147,8 +147,9 @@ if(resultsTable) {
             resultModal.querySelector('.result-modal-backdrop').addEventListener('click', (e) => {
                 // Get the result details
                 var resultDetails = resultModal.querySelector('.result-details');
+                var resultActions = resultModal.querySelector('.result-actions');
                 
-                if(!resultDetails.contains(e.target) || e.target.classList.contains('modal-close')) {
+                if((!resultDetails.contains(e.target) && !resultActions.contains(e.target)) || e.target.classList.contains('modal-close')) {
                     resultModal.classList.remove('active');
                 }
             })
@@ -378,6 +379,44 @@ if(userModals) {
     })
 }
 
+// Delete results modal triggers
+var deleteResultModal = document.getElementById('deleteResultModal');
+
+if(deleteResultModal) {
+    // We need to load this when a delete button has been pressed.
+    document.addEventListener('click', (e) => {
+        if(e.target.classList.contains('delete-result')) {
+            var id = e.target.dataset.id;
+            deleteResultModal.classList.add('active');
+
+            deleteResultModal.querySelector("#resultToDelete").innerHTML = id;
+            deleteResultModal.querySelector(".form-result-id").value = id;
+        }
+
+        if(!e.target.classList.contains('delete-result') && (!deleteResultModal.contains(e.target) || e.target.classList.contains('close-modal'))) {
+            deleteResultModal.classList.remove('active');
+        }
+    })
+}
+
+// We need to open up filters (if this exists)
+var filterBtn = document.getElementById('filter');
+
+if(filterBtn) {
+    var filterModal = document.querySelector('#filterModalWrapper .generic-modal');
+
+    filterBtn.addEventListener('click', () => {
+        filterModal.classList.add('active');
+    });
+
+    // We need to load this when a delete button has been pressed.
+    document.addEventListener('click', (e) => {
+        if(!filterBtn.contains(e.target) && (!filterModal.contains(e.target) || e.target.classList.contains('close-modal'))) {
+            filterModal.classList.remove('active');
+        }
+    })
+}
+
 // We need to be able to pop open lot information and display all the lots details
 var lotsTable = document.getElementById('lotsTable');
 
@@ -387,8 +426,6 @@ if(lotsTable) {
         
         lot.addEventListener('click', () => {
             var lotId = lot.id;
-
-            var id = lotId.replace("lot", "");
 
             // Get the lot's corresponding modal
             var lotModal = document.getElementById(lotId + "Modal");
@@ -410,21 +447,52 @@ if(lotsTable) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    const notices = document.querySelectorAll('#notices .notice');
+    const notices = document.querySelectorAll('.notice');
     
-    // Loop through each notice
     notices.forEach((notice, index) => {
+        let timeout;
+
         // Calculate delay for each notice
         const delay = index * 200; // Adjust the delay time as needed
-        
+    
         // Add animation with delay
         setTimeout(() => {
             notice.classList.add('animate-in');
         }, delay);
-        
+    
+        // Function to start the timeout
+        const startTimeout = () => {
+            timeout = setTimeout(() => {
+            notice.classList.add('animate-out');
+            }, 8000); // 8 seconds
+        };
+    
+        // Start the initial timeout
+        startTimeout();
+    
+        // Pause the timeout on hover
+        notice.addEventListener('mouseenter', () => {
+            clearTimeout(timeout);
+        });
+    
+        // Resume the timeout when not hovered
+        notice.addEventListener('mouseleave', () => {
+            startTimeout();
+        });
+    
         // Add click event listener to toggle animate-out
         notice.addEventListener('click', function() {
             notice.classList.toggle('animate-out');
         });
     });
-  });
+
+    // If any input wrappers are selected, select the respective input.
+    var inputWrappers = document.querySelectorAll(".input-wrapper");
+
+    inputWrappers.forEach(inputWrapper => {
+        inputWrapper.addEventListener('click', () => {
+            inputWrapper.parentElement.querySelector('input').click();
+            inputWrapper.parentElement.querySelector('input').focus();
+        });
+    });
+});

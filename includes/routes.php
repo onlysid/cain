@@ -79,6 +79,7 @@ $routes = [
     '/login' => new PageRoute('auth/login.php', 'Login', false, GUEST), // Login page
     '/blocks' => new PageRoute('views/objects.php', 'Demo', true), // Demo blocks
     '/changelog' => new PageRoute('views/changelog.php', 'Changelog', true), // About this website
+    '/backup' => new PageRoute('views/backup.php', 'Backup/Delete', true), // About this website
     '/about' => new PageRoute('views/about.php', 'About', true),
 ];
 

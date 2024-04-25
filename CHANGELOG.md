@@ -12,6 +12,16 @@ Init!
 
 ### What's happened?
 
+#### 25/04/2024
+
+Datepicker, backup/export page and delete/print
+
+-   Added printing results.
+-   Started filter functionality.
+-   Created area for backing up/exporting.
+-   Included a datepicker library for backup functionality.
+-   Hotfixes for quotation-filled passwords (spell checking now disabled on form fields).
+
 #### 24/04/2024
 
 Lots, notices and and form errors sorted.

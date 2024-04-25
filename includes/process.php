@@ -38,6 +38,9 @@ class Process {
                 case('delete-operator'):
                     $this->deleteOperator();
                     break;
+                case('delete-result'):
+                    $this->deleteResult();
+                    break;
                 case('edit-operator'):
                     $this->editOperator();
                     break;
@@ -91,6 +94,7 @@ class Process {
             } catch(Exception $e) {
                 // Throw error
                 $form->setError('general', 'Something went wrong. Please try again later.');
+                Session::setNotice("Something went wrong.", 2);
             }
         } else {
             if($password) {
@@ -111,6 +115,7 @@ class Process {
         } catch(Exception $e) {
             // Throw error
             $form->setError('general', 'Something went wrong. Please try again later.');
+            Session::setNotice("Something went wrong.", 2);
         }
     }
 
@@ -204,6 +209,7 @@ class Process {
         } catch (Exception $e) {
             // Error occurred while executing the query, handle appropriately
             $form->setError('general', 'An error occurred while creating the account. Please try again later.');
+            Session::setNotice("Something went wrong.", 2);
         }
     }
 
@@ -264,14 +270,16 @@ class Process {
 
             // Check if the update was successful
             if ($rowCount > 0) {
+                Session::setNotice("Successfully updated settings.");
                 return;
             } else {
                 // Failed to update settings
-                echo "Failed to update settings.";
+                Session::setNotice("No changes made.", 1);
             }
         } catch (Exception $e) {
             // Handle exceptions if any
             echo "An error occurred: " . $e->getMessage();
+            Session::setNotice("Something went wrong.", 2);
         }
     }
 
@@ -311,6 +319,7 @@ class Process {
         $cainDB->query("UPDATE settings SET `value` = :updatedBehaviour WHERE `name` = 'field_behaviour';", [":updatedBehaviour" => $updatedBehaviour]);
         $cainDB->query("UPDATE settings SET `value` = :updatedVisibility WHERE `name` = 'field_visibility';", [":updatedVisibility" => $updatedVisibility]);
         
+        Session::setNotice("Successfully updated settings.");
     }
 
     function deleteOperator() {
@@ -321,6 +330,20 @@ class Process {
         if($operatorId) {
             $cainDB->query("DELETE FROM users WHERE id = :id", [":id" => $operatorId]);
         }
+
+        Session::setNotice("Operator successfully deleted.");
+    }
+
+    function deleteResult() {
+        global $cainDB;
+
+        $resultId = $_POST['id'] ?? null;
+
+        if($resultId) {
+            $cainDB->query("DELETE FROM results WHERE id = :id", [":id" => $resultId]);
+        }
+
+        Session::setNotice("Result successfully deleted.");
     }
 
     function editOperator() {
@@ -430,11 +453,21 @@ class Process {
 
         // Execute the query
         try {
-            $cainDB->query($query, $params);
-            Session::setNotice("Successfully updated account settings");
+            // Execute the query
+            $rowCount = $cainDB->query($query, $params);
+
+            // Check if the update was successful
+            if ($rowCount > 0) {
+                Session::setNotice("Successfully updated settings.");
+                return;
+            } else {
+                // Failed to update settings
+                Session::setNotice("No changes made.", 1);
+            }
         } catch (Exception $e) {
             // Error occurred while executing the query, handle appropriately
             $form->setError('general', 'An error occurred while creating the account. Please try again later.');
+            Session::setNotice("Something went wrong.", 2);
         }
     }
 
@@ -544,6 +577,7 @@ class Process {
         } catch (Exception $e) {
             // Error occurred while executing the query, handle appropriately
             $form->setError('general', 'An error occurred while creating the account. Please try again later.');
+            Session::setNotice("Something went wrong.", 2);
         }
     }
 
@@ -597,14 +631,16 @@ class Process {
 
             // Check if the update was successful
             if ($rowCount > 0) {
+                Session::setNotice("Successfully updated settings.");
                 return;
             } else {
                 // Failed to update settings
-                echo "Failed to update settings.";
+                Session::setNotice("No changes made.", 1);
             }
         } catch (Exception $e) {
             // Handle exceptions if any
             echo "An error occurred: " . $e->getMessage();
+            Session::setNotice("Something went wrong.", 2);
         }
 
     }
@@ -637,14 +673,16 @@ class Process {
 
             // Check if the update was successful
             if ($rowCount > 0) {
+                Session::setNotice("Successfully updated settings.");
                 return;
             } else {
                 // Failed to update settings
-                echo "Failed to update settings.";
+                Session::setNotice("No changes made.", 1);
             }
         } catch (Exception $e) {
             // Handle exceptions if any
             echo "An error occurred: " . $e->getMessage();
+            Session::setNotice("Something went wrong.", 2);
         }
     }
 
@@ -696,14 +734,16 @@ class Process {
 
             // Check if the update was successful
             if ($rowCount > 0) {
+                Session::setNotice("Successfully updated settings.");
                 return;
             } else {
                 // Failed to update settings
-                echo "Failed to update settings.";
+                Session::setNotice("No changes made.", 1);
             }
         } catch (Exception $e) {
             // Handle exceptions if any
             echo "An error occurred: " . $e->getMessage();
+            Session::setNotice("Something went wrong.", 2);
         }
     }
 }

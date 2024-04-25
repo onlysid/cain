@@ -10,6 +10,7 @@ $menuItems = [
     new MenuItem($routes['/qc-policy']),
     new MenuItem($routes['/lots']),
     new MenuItem($routes['/users'], 'User Login Control'),
+    new MenuItem($routes['/backup']),
     new MenuItem($routes['/about']),
     new MenuItem($routes['/settings'], "Settings"),
     // Add more menu items above and sort as you like

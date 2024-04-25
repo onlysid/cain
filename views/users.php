@@ -122,7 +122,7 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
                     </div>
                 </div>
                 <div class="w-full flex justify-center items-center gap-3 mt-3">
-                    <button type="submit" class="btn smaller-btn">Apply</button>
+                    <button type="submit" class="btn smaller-btn trigger-loading">Apply</button>
                     <div class="cursor-pointer btn smaller-btn close-user-modal no-styles">Cancel</div>
                 </div>
             </form>
@@ -133,7 +133,7 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
                     <input type="hidden" name="return-path" value="<?= $currentURL;?>">
                     <input type="hidden" name="id" class="form-operator-id" value="<?= $operator['id'];?>">
     
-                    <button type="submit" class="btn smaller-btn <?= $operator['status'] == '1' ? 'deactivate' : 'activate';?>"> <?= $operator['status'] == '1' ? 'Deactivate' : 'Activate';?> User</button>
+                    <button type="submit" class="btn smaller-btn trigger-loading <?= $operator['status'] == '1' ? 'deactivate' : 'activate';?>"> <?= $operator['status'] == '1' ? 'Deactivate' : 'Activate';?> User</button>
                 </form>
                 <button id="delete<?= $operator['id'];?>" data-operator="<?= $operator['operator_id'];?>" data-id="<?= $operator['id'];?>" class="delete-user-button btn smaller-btn tooltip" title="Delete">
                     <svg class="h-10" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
@@ -159,7 +159,7 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
             <input type="hidden" name="return-path" value="<?= $currentURL;?>">
             <input type="hidden" name="id" class="form-operator-id" value="">
             <div class="w-full flex justify-center items-center gap-3 mt-3">
-                <button type="submit" class="btn smaller-btn">Yes</button>
+                <button type="submit" class="btn smaller-btn trigger-loading">Yes</button>
                 <div class="cursor-pointer btn smaller-btn close-user-modal no-styles">Cancel</div>
             </div>
         </form>
@@ -233,7 +233,7 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
                 </div>
             </div>
             <div class="w-full flex justify-center items-center gap-3 mt-3">
-                <button type="submit" class="btn smaller-btn">Create Operator</button>
+                <button type="submit" class="btn smaller-btn trigger-loading">Create Operator</button>
                 <div class="cursor-pointer btn smaller-btn close-user-modal no-styles">Cancel</div>
             </div>
         </form>

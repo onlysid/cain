@@ -327,7 +327,7 @@ td.active {
 }
 
 .result-details .canvas-wrapper {
-    @apply min-w-[450px] min-h-[400px] overflow-scroll;
+    @apply min-h-[400px] overflow-scroll;
 }
 
 .result-details .canvas-wrapper, .result-details .error {
@@ -366,10 +366,6 @@ td .details svg {
     @apply h-5 fill-dark;
 }
 
-.result-details, .lot-details {
-    @apply mb-3;
-}
-
 .result-details.alert, .lot-details.alert {
     @apply text-red-500;
 }
@@ -382,32 +378,32 @@ td .details svg {
     @apply pointer-events-none;
 }
 
-#instrumentModalWrapper, #userModalWrapper {
+#instrumentModalWrapper, #userModalWrapper, #genericModalWrapper, #filterModalWrapper {
     @apply fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none;
 }
 
-#instrumentModalWrapper .instrument-modal .close-instrument-modal, #userModalWrapper .user-modal .close-user-modal:not(.no-styles) {
+#instrumentModalWrapper .instrument-modal .close-instrument-modal, #userModalWrapper .user-modal .close-user-modal:not(.no-styles), .generic-modal .close-modal:not(.no-styles) {
     @apply w-8 h-8 cursor-pointer absolute top-4 right-4 transition-all duration-500 hover:scale-110;
 }
 
-#instrumentModalWrapper .instrument-modal .close-instrument-modal svg, #userModalWrapper .user-modal .close-user-modal svg {
+#instrumentModalWrapper .instrument-modal .close-instrument-modal svg, #userModalWrapper .user-modal .close-user-modal svg, .generic-modal .close-modal svg {
     @apply pointer-events-none;
 }
 
-#instrumentModalWrapper::before, #userModalWrapper::before {
+#instrumentModalWrapper::before, #userModalWrapper::before, #genericModalWrapper::before, #filterModalWrapper::before {
     @apply fixed w-[100vw] h-[100vh] left-0 backdrop-blur-md bg-dark/50 top-0 -translate-y-1/2 -translate-x-1/2 opacity-0 pointer-events-none transition-all duration-500;
     content: "";
 }
 
-#instrumentModalWrapper:has(.active)::before, #userModalWrapper:has(.active)::before {
+#instrumentModalWrapper:has(.active)::before, #userModalWrapper:has(.active)::before, #genericModalWrapper:has(.active)::before, #filterModalWrapper:has(.active)::before {
     @apply opacity-100 pointer-events-auto;
 }
 
-#instrumentModalWrapper .instrument-modal, #userModalWrapper .user-modal {
+#instrumentModalWrapper .instrument-modal, #userModalWrapper .user-modal, .generic-modal {
     @apply fixed top-1/2 flex flex-col gap-2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none scale-75 opacity-0 p-8 rounded-lg bg-gray-100 shadow-xl transition-all duration-500 w-[clamp(20rem,40rem,90vw)];
 }
 
-#instrumentModalWrapper .instrument-modal.active, #userModalWrapper .user-modal.active {
+#instrumentModalWrapper .instrument-modal.active, #userModalWrapper .user-modal.active, .generic-modal.active {
     @apply pointer-events-auto scale-100 opacity-100;
 }
 
@@ -421,6 +417,10 @@ tr.instrument.lost td {
 
 tr.instrument.lost td .status-indicator {
     @apply bg-grey;
+}
+
+#genericModalWrapper {
+    z-index: 9999;
 }
 
 #pagination {
@@ -486,6 +486,14 @@ label:not(.toggle) {
 
 .form-fields .input-wrapper {
     @apply transition-all duration-500 w-full flex justify-center bg-white text-dark rounded-full px-4 py-2 border-light border-solid border items-center gap-2.5 md:gap-3;
+}
+
+.form-fields .input-wrapper.select-wrapper {
+    @apply py-0;
+}
+
+.form-fields .input-wrapper.select-wrapper select {
+    @apply py-2;
 }
 
 .form-fields .input-wrapper.error {
@@ -735,7 +743,7 @@ label:not(.toggle) {
 }
 
 #mobileMenu {
-    @apply transition-all duration-300 fixed left-0 top-0 z-50 bg-blue-900/40 backdrop-blur-xl md:hidden opacity-0 pointer-events-none w-full h-full flex flex-col justify-center items-center px-4 xs:px-16 sm:px-20 py-12;
+    @apply transition-all duration-300 fixed left-0 top-0 z-50 bg-blue-900/40 backdrop-blur-xl md:hidden opacity-0 pointer-events-none w-full h-full flex flex-col justify-center items-center px-4 xs:px-16 sm:px-20 pt-16;
 }
 
 #mobileMenu.active {
@@ -809,7 +817,7 @@ body.show-menu #contentWrapper:not(.settings-wrapper) {
 }
 
 .result-modal-backdrop, .lot-modal-backdrop {
-    @apply fixed opacity-0 backdrop-blur-lg w-screen h-screen top-0 left-0 bg-black/30 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 flex justify-center items-center;
+    @apply fixed opacity-0 backdrop-blur-xl w-screen h-screen top-0 left-0 bg-black/30 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 flex flex-col justify-center items-center;
 }
 
 .result-modal.active, .lot-modal.active {
@@ -865,7 +873,6 @@ section p a, a.alt {
     @apply !text-blue-800 hover:!text-green-800;
 }
 
-
 #updateAlert {
     position: fixed;
     bottom: 0;
@@ -882,20 +889,24 @@ section p a, a.alt {
     z-index: 99999;
     box-shadow: rgba(0, 0, 0, 0.35) 0 5px 15px;
 }
+
 #updateAlert h2 {
     color: #fff !important;
     font-size: 28px;
     font-weight: 700;
 }
+
 #updateAlert h2,
 #updateAlert p {
     margin-bottom: 0;
     margin-top: 4px;
     color: white;
 }
+
 #updateAlert p {
     font-size: 19px;
 }
+
 #updateAlert .response-code {
     background-color: #fff;
     border-radius: 20px;
@@ -958,8 +969,9 @@ ul.form-errors li {
 }
 
 #notices .notice {
-    @apply relative sm:w-[min(20rem,_100vw)] bg-blue-200 cursor-pointer rounded-lg shadow-xl shadow-black/50 p-3.5 md:p-4 my-1.5;
+    @apply relative sm:w-[min(20rem,_100vw)] bg-blue-200 cursor-pointer rounded-lg p-3.5 md:p-4 my-1.5;
     opacity: 0;
+    box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 }
   
 #notices .notice.animate-in {
@@ -1033,6 +1045,15 @@ ul.form-errors li {
 
 .cain-grid-content {
     @apply bg-white shadow-white/30 shadow-lg rounded-r-lg p-4 text-center content-center font-extrabold;
+}
+
+/* Calendar styles overrides */
+.vanilla-calendar {
+    @apply shadow-xl shadow-dark/50;
+}
+
+.vanilla-calendar-day_selected-intermediate button {
+    @apply !bg-blue-200 !text-dark;
 }
 
 /* Loader */

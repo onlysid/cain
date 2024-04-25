@@ -52,5 +52,5 @@ $qcSettings = array_intersect_key($settings, array_flip($qcKeys));
             </div>
         </label>
     </div>
-    <button class="btn smaller-btn" type="submit">Save Settings</button>
+    <button class="btn smaller-btn trigger-loading" type="submit">Save Settings</button>
 </form>

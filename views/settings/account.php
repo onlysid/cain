@@ -46,6 +46,6 @@
         </div>
     </div>
     <div class="w-full flex justify-center items-center gap-3 mt-3">
-        <button type="submit" class="btn smaller-btn">Save Settings</button>
+        <button type="submit" class="btn smaller-btn trigger-loading">Save Settings</button>
     </div>
 </form>
