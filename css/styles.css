@@ -987,6 +987,7 @@ ul.form-errors li {
 }
 
 #notices .notice.animate-out {
+    @apply pointer-events-none;
     animation: fadeOutShrink 0.5s ease-out forwards;
 }
 
@@ -1027,7 +1028,6 @@ ul.form-errors li {
     }
     100% {
         display: none;
-        pointer-events: none;
         transform: scale(0);
     }
 }

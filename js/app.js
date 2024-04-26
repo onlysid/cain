@@ -474,6 +474,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const startTimeout = () => {
             timeout = setTimeout(() => {
                 notice.classList.add('animate-out');
+
+                setTimeout(() => {
+                    notice.remove();
+                }, 1000)();
             }, 8000); // 8 seconds
         };
     
@@ -493,6 +497,9 @@ document.addEventListener('DOMContentLoaded', function() {
         // Add click event listener to toggle animate-out
         notice.addEventListener('click', function() {
             notice.classList.toggle('animate-out');
+            setTimeout(() => {
+                notice.remove();
+            }, 1000)();
         });
     });
 
