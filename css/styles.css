@@ -825,7 +825,7 @@ body.show-menu #contentWrapper:not(.settings-wrapper) {
 }
 
 .result-modal-backdrop, .lot-modal-backdrop {
-    @apply fixed opacity-0 backdrop-blur-xl w-screen h-[100svh] top-0 left-0 bg-black/30 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 flex flex-col justify-center items-center;
+    @apply fixed opacity-0 backdrop-blur-xl w-[100vw] h-[100svh] top-0 left-0 bg-black/30 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 flex flex-col justify-center items-center;
 }
 
 .result-modal.active, .lot-modal.active {

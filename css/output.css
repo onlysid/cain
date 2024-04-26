@@ -843,10 +843,6 @@ video {
   margin-bottom: 0px;
 }
 
-.mb-0\.5 {
-  margin-bottom: 0.125rem;
-}
-
 .mb-1 {
   margin-bottom: 0.25rem;
 }
@@ -1031,8 +1027,8 @@ video {
   height: 2.25rem;
 }
 
-.h-\[100vh\] {
-  height: 100vh;
+.h-\[100svh\] {
+  height: 100svh;
 }
 
 .h-auto {
@@ -1057,6 +1053,10 @@ video {
 
 .max-h-\[0rem\] {
   max-height: 0rem;
+}
+
+.max-h-\[100svh\] {
+  max-height: 100svh;
 }
 
 .max-h-\[20rem\] {
@@ -3628,7 +3628,7 @@ td .details svg {
   position: fixed;
   left: 0px;
   top: 0px;
-  height: 100vh;
+  height: 100svh;
   width: 100vw;
   --tw-translate-y: -50%;
   --tw-translate-x: -50%;
@@ -3655,7 +3655,7 @@ td .details svg {
   top: 50%;
   left: 50%;
   display: flex;
-  max-height: 100vh;
+  max-height: 100svh;
   width: clamp(20rem,40rem,90vw);
   --tw-translate-x: -50%;
   --tw-translate-y: -50%;
@@ -4649,7 +4649,7 @@ body.show-menu #contentWrapper:not(.settings-wrapper) {
   top: 0px;
   left: 0px;
   display: flex;
-  height: 100vh;
+  height: 100svh;
   width: 100vw;
   --tw-translate-x: -50%;
   --tw-translate-y: -50%;
@@ -5002,6 +5002,7 @@ ul.form-errors li {
 }
 
 #notices .notice.animate-out {
+  pointer-events: none;
   animation: fadeOutShrink 0.5s ease-out forwards;
 }
 
@@ -5049,6 +5050,7 @@ ul.form-errors li {
 
   100% {
     display: none;
+    transform: scale(0);
   }
 }
 
