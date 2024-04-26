@@ -409,9 +409,19 @@ if(filterBtn) {
         filterModal.classList.add('active');
     });
 
+    // Function to check if "vanilla" is not present in any string
+    function isVanillaNotPresent(list) {
+        for (let i = 0; i < list.length; i++) {
+            if (list[i].includes("vanilla")) {
+                return false; // "vanilla" found in a string, so return false
+            }
+        }
+        return true; // "vanilla" not found in any string, so return true
+    }
+
     // We need to load this when a delete button has been pressed.
     document.addEventListener('click', (e) => {
-        if(!filterBtn.contains(e.target) && (!filterModal.contains(e.target) || e.target.classList.contains('close-modal'))) {
+        if(!filterBtn.contains(e.target) && isVanillaNotPresent(e.target.classList) && (!filterModal.contains(e.target) || e.target.classList.contains('close-modal'))) {
             filterModal.classList.remove('active');
         }
     })
@@ -491,8 +501,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     inputWrappers.forEach(inputWrapper => {
         inputWrapper.addEventListener('click', () => {
-            inputWrapper.parentElement.querySelector('input').click();
-            inputWrapper.parentElement.querySelector('input').focus();
+            // Get the input wrapper's parent
+            var parentInput = inputWrapper.parentElement.querySelector('input');
+
+            if(parentInput) {
+                inputWrapper.parentElement.querySelector('input').focus();
+                inputWrapper.parentElement.querySelector('input').click();
+            }
         });
     });
 });

@@ -648,6 +648,30 @@ video {
   position: relative;
 }
 
+.\!bottom-auto {
+  bottom: auto !important;
+}
+
+.\!left-1 {
+  left: 0.25rem !important;
+}
+
+.\!left-1\/2 {
+  left: 50% !important;
+}
+
+.\!right-auto {
+  right: auto !important;
+}
+
+.\!top-1 {
+  top: 0.25rem !important;
+}
+
+.\!top-1\/2 {
+  top: 50% !important;
+}
+
 .-bottom-3 {
   bottom: -0.75rem;
 }
@@ -662,6 +686,10 @@ video {
 
 .bottom-\[90\%\] {
   bottom: 90%;
+}
+
+.bottom-auto {
+  bottom: auto;
 }
 
 .bottom-full {
@@ -694,6 +722,10 @@ video {
 
 .right-4 {
   right: 1rem;
+}
+
+.right-auto {
+  right: auto;
 }
 
 .top-0 {
@@ -809,6 +841,10 @@ video {
 
 .mb-0 {
   margin-bottom: 0px;
+}
+
+.mb-0\.5 {
+  margin-bottom: 0.125rem;
 }
 
 .mb-1 {
@@ -1031,12 +1067,20 @@ video {
   max-height: 30rem;
 }
 
+.max-h-\[90vh\] {
+  max-height: 90vh;
+}
+
 .max-h-\[calc\(min\(35rem\2c _90vh\)\)\] {
   max-height: calc(min(35rem, 90vh));
 }
 
 .max-h-\[calc\(min\(45rem\2c _90vh\)\)\] {
   max-height: calc(min(45rem, 90vh));
+}
+
+.max-h-screen {
+  max-height: 100vh;
 }
 
 .min-h-\[400px\] {
@@ -1162,6 +1206,10 @@ video {
 
 .max-w-\[35rem\] {
   max-width: 35rem;
+}
+
+.max-w-\[90vw\] {
+  max-width: 90vw;
 }
 
 .max-w-\[min\(15rem\2c 95vw\)\] {
@@ -1494,6 +1542,10 @@ video {
   justify-content: space-between;
 }
 
+.\!gap-2 {
+  gap: 0.5rem !important;
+}
+
 .gap-0 {
   gap: 0px;
 }
@@ -1557,6 +1609,10 @@ video {
 
 .overflow-hidden {
   overflow: hidden;
+}
+
+.overflow-scroll {
+  overflow: scroll;
 }
 
 .overflow-x-hidden {
@@ -2652,6 +2708,12 @@ video {
           backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
 }
 
+.backdrop-blur-sm {
+  --tw-backdrop-blur: blur(4px);
+  -webkit-backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
+          backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
+}
+
 .backdrop-blur-xl {
   --tw-backdrop-blur: blur(24px);
   -webkit-backdrop-filter: var(--tw-backdrop-blur) var(--tw-backdrop-brightness) var(--tw-backdrop-contrast) var(--tw-backdrop-grayscale) var(--tw-backdrop-hue-rotate) var(--tw-backdrop-invert) var(--tw-backdrop-opacity) var(--tw-backdrop-saturate) var(--tw-backdrop-sepia);
@@ -3383,7 +3445,7 @@ table:not(.result-explosion):not(.lot-explosion) tbody tr:hover {
   --tw-shadow: var(--tw-shadow-colored);
 }
 
-td .status-indicator {
+.status-indicator {
   aspect-ratio: 1 / 1;
   height: 1rem;
   width: 1rem;
@@ -3393,12 +3455,12 @@ td .status-indicator {
   vertical-align: middle;
 }
 
-td .status-indicator.active {
+.status-indicator.active {
   --tw-bg-opacity: 1;
   background-color: rgb(34 197 94 / var(--tw-bg-opacity));
 }
 
-td .status-indicator.pending {
+.status-indicator.pending {
   --tw-bg-opacity: 1;
   background-color: rgb(245 158 11 / var(--tw-bg-opacity));
 }
@@ -3593,6 +3655,7 @@ td .details svg {
   top: 50%;
   left: 50%;
   display: flex;
+  max-height: 100vh;
   width: clamp(20rem,40rem,90vw);
   --tw-translate-x: -50%;
   --tw-translate-y: -50%;
@@ -3601,6 +3664,7 @@ td .details svg {
   transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
   flex-direction: column;
   gap: 0.5rem;
+  overflow: scroll;
   border-radius: 0.5rem;
   --tw-bg-opacity: 1;
   background-color: rgb(243 244 246 / var(--tw-bg-opacity));
@@ -3701,6 +3765,26 @@ tr.instrument.lost td .status-indicator {
 @media (min-width: 480px) {
   #pagination .inner-pagination:not(.active) {
     display: block;
+  }
+}
+
+.vanilla-calendar {
+  left: 50% !important;
+  top: 50% !important;
+  bottom: auto !important;
+  right: auto !important;
+  margin-top: 0px !important;
+  max-height: 90vh;
+  max-width: 90vw;
+  --tw-translate-x: -50%;
+  --tw-translate-y: -50%;
+  transform: translate(var(--tw-translate-x), var(--tw-translate-y)) rotate(var(--tw-rotate)) skewX(var(--tw-skew-x)) skewY(var(--tw-skew-y)) scaleX(var(--tw-scale-x)) scaleY(var(--tw-scale-y));
+  overflow: scroll;
+}
+
+@media (min-width: 600px) {
+  .vanilla-calendar-grid {
+    flex-wrap: nowrap !important;
   }
 }
 

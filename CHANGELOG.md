@@ -12,6 +12,15 @@ Init!
 
 ### What's happened?
 
+#### 26/04/2024
+
+Added filtering modal and fixed some styling.
+
+-   Calendar input now centers as there are overflow issues with having the calendar exist below the field.
+-   Filtering modal now exists.
+-   Added age demographic information.
+-   LIMS status now shows in the result modal and printout.
+
 #### 25/04/2024
 
 Datepicker, backup/export page and delete/print

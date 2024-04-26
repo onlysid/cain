@@ -3,7 +3,7 @@
 class Process {
     function __construct() {
         // ! Auto-redirect override (for debugging only, to remain on process page)
-        $redirectOverride = false;
+        $redirectOverride = true;
 
         if(isset($_POST['action'])) {
             switch($_POST['action']) {
@@ -38,6 +38,9 @@ class Process {
                 case('delete-operator'):
                     $this->deleteOperator();
                     break;
+                case('filter-results'):
+                    $this->filterResults();
+                    break;
                 case('delete-result'):
                     $this->deleteResult();
                     break;
@@ -60,10 +63,12 @@ class Process {
 
             // Once we are done, we may specify a return path
             if(!$redirectOverride) {
-                if (!empty($_POST['return-path'])) {
-                    header("Location: " . $_POST['return-path']);
-                } else {
-                    header("Location: /");
+                if(!isset($_POST['intrinsic-redirect'])) {
+                    if (!empty($_POST['return-path'])) {
+                        header("Location: " . $_POST['return-path']);
+                    } else {
+                        header("Location: /");
+                    }
                 }
             }
         } else {
@@ -745,6 +750,11 @@ class Process {
             echo "An error occurred: " . $e->getMessage();
             Session::setNotice("Something went wrong.", 2);
         }
+    }
+
+    function filterResults() {
+        header("Location: /");
+        Session::setNotice("Oh yeah, filtering doesn't completely work yet...", 2);
     }
 }
 

@@ -39,9 +39,17 @@ foreach ($filters as $key => $value) {
     }
 }
 
+// We need to determine if the result has been sent to LIMS. If we aren't connected to LIMS we don't need to display anything (unless it is flagged as sent)
+$limsConnection = $settings['app_mode'] == 1 ? true : false;
+
+// We need to include age groups for our dropdown filter
+include_once BASE_DIR . "/utils/AgeGroup.php";
 ?>
 
 <script src="js/chartJs/dist/chart.umd.js"></script>
+<link href="/js/vanilla-calendar/build/vanilla-calendar.min.css" rel="stylesheet">
+<script src="/js/vanilla-calendar/build/vanilla-calendar.min.js" defer></script>
+<script src="/js/dateRangePicker.js" defer></script>
 
 <h1 class="mb-0 md:mb-2">Results</h1>
 
@@ -64,7 +72,7 @@ foreach ($filters as $key => $value) {
         </form>
         <div class="flex items-center w-full sm:w-auto">
             <p class="grow sm:hidden text-base md:text-lg"><?= $resultNumberText;?></p>
-            <button id="filter" class="p-2 transition-all duration-500 hover:scale-110 hover:opacity-75 tooltip" title="Coming Soon...">
+            <button id="filter" class="p-2 transition-all duration-500 hover:scale-110 hover:opacity-75 tooltip" title="Filters & Actions">
                 <svg class="h-7 fill-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                     <path d="M0 416c0 17.7 14.3 32 32 32l54.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48L480 448c17.7 0 32-14.3 32-32s-14.3-32-32-32l-246.7 0c-12.3-28.3-40.5-48-73.3-48s-61 19.7-73.3 48L32 384c-17.7 0-32 14.3-32 32zm128 0a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zM320 256a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm32-80c-32.8 0-61 19.7-73.3 48L32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l246.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48l54.7 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-54.7 0c-12.3-28.3-40.5-48-73.3-48zM192 128a32 32 0 1 1 0-64 32 32 0 1 1 0 64zm73.3-64C253 35.7 224.8 16 192 16s-61 19.7-73.3 48L32 64C14.3 64 0 78.3 0 96s14.3 32 32 32l86.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48L480 128c17.7 0 32-14.3 32-32s-14.3-32-32-32L265.3 64z"/>
                 </svg>
@@ -148,9 +156,6 @@ foreach ($filters as $key => $value) {
                                 <?php endif;?>
                                 <button id="sendResult<?= $result['id'];?>" class="flex items-center">
                                 <?php 
-                                // We need to determine if the result has been sent to LIMS. If we aren't connected to LIMS we don't need to display anything (unless it is flagged as sent)
-                                $limsConnection = $settings['app_mode'] == 1 ? true : false;
-
                                 // Determine the symbol (if any) to display
                                 $limsStatus = false;
                                 $limsStatusMessage = "Not sent to LIMS";
@@ -242,7 +247,28 @@ foreach($resultItems as $result) : ?>
                         <path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/>
                     </svg>
                 </button>
-                <h2 class="text-center sm:text-start mx-12 sm:mx-0 sm:mr-12 mb-2.5 sm:mb-1"><?= (new DateTime($result['testcompletetimestamp']))->format($hospitalInfoArray['date_format']);?>: <?= $result['firstName'];?> <?= $result['lastName'];?></h2>
+                <h2 class="flex text-center items-center gap-2.5 sm:text-start mx-12 sm:mx-0 sm:mr-12 mb-2.5 sm:mb-1">
+                    <?= (new DateTime($result['testcompletetimestamp']))->format($hospitalInfoArray['date_format']);?>: <?= $result['firstName'];?> <?= $result['lastName'];?>
+                    <?php // Determine the symbol (if any) to display
+                    $limsStatus = false;
+                    $limsStatusMessage = "Not sent to LIMS";
+
+                    if($limsConnection) {
+                        $limsStatus = 'unsent';
+                    }
+
+                    if($result['flag'] == 102) {
+                        $limsStatus = 'active';
+                        $limsStatusMessage = "Sent to LIMS";
+                    } else if($result['flag'] == 101 && $limsStatus) {
+                        $limsStatus = 'pending';
+                        $limsStatusMessage = "Sending to LIMS";
+                    }
+
+                    if($limsStatus !== false) : ?>
+                        <div class="status-indicator <?= $limsStatus;?> tooltip" title="<?= $limsStatusMessage;?>"><span class="hidden"> (<?= $limsStatusMessage;?>)</span></div>
+                    <?php endif;?>
+                    </h2>
                 <div class="bg-gradient-to-r from-transparent via-grey/75 sm:from-grey/75 to-transparent w-full mb-3 pb-0.5 rounded-full"></div>
 
                 <div class="flex result-details flex-wrap gap-2 items-stretch mb-2">
@@ -343,6 +369,97 @@ foreach($resultItems as $result) : ?>
                 <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/>
             </svg>
         </div>
-    <p>Filters!</p>
+        <h2 class="flex items-center">Filters
+            <?php if($filters): ?>
+                <a href="<?= strtok($currentURL, '?');?>" id="removeFilter" class="p-2 transition-all duration-500 hover:scale-110 hover:opacity-75 tooltip" title="Clear Filters">
+                    <svg class="h-7 fill-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                        <path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c-9.4 9.4-9.4 24.6 0 33.9l47 47-47 47c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l47-47 47 47c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-47-47 47-47c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-47 47-47-47c-9.4-9.4-24.6-9.4-33.9 0z"/>
+                    </svg>
+                </a>
+            <?php endif;?>
+        </h2>
+        <div class="bg-gradient-to-r from-transparent via-grey/75 sm:from-grey/75 to-transparent w-full mb-3 pb-0.5 rounded-full"></div>
+        <form action="/process" method="POST" id="filterForm" class="max-w-sm">
+            <input type="hidden" name="action" value="filter-results">
+            <input type="hidden" name="return-path" value="<?= $currentURL;?>">
+            <input type="hidden" name="intrinsic-redirect" value="true">
+            <div class="form-fields">
+                <div class="field">
+                    <label for="filterSearch">Search results</label>
+                    <div class="input-wrapper !py-1 !pr-1">
+                        <input id="filterSearch" type="text" placeholder="Search..." name="s" value="<?= $_GET['s'] ?? "";?>">
+                        <button class="aspect-square rounded-full p-2 bg-dark transition-all duration-500 hover:scale-110 hover:opacity-75" type="submit">
+                            <svg class="h-3 w-auto fill-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                                <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div class="form-fields">
+                <label for="resultPolarity" class="field !flex-row toggle-field !px-6 py-2 rounded-full bg-white shadow-md">
+                    <div class="flex flex-col w-full">
+                        <div class="shrink">Positive Results</div>
+                        <div class="description !text-xs text-grey mr-4">Show only positive results?</div>
+                    </div>
+                    <div class="checkbox-wrapper">
+                        <input class="tgl" name="resultPolarity" id="resultPolarity" type="checkbox">
+                        <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="resultPolarity"><span></span></label>
+                    </div>
+                </label>
+            </div>
+            <div class="form-fields">
+                <div class="field">
+                    <label for="sex">Sex</label>
+                    <div class="input-wrapper select-wrapper">
+                        <select required name="sex" id="sex">
+                            <option>Please Select</option>
+                            <option value="0">Male</option>
+                            <option value="1">Female</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="ageGroup">Age Group</label>
+                    <div class="input-wrapper select-wrapper">
+                        <select required name="ageGroup" id="ageGroup">
+                            <option>Please Select</option>
+                            <?php foreach($ageGroups as $ageGroup) : ?>
+                                <option value="<?= $ageGroup;?>"><?= $ageGroup;?></option>
+                            <?php endforeach;?>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="form-fields">
+                <div class="field">
+                    <label for="sentToLIMS">Sent to LIMS?</label>
+                    <div class="input-wrapper select-wrapper">
+                        <select required name="sentToLIMS" id="sentToLIMS">
+                            <option>Please Select</option>
+                            <option value="0">Not Sent</option>
+                            <option value="1">Pending</option>
+                            <option value="2">Sent</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <!-- TODO: We may need some other filters (test purpose, product etc) -->
+            <div class="form-fields">
+                <div class="field">
+                    <label for="filterDates">Select a date range to view results.</label>
+                    <div class="input-wrapper">
+                        <svg class="cursor-pointer" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                            <path d="M128 0c17.7 0 32 14.3 32 32V64H288V32c0-17.7 14.3-32 32-32s32 14.3 32 32V64h48c26.5 0 48 21.5 48 48v48H0V112C0 85.5 21.5 64 48 64H96V32c0-17.7 14.3-32 32-32zM0 192H448V464c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V192zm64 80v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H80c-8.8 0-16 7.2-16 16zm128 0v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H208c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H336zM64 400v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H80c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H208zm112 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H336c-8.8 0-16 7.2-16 16z"/>
+                        </svg>
+                        <input id="filterDates" type="text" class="date-range-picker" placeholder="Choose Date Range" readonly/>
+                    </div>
+                </div>
+            </div>
+            <div class="flex items-center gap-2">
+                <button type="submit" class="grow btn smaller-btn">Apply</button>
+                <div class="grow btn smaller-btn cursor-pointer close-modal no-styles">Cancel</div>
+            </div>
+        </form>
     </div>
 </div>
