@@ -477,7 +477,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 setTimeout(() => {
                     notice.remove();
-                }, 1000)();
+                }, 1000);
             }, 8000); // 8 seconds
         };
     
@@ -499,7 +499,7 @@ document.addEventListener('DOMContentLoaded', function() {
             notice.classList.toggle('animate-out');
             setTimeout(() => {
                 notice.remove();
-            }, 1000)();
+            }, 1000);
         });
     });
 
