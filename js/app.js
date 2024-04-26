@@ -473,7 +473,7 @@ document.addEventListener('DOMContentLoaded', function() {
         // Function to start the timeout
         const startTimeout = () => {
             timeout = setTimeout(() => {
-            notice.classList.add('animate-out');
+                notice.classList.add('animate-out');
             }, 8000); // 8 seconds
         };
     

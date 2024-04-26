@@ -1027,6 +1027,8 @@ ul.form-errors li {
     }
     100% {
         display: none;
+        pointer-events: none;
+        transform: scale(0);
     }
 }
 
