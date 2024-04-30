@@ -443,8 +443,6 @@ class Process {
 
         // Firstly, we need to check if either the user is an admin clinician OR the user is trying to edit themselves
         $currUser = $cainDB->select("SELECT user_id FROM users WHERE id = ?;", [$id])['user_id'];
-        var_dump($currUser);
-        var_dump($session->get('user-id'));
         if($session->getUserType() < ADMINISTRATIVE_CLINICIAN && $session->get('user-id') != $currUser) {
             Session::setNotice("You do not have permission to do this.", 2);
             return;

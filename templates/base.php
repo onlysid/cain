@@ -13,7 +13,6 @@ $showMenu = $route->showMenu;
 
 // Check to see if we are using too many results
 $resultsNum = checkResultCapacity();
-var_dump($_SESSION);
 ?>
 
 <body class="<?= $showMenu ? "show-menu" : "";?>">
