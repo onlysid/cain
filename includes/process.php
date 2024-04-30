@@ -20,9 +20,6 @@ class Process {
                 case('create-account'):
                     $this->createAccount();
                     break;
-                case('update-instruments'):
-                    $this->updateAllInstruments();
-                    break;
                 case('general-settings'):
                     $this->updateGeneralSettings();
                     break;
@@ -222,12 +219,13 @@ class Process {
         }
     }
 
-    function updateAllInstruments() {
-        Session::setNotice("Updating instruments is a feature that I will one day think of.");
-    }
-
     function updateGeneralSettings() {
-        global $cainDB, $form;
+        global $cainDB, $form, $session;
+
+        if($session->getUserType() < ADMINISTRATIVE_CLINICIAN) {
+            Session::setNotice("You do not have permission to do this.", 2);
+            return;
+        }
 
         // Retrieve form data
         $hospitalName = $_POST['hospitalName'];
@@ -293,7 +291,12 @@ class Process {
     }
 
     function updateFieldSettings() {
-        global $cainDB;
+        global $cainDB, $session;
+
+        if($session->getUserType() < ADMINISTRATIVE_CLINICIAN) {
+            Session::setNotice("You do not have permission to do this.", 2);
+            return;
+        }
 
         $hospitalInfo = systemInfo();
 
@@ -332,7 +335,12 @@ class Process {
     }
 
     function deleteOperator() {
-        global $cainDB;
+        global $cainDB, $session;
+
+        if($session->getUserType() < ADMINISTRATIVE_CLINICIAN) {
+            Session::setNotice("You do not have permission to do this.", 2);
+            return;
+        }
 
         $operatorId = $_POST['id'] ?? null;
 
@@ -344,7 +352,12 @@ class Process {
     }
 
     function deleteResult() {
-        global $cainDB;
+        global $cainDB, $session;
+
+        if($session->getUserType() < ADMINISTRATIVE_CLINICIAN) {
+            Session::setNotice("You do not have permission to do this.", 2);
+            return;
+        }
 
         $resultId = $_POST['id'] ?? null;
 
@@ -356,7 +369,12 @@ class Process {
     }
 
     function deleteResults() {
-        global $cainDB;
+        global $cainDB, $session;
+
+        if($session->getUserType() < ADMINISTRATIVE_CLINICIAN) {
+            Session::setNotice("You do not have permission to do this.", 2);
+            return;
+        }
 
         $dateRange = $_POST['dateRange'] ?? null;
 
@@ -413,7 +431,7 @@ class Process {
     }
 
     function editOperator() {
-        global $cainDB, $form;
+        global $cainDB, $form, $session;
 
         $id = $_POST['id'] ?? null;
         $firstName = $_POST['firstName'] ?? null;
@@ -422,6 +440,15 @@ class Process {
         $password2 = $_POST['password2'] ?? null;
         $firstName = $_POST['firstName'] ?? null;
         $userType = $_POST['userType'] ?? null;
+
+        // Firstly, we need to check if either the user is an admin clinician OR the user is trying to edit themselves
+        $currUser = $cainDB->select("SELECT user_id FROM users WHERE id = ?;", [$id])['user_id'];
+        var_dump($currUser);
+        var_dump($session->get('user-id'));
+        if($session->getUserType() < ADMINISTRATIVE_CLINICIAN && $session->get('user-id') != $currUser) {
+            Session::setNotice("You do not have permission to do this.", 2);
+            return;
+        }
 
         // Validate input values
         $errors = array();
@@ -538,7 +565,12 @@ class Process {
     }
 
     function addOperator() {
-        global $cainDB, $form;
+        global $cainDB, $form, $session;
+
+        if($session->getUserType() < ADMINISTRATIVE_CLINICIAN) {
+            Session::setNotice("You do not have permission to do this.", 2);
+            return;
+        }
 
         $operatorId = $_POST['operatorId'] ?? null;
         $firstName = $_POST['firstName'] ?? null;
@@ -648,12 +680,19 @@ class Process {
     }
 
     function toggleOperatorStatus() {
-        global $cainDB;
+        global $cainDB, $session;
+
+        if(intval($session->getUserType()) < ADMINISTRATIVE_CLINICIAN) {
+            Session::setNotice("You do not have permission to do this.", 2);
+            return;
+        }
 
         $operatorId = $_POST['id'] ?? null;
 
         if($operatorId) {
-            $status = $cainDB->select("SELECT status FROM users WHERE id = :id", [":id" => $operatorId])['status'];
+            $result = $cainDB->select("SELECT status, operator_id FROM users WHERE id = :id", [":id" => $operatorId]);
+            $status = $result['status'];
+            $operator = $result['operator_id'];
 
             $toggle = 0;
             if($status == 0) {
@@ -662,10 +701,17 @@ class Process {
 
             $cainDB->query("UPDATE users SET status = :toggle WHERE id = :id;", [":toggle" => $toggle, ":id" => $operatorId]);
         }
+
+        Session::setNotice("$operator succsessfully " . ($status == 0 ? "activated." : "deactivated."));
     }
 
     function updateQCSettings() {
-        global $cainDB;
+        global $cainDB, $session;
+
+        if(intval($session->getUserType()) < ADMINISTRATIVE_CLINICIAN) {
+            Session::setNotice("You do not have permission to do this.", 2);
+            return;
+        }
 
         // Retrieve form data
         $qcEnforcement = $_POST['qcEnforcement'];
@@ -712,7 +758,12 @@ class Process {
     }
 
     function updateGeneralUserSettings() {
-        global $cainDB;
+        global $cainDB, $session;
+
+        if($session->getUserType() < ADMINISTRATIVE_CLINICIAN) {
+            Session::setNotice("You do not have permission to do this.", 2);
+            return;
+        }
 
         // Retrieve form data
         $sessionTimeout = $_POST['sessionTimeout'];
@@ -753,7 +804,12 @@ class Process {
     }
 
     function updateNetworkSettings() {
-        global $cainDB;
+        global $cainDB, $session;
+
+        if($session->getUserType() < ADMINISTRATIVE_CLINICIAN) {
+            Session::setNotice("You do not have permission to do this.", 2);
+            return;
+        }
 
         // Retrieve form data
         $protocol = $_POST['protocol'] == 0 ? "Cain" : "HL7";

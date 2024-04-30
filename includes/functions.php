@@ -485,7 +485,7 @@ function getOperators($currentUserId = null) {
     if($currentUserId) {
         return $cainDB->selectAll("SELECT * FROM users WHERE user_type < 3 AND id != :currentUser;", [":currentUser" => $currentUserId]);
     } else {
-        return $cainDB->selectAll("SELECT * FROM users WHERE user_type <3;");
+        return $cainDB->selectAll("SELECT * FROM users WHERE user_type < 3;");
     }
 }
 

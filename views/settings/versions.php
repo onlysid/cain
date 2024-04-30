@@ -4,12 +4,12 @@ require_once BASE_DIR . "/utils/Software.php";
 ?>
 <div class="flex flex-wrap gap-2 w-full justify-center items-stretch">
     <?php foreach($software as $softwareItem) : ?>
-        <div class="grow p-6 basis-1/4 min-w-60 flex flex-col gap-3 rounded-xl border-2 border-solid bg-white shadow-xl">
+        <div class="grow p-6 basis-1/4 min-w-60 flex flex-col gap-3 rounded-xl bg-white shadow-xl shadow-dark/50">
             <h2><?= $softwareItem->getTitle();?></h2>
             <?php if($softwareItem->getVersion()) : ?>
-                <ul class="flex flex-col gap-1 items-center justify-center">
+                <ul class="ml-4">
                     <?php foreach($softwareItem->getVersion() as $version) : ?>
-                        <li class="rounded-xl px-4 py-2 w-full bg-dark text-center text-white"><?= $version['value'];?></li>
+                        <li class="list-disc text-dark"><?= $version['value'];?></li>
                     <?php endforeach;?>
                 </ul>
             <?php else : ?>

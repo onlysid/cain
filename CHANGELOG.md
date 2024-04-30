@@ -18,6 +18,7 @@ Added backup/delete and implemented filtering functionality
 
 -   You can now export and delete results (which also deletes the CSV files)
 -   Filtering now works. You can filter on search, positive results, sex, age, sent to LIMS status and a date range.
+-   Permissions are now strict and applied sitewide.
 
 #### 26/04/2024
 

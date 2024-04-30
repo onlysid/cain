@@ -132,6 +132,8 @@ class Session {
 
             // If we don't need a password generally and the operator is a clinician
             if(($passwordRequired < 2 && $operatorInfo['user_type'] == CLINICIAN) || (($passwordRequired == 0 || $passwordRequired == 2) && $operatorInfo['user_type'] == ADMINISTRATIVE_CLINICIAN)) {
+                // Set the user type in the session
+                self::set('user-type', $operatorInfo['user_type']);
                 return true;
             }
 
@@ -159,6 +161,9 @@ class Session {
                 $newHashedPassword = password_hash($password, PASSWORD_BCRYPT);
                 // Update the user's password with the new hashed password and salt
                 $cainDB->query("UPDATE `users` SET `password` = :password WHERE `operator_id` = :operatorId;", [':password' => $newHashedPassword, ':operatorId' => $operatorId]);
+
+                // Set the user type in the session
+                self::set('user-type', $operatorInfo['user_type']);
                 return true;
             }
 
@@ -182,6 +187,11 @@ class Session {
         return false;
     }
 
+    // Get user type
+    public static function getUserType() {
+        return intval(self::get('user-type')) ?? 0;
+    }
+    
     // Login user
     public static function login($operatorId) {
         global $cainDB;
@@ -197,6 +207,12 @@ class Session {
         $cainDB->query("UPDATE `users` SET `user_id` = :userId WHERE `operator_id` = :operatorId", [':userId' => $userId, ':operatorId' => $operatorId]);
 
         self::set('user-id', $userId);
+
+        // Get the user type
+        $userType = $cainDB->select("SELECT `user_type` FROM `users` WHERE `operator_id` = :operatorId", [':operatorId' => $operatorId]);
+        
+        // Set the user type in the session
+        self::set('user-type', $userType['user_type']);
         return true;
     }
 

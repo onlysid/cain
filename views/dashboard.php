@@ -327,38 +327,46 @@ foreach($resultItems as $result) : ?>
                 }
             </script>
 
-            <div class="shrink-0 relative result-actions mt-1.5 bg-black gap-0.5 shadow-xl shadow-dark flex rounded-2xl max-w-[min(15rem,95vw)] overflow-hidden mb-4 lg:mb-8">
-                <button onclick="PrintElem('<?= $result['result_id'];?>', <?= $result['result_id'];?>)" class="bg-gradient-to-r from-yellow-300 to-yellow-200 grow-1 px-4 py-1.5 text-black transition-all duration-500 hover:bg-blue-200 hover:saturate-50 hover:scale-105 tooltip" title="Print details">Print</button>
-                <button data-id="<?= $result['result_id'];?>" class="delete-result bg-gradient-to-r from-red-900 to-red-600 grow-1 px-4 py-1.5 text-white transition-all duration-500 hover:bg-blue-200 hover:saturate-50 hover:scale-105 tooltip" title="Delete">Delete</button>
-            </div>
+            <?php if($currentUser['user_type'] >= ADMINISTRATIVE_CLINICIAN) : ?>
+                <div class="shrink-0 relative result-actions mt-1.5 bg-black gap-0.5 shadow-xl shadow-dark flex rounded-2xl max-w-[min(15rem,95vw)] overflow-hidden mb-4 lg:mb-8">
+                    <button onclick="PrintElem('<?= $result['result_id'];?>', <?= $result['result_id'];?>)" class="bg-gradient-to-r from-yellow-300 to-yellow-200 grow-1 px-4 py-1.5 text-black transition-all duration-500 hover:bg-blue-200 hover:saturate-50 hover:scale-105 tooltip" title="Print details">Print</button>
+                    <button data-id="<?= $result['result_id'];?>" class="delete-result bg-gradient-to-r from-red-900 to-red-600 grow-1 px-4 py-1.5 text-white transition-all duration-500 hover:bg-blue-200 hover:saturate-50 hover:scale-105 tooltip" title="Delete">Delete</button>
+                </div>
+            <?php else : ?>
+                <div class="result-actions mt-1.5 shadow-xl shadow-dark flex rounded-2xl max-w-[min(15rem,95vw)] overflow-hidden mb-4 lg:mb-8">
+                    <button onclick="PrintElem('<?= $result['result_id'];?>', <?= $result['result_id'];?>)" class="bg-gradient-to-r from-yellow-300 to-yellow-200 grow-1 px-4 py-1.5 text-black transition-all duration-500 hover:bg-blue-200 hover:saturate-50 hover:scale-105 tooltip" title="Print details">Print</button>
+                </div>
+            <?php endif;?>
         </div>
     </div>
 <?php endforeach;?>
 
-<div id="genericModalWrapper">
-    <div class="overlay"></div>
+<?php if($currentUser['user_type'] >= ADMINISTRATIVE_CLINICIAN) : ?>
+    <div id="genericModalWrapper">
+        <div class="overlay"></div>
 
-    <div id="deleteResultModal" class="generic-modal">
-        <div class="close-modal">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/>
-            </svg>
-        </div>
-        <svg class="fill-red-500 h-10 w-auto mb-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-            <path d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480H40c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24V296c0 13.3 10.7 24 24 24s24-10.7 24-24V184c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/>
-        </svg>
-        <p class="text-center">Are you sure you want to delete result #<span id="resultToDelete" class="font-black text-red-500"></span>?</p>
-        <form action="/process" method="POST">
-            <input type="hidden" name="action" value="delete-result">
-            <input type="hidden" name="return-path" value="<?= $currentURL;?>">
-            <input type="hidden" name="id" class="form-result-id" value="">
-            <div class="w-full flex justify-center items-center gap-3 mt-3">
-                <button type="submit" class="btn smaller-btn trigger-loading">Yes</button>
-                <div class="cursor-pointer btn smaller-btn close-modal no-styles">Cancel</div>
+        <div id="deleteResultModal" class="generic-modal">
+            <div class="close-modal">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                    <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/>
+                </svg>
             </div>
-        </form>
+            <svg class="fill-red-500 h-10 w-auto mb-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                <path d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480H40c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24V296c0 13.3 10.7 24 24 24s24-10.7 24-24V184c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/>
+            </svg>
+            <p class="text-center">Are you sure you want to delete result #<span id="resultToDelete" class="font-black text-red-500"></span>?</p>
+            <form action="/process" method="POST">
+                <input type="hidden" name="action" value="delete-result">
+                <input type="hidden" name="return-path" value="<?= $currentURL;?>">
+                <input type="hidden" name="id" class="form-result-id" value="">
+                <div class="w-full flex justify-center items-center gap-3 mt-3">
+                    <button type="submit" class="btn smaller-btn trigger-loading">Yes</button>
+                    <div class="cursor-pointer btn smaller-btn close-modal no-styles">Cancel</div>
+                </div>
+            </form>
+        </div>
     </div>
-</div>
+<?php endif;?>
 
 <div id="filterModalWrapper">
     <div class="overlay"></div>
@@ -431,7 +439,7 @@ foreach($resultItems as $result) : ?>
                     </div>
                 </div>
             </div>
-            <div class="form-fields">
+            <div class="form-fields <?= $settings['app_mode'] == 1 ? "" : "!hidden";?>">
                 <div class="field">
                     <label for="sentToLIMS">Sent to LIMS?</label>
                     <div class="input-wrapper select-wrapper">

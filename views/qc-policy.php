@@ -51,7 +51,8 @@ $qcSettings = array_intersect_key($settings, array_flip($qcKeys));
     <p class="cain-grid-content"><?= $qcSettings['qc_enable_independence'] ? "ENABLED" : "DISABLED";?></p>
 </div>
 
-<!-- TODO: Make only accessible to admins -->
-<div class="flex items-end max-w-4xl mx-auto">
-    <a href="/settings/qc" class="btn border-btn">Adjust QC Policy</a>
-</div>
+<?php if($currentUser['user_type'] >= ADMINISTRATIVE_CLINICIAN) : ?>
+    <div class="flex items-end max-w-4xl mx-auto">
+        <a href="/settings/qc" class="btn border-btn">Adjust QC Policy</a>
+    </div>
+<?php endif;?>
