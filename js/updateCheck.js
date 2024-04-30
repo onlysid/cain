@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     document.title = "Updating...";
 
     // Set the container html
-    updateAlert.innerHTML = '<h2>Cain is updating...</h2><p>This process may take a while.</p>';
+    updateAlert.innerHTML = '<h2>Samba HUB is updating...</h2><p>This process may take a while.</p>';
 
     // Create the container
     var container = document.createElement('div');

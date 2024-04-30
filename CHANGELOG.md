@@ -12,6 +12,13 @@ Init!
 
 ### What's happened?
 
+#### 30/04/2024
+
+Added backup/delete and implemented filtering functionality
+
+-   You can now export and delete results (which also deletes the CSV files)
+-   Filtering now works. You can filter on search, positive results, sex, age, sent to LIMS status and a date range.
+
 #### 26/04/2024
 
 Added filtering modal and fixed some styling.

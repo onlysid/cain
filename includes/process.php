@@ -44,6 +44,9 @@ class Process {
                 case('delete-result'):
                     $this->deleteResult();
                     break;
+                case('delete-results'):
+                    $this->deleteResults();
+                    break;
                 case('edit-operator'):
                     $this->editOperator();
                     break;
@@ -63,6 +66,7 @@ class Process {
 
             // Once we are done, we may specify a return path
             if(!$redirectOverride) {
+                // There may be a redirect baked into the 
                 if(!isset($_POST['intrinsic-redirect'])) {
                     if (!empty($_POST['return-path'])) {
                         header("Location: " . $_POST['return-path']);
@@ -349,6 +353,63 @@ class Process {
         }
 
         Session::setNotice("Result successfully deleted.");
+    }
+
+    function deleteResults() {
+        global $cainDB;
+
+        $dateRange = $_POST['dateRange'] ?? null;
+
+        $queryDelete = "DELETE FROM results WHERE ";
+        $queryCheck = "SELECT id FROM results WHERE ";
+        $query = "";
+        $params = [];
+
+        if($dateRange) {
+            // We need to parse the date range
+            $dateRangeArr = explode(' - ', $dateRange);
+    
+            if($dateRangeArr[0]) {
+                $query .= 'STR_TO_DATE(testcompletetimestamp, "%Y-%m-%d %H:%i") >= ?';
+                $params[] = $dateRangeArr[0] . " 00:00";
+            }
+            if(isset($dateRangeArr[1])) {
+                $query .= ' AND STR_TO_DATE(testcompletetimestamp, "%Y-%m-%d %H:%i") <= ?';
+                $params[] = $dateRangeArr[1] . " 00:00";
+            } else {
+                $query .= ' AND STR_TO_DATE(testcompletetimestamp, "%Y-%m-%d %H:%i") <= ?';
+                $params[] = $dateRangeArr[0] . " 23:59";
+            }
+        } else {
+            $query .= "1;";
+        }
+
+        // First, we must select all the ID's of the query and 
+        $queryCheck .= $query;
+        $queryDelete .= $query;
+
+        $results = $cainDB->selectAll($queryCheck, $params);
+
+        foreach($results as $result) {
+            $id = $result['id'];
+
+            // Directory for CSV curves
+            $curvesDir = __DIR__ . "/../curves";
+
+            $file = $curvesDir . "/" . $id . ".csv";
+
+            if(file_exists($file)) {
+                unlink($file);
+            }
+        }
+
+        $count = $cainDB->query($queryDelete, $params);
+
+        if($count > 0) {
+            Session::setNotice($count . (($count > 1 || $count == 0) ? " results " : " result ") . "successfully deleted.");
+        } else {
+            Session::setNotice("There are no results to delete for the selected time frame.");
+        }
     }
 
     function editOperator() {
@@ -753,8 +814,70 @@ class Process {
     }
 
     function filterResults() {
-        header("Location: /");
-        Session::setNotice("Oh yeah, filtering doesn't completely work yet...", 2);
+        global $cainDB;
+
+        // Retrieve filters form data
+        $searchQuery = $_POST['s'] ?? null;
+        $sex = $_POST['sex'] ?? null;
+        $ageGroup = $_POST['ageGroup'] ?? null;
+        $sentToLIMS = $_POST['sentToLIMS'] ?? null;
+        $filterDates = $_POST['filterDates'] ?? null;
+        $resultPolarity = ($_POST['resultPolarity'] ?? null) == "on" ? 1 : 0;
+        
+        // Get the return path and the query params that already exist
+        $url = $_POST['return-path'];
+        $paramArr = getParams($url);
+
+        unset($paramArr['p']);
+
+        // Recreate the GET request by redirecting to a location with params set by the new filters
+        if($searchQuery != "") {
+            $paramArr['s'] = $searchQuery;
+        } else {
+            unset($paramArr['s']);
+        }
+        if($sex != "") {
+            $paramArr['g'] = $sex;
+        } else {
+            unset($paramArr['g']);
+        }
+        if($ageGroup != "") {
+            $paramArr['a'] = $ageGroup;
+        } else {
+            unset($paramArr['a']);
+        }
+        if($sentToLIMS != "") {
+            $paramArr['l'] = $sentToLIMS;
+        } else {
+            unset($paramArr['l']);
+        }
+        if($filterDates != "") {
+            $paramArr['d'] = $filterDates;
+        } else {
+            unset($paramArr['d']);
+        }
+        if($resultPolarity != "") {
+            $paramArr['r'] = $resultPolarity;
+        } else {
+            unset($paramArr['r']);
+        }
+
+        // Create the filter query
+        $filter = "";
+
+        if(count($paramArr) > 0) {
+            $filter .= "?";
+            $i = 0;
+            foreach($paramArr as $param => $paramData) {
+                if($i != 0) {
+                    $filter .= "&";
+                }
+                $filter .= $param . "=" . $paramData;
+                $i++;
+            }
+        }
+
+        header("Location: /" . $filter);
     }
 }
 

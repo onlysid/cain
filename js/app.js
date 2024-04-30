@@ -400,13 +400,21 @@ if(deleteResultModal) {
 }
 
 // We need to open up filters (if this exists)
-var filterBtn = document.getElementById('filter');
+var modalBtn = document.getElementById('filter');
 
-if(filterBtn) {
-    var filterModal = document.querySelector('#filterModalWrapper .generic-modal');
+if(!modalBtn) {
+    modalBtn = document.getElementById('deleteBtn');
+}
+var modal = document.querySelector('#filterModalWrapper .generic-modal');
 
-    filterBtn.addEventListener('click', () => {
-        filterModal.classList.add('active');
+if(!modal) {
+    modal = document.querySelector('.generic-modal');
+}
+
+if(modal) {
+
+    modalBtn.addEventListener('click', () => {
+        modal.classList.add('active');
     });
 
     // Function to check if "vanilla" is not present in any string
@@ -421,8 +429,8 @@ if(filterBtn) {
 
     // We need to load this when a delete button has been pressed.
     document.addEventListener('click', (e) => {
-        if(!filterBtn.contains(e.target) && isVanillaNotPresent(e.target.classList) && (!filterModal.contains(e.target) || e.target.classList.contains('close-modal'))) {
-            filterModal.classList.remove('active');
+        if(!modalBtn.contains(e.target) && isVanillaNotPresent(e.target.classList) && (!modal.contains(e.target) || e.target.classList.contains('close-modal'))) {
+            modal.classList.remove('active');
         }
     })
 }
@@ -457,7 +465,7 @@ if(lotsTable) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    const notices = document.querySelectorAll('.notice');
+    const notices = document.querySelectorAll('#notices .notice');
     
     notices.forEach((notice, index) => {
         let timeout;
@@ -518,3 +526,17 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 });
+
+// We need to put the fake search into the real search box!
+var fakeSearchInput = document.getElementById('fakeSearch');
+var fakeSearchForm = document.getElementById('fakeSearchForm');
+var searchInput = document.getElementById('filterSearch');
+var filterSearchBtn = document.getElementById('filterSearchBtn');
+
+if(fakeSearchForm && fakeSearchInput && searchInput && filterSearchBtn) {
+    fakeSearchForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        searchInput.value = fakeSearchInput.value;
+        filterSearchBtn.click();
+    })
+}

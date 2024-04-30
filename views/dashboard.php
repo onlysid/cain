@@ -3,12 +3,12 @@ $hospitalInfo = systemInfo();
 $hospitalInfoArray = array_column($hospitalInfo, 'value', 'name');
 
 // Do we have any filters?
-$filters = $_GET;
+$filters = $_GET ?? $session->get('result-filters');
 $page = $filters['p'] ?? 1;
 $itemsPerPage = $filters['ipp'] ?? 10;
 
 // Get all the data
-$results = getResults($_GET, $itemsPerPage);
+$results = getResults($_GET ?? $session->get('result-filters'), $itemsPerPage, false);
 $resultItems = $results["results"];
 $totalResultsCount = $results["count"];
 
@@ -56,12 +56,12 @@ include_once BASE_DIR . "/utils/AgeGroup.php";
 <div id="tableInfoWrapper" class="w-full flex justify-between items-center gap-2">
     <p class="results-number hidden sm:block"><?= $resultNumberText;?></p>
     <div id="filterSearchWrapper" class="flex items-center flex-col-reverse sm:flex-row w-full sm:w-auto justify-end">
-        <form action="/" method="GET" id="searchForm" class="w-full sm:w-auto">
+        <form id="fakeSearchForm" class="w-full sm:w-auto">
             <div class="form-fields">
                 <div class="field">
                     <div class="input-wrapper !py-1 !pr-1">
-                        <input required type="text" placeholder="Search..." name="s" value="<?= $_GET['s'] ?? "";?>">
-                        <button class="aspect-square rounded-full p-2 bg-dark transition-all duration-500 hover:scale-110 hover:opacity-75" type="submit">
+                        <input id="fakeSearch" required type="text" placeholder="Search..." name="s" value="<?= $filters['s'] ?? "";?>">
+                        <button id="fakeSearchBtn" class="cursor-pointer aspect-square rounded-full p-2 bg-dark transition-all duration-500 hover:scale-110 hover:opacity-75">
                             <svg class="h-4 w-auto fill-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                                 <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/>
                             </svg>
@@ -387,7 +387,7 @@ foreach($resultItems as $result) : ?>
                 <div class="field">
                     <label for="filterSearch">Search results</label>
                     <div class="input-wrapper !py-1 !pr-1">
-                        <input id="filterSearch" type="text" placeholder="Search..." name="s" value="<?= $_GET['s'] ?? "";?>">
+                        <input id="filterSearch" type="text" placeholder="Search..." name="s" value="<?= $filters['s'] ?? "";?>">
                         <div class="aspect-square rounded-full p-2 bg-dark transition-all duration-500 hover:scale-110 hover:opacity-75">
                             <svg class="h-3 w-auto fill-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                                 <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/>
@@ -403,7 +403,7 @@ foreach($resultItems as $result) : ?>
                         <div class="description !text-xs text-grey mr-4">Show only positive results?</div>
                     </div>
                     <div class="checkbox-wrapper">
-                        <input class="tgl" name="resultPolarity" id="resultPolarity" type="checkbox">
+                        <input <?= isset($filters['r']) ? "checked" : "";?> class="tgl" name="resultPolarity" id="resultPolarity" type="checkbox">
                         <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="resultPolarity"><span></span></label>
                     </div>
                 </label>
@@ -412,20 +412,20 @@ foreach($resultItems as $result) : ?>
                 <div class="field">
                     <label for="sex">Sex</label>
                     <div class="input-wrapper select-wrapper">
-                        <select required name="sex" id="sex">
-                            <option>Please Select</option>
-                            <option value="0">Male</option>
-                            <option value="1">Female</option>
+                        <select name="sex" id="sex">
+                            <option value>Please Select</option>
+                            <option <?= ($filters['g'] ?? null) == "M" ? "selected" : "";?> value="M">Male</option>
+                            <option <?= ($filters['g'] ?? null) == "F" ? "selected" : "";?> value="F">Female</option>
                         </select>
                     </div>
                 </div>
                 <div class="field">
                     <label for="ageGroup">Age Group</label>
                     <div class="input-wrapper select-wrapper">
-                        <select required name="ageGroup" id="ageGroup">
-                            <option>Please Select</option>
+                        <select name="ageGroup" id="ageGroup">
+                            <option value>Please Select</option>
                             <?php foreach($ageGroups as $ageGroup) : ?>
-                                <option value="<?= $ageGroup;?>"><?= $ageGroup;?></option>
+                                <option <?= ($filters['a'] ?? null) == $ageGroup ? "selected" : "";?> value="<?= $ageGroup;?>"><?= $ageGroup;?></option>
                             <?php endforeach;?>
                         </select>
                     </div>
@@ -435,11 +435,11 @@ foreach($resultItems as $result) : ?>
                 <div class="field">
                     <label for="sentToLIMS">Sent to LIMS?</label>
                     <div class="input-wrapper select-wrapper">
-                        <select required name="sentToLIMS" id="sentToLIMS">
-                            <option>Please Select</option>
-                            <option value="0">Not Sent</option>
-                            <option value="1">Pending</option>
-                            <option value="2">Sent</option>
+                        <select name="sentToLIMS" id="sentToLIMS">
+                            <option value>Please Select</option>
+                            <option <?= ($filters['l'] ?? null) == "100" ? "selected" : "";?> value="100">Not Sent</option>
+                            <option <?= ($filters['l'] ?? null) == "101" ? "selected" : "";?> value="101">Pending</option>
+                            <option <?= ($filters['l'] ?? null) == "102" ? "selected" : "";?> value="102">Sent</option>
                         </select>
                     </div>
                 </div>
@@ -452,12 +452,12 @@ foreach($resultItems as $result) : ?>
                         <svg class="cursor-pointer" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
                             <path d="M128 0c17.7 0 32 14.3 32 32V64H288V32c0-17.7 14.3-32 32-32s32 14.3 32 32V64h48c26.5 0 48 21.5 48 48v48H0V112C0 85.5 21.5 64 48 64H96V32c0-17.7 14.3-32 32-32zM0 192H448V464c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V192zm64 80v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H80c-8.8 0-16 7.2-16 16zm128 0v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H208c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H336zM64 400v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H80c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H208zm112 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H336c-8.8 0-16 7.2-16 16z"/>
                         </svg>
-                        <input id="filterDates" type="text" class="date-range-picker" placeholder="Choose Date Range" readonly/>
+                        <input id="filterDates" name="filterDates" type="text" class="date-range-picker" placeholder="Choose Date Range" readonly value="<?= $filters['d'] ?? "";?>"/>
                     </div>
                 </div>
             </div>
             <div class="flex items-center gap-2">
-                <button type="submit" class="grow btn smaller-btn">Apply</button>
+                <button id="filterSearchBtn" type="submit" class="grow btn smaller-btn">Apply</button>
                 <div class="grow btn smaller-btn cursor-pointer close-modal no-styles">Cancel</div>
             </div>
         </form>

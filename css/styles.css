@@ -194,6 +194,14 @@ a.ignore-default {
     @apply bg-gradient-to-r from-green-500 to-green-700 hover:text-white transition-all duration-500 hover:opacity-80 hover:scale-95 hover:shadow-lg hover:shadow-dark;
 }
 
+.btn.btn-red {
+    @apply bg-gradient-to-r from-red-800 to-[#451616] hover:text-white shadow-md shadow-black/40 transition-all duration-500 hover:opacity-80 hover:scale-95 hover:shadow-lg hover:shadow-black/60;
+}
+
+.btn.btn-green {
+    @apply bg-gradient-to-r from-[#0a3118] to-green-700 hover:text-white shadow-md shadow-black/40 transition-all duration-500 hover:opacity-80 hover:scale-95 hover:shadow-lg hover:shadow-black/60;
+}
+
 #menu .btn {
     @apply justify-start;
 }
@@ -1005,6 +1013,18 @@ ul.form-errors li {
 
 #notices .notice.alert p, #notices .notice.warn p {
     @apply text-white;
+}
+
+#notices .notice-content-wrapper {
+    @apply rounded-full transition-all duration-500 hover:scale-110 p-0.5 bg-black shadow-xl shadow-dark/50 absolute top-0 right-0 translate-x-1/4 -translate-y-1/4;
+}
+
+#notices .notice-content {
+    @apply w-full h-full rounded-full p-1 bg-white flex justify-center items-center;
+}
+
+#notices .notice-content svg {
+    @apply h-4 w-4;
 }
 
 @keyframes fadeInRight {

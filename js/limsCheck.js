@@ -24,8 +24,14 @@ function limsStatusCheck() {
             if (xhr.status === 200) {
                 // The response code/message
                 var data = JSON.parse(xhr.responseText);
+
+                // If the data shows refresh = true, refresh the page
+                if(data.refresh) {
+                    alert("You've been logged out!");
+                } else {
+                    updateLimsStatus(data);
+                }
                 
-            updateLimsStatus(data);
             } else {
                 // Handle error
                 statusSpan.classList.remove("active");

@@ -77,6 +77,10 @@ function systemInfo() {
 // Retrieve LIMS connectivity status from db
 function limsConnectivity() {
     global $cainDB;
+    // Whilst we're doing this often enough anyway, check login status and redirect to the login page if necessary.
+    // if(!$session->isLoggedIn()) {
+    //     return ["refresh" => true];
+    // }
     return $cainDB->select("SELECT value FROM settings WHERE `name` = 'comms_status';");
 }
 
@@ -224,7 +228,59 @@ function getResults($params, $itemsPerPage) {
     $sortDirection = isset($params['sd']) && ($params['sd'] != "" || $params['sd'] == "asc") ? "ASC" : "DESC";
     $sortParam = isset($params['sp']) && $params['sp'] != "" ? $params['sp'] : "testcompletetimestamp";
     $pageNumber = isset($params['p']) ? $params['p'] : 1;
-    $offset = ($pageNumber - 1) * $itemsPerPage;
+    $offset = $itemsPerPage ? ($pageNumber - 1) * $itemsPerPage : null;
+
+    // These filters need a little extra cleaning
+    $resultPolarity = isset($params['r']) ? $params['r'] : null;
+    $sex = isset($params['g']) ? $params['g'] : null;
+    $age = isset($params['a']) ? $params['a'] : null;
+    $sentToLIMS = isset($params['l']) ? $params['l'] : null;
+    $dateRange = isset($params['d']) ? $params['d'] : null;
+    $filters = [];
+
+    // Check for positive result
+    if($resultPolarity) {
+        $filters[] = "result LIKE '" . ($resultPolarity == 0 ? 'Negative' : 'Positive') . "'";
+    }
+
+    if($sex) {
+        $filters[] = "patientSex = '$sex'";
+    }
+
+    if($age) {
+        // We need to parse the age 
+        $ageRange = explode('-', $age);
+        if(count($ageRange) > 1) {
+            $minAge = $ageRange[0];
+            $maxAge = $ageRange[1];
+        } else {
+            $minAge = explode('+', $age)[0];
+            $maxAge = null;
+        }
+
+        $filters[] = "patientAge >= $minAge";
+        if($maxAge) {
+            $filters[] = "patientAge <= $maxAge";
+        }
+    }
+
+    if($sentToLIMS) {
+        $filters[] = "flag = '$sentToLIMS'";
+    }
+
+    if($dateRange) {
+        // We need to parse the date range
+        $dateRangeArr = explode(' - ', $dateRange);
+
+        if($dateRangeArr[0]) {
+            $filters[] = 'STR_TO_DATE(testcompletetimestamp, "%Y-%m-%d %H:%i") >= "' . $dateRangeArr[0] . ' 00:00"';
+        }
+        if(isset($dateRangeArr[1])) {
+            $filters[] = 'STR_TO_DATE(testcompletetimestamp, "%Y-%m-%d %H:%i") <= "' . $dateRangeArr[1] . ' 00:00"';
+        } else {
+            $filters[] = 'STR_TO_DATE(testcompletetimestamp, "%Y-%m-%d %H:%i") <= "' . $dateRangeArr[0] . ' 23:59"';
+        }
+    }
 
     // Construct the WHERE clause for searching across all columns
     $searchConditions = '';
@@ -235,7 +291,7 @@ function getResults($params, $itemsPerPage) {
 
         $i = 0;
         foreach($searchTerms as $filterString) {
-            $searchConditions .= "AND (";
+            $searchConditions .= "(";
             $j = 0;
             foreach ($columns as $column) {
                 $searchConditions .= ($j != 0 ? "OR " : "") . "$column LIKE :filterString$i ";
@@ -245,9 +301,20 @@ function getResults($params, $itemsPerPage) {
             $searchConditions .= ") ";
             $i++;
         }
-        // Remove the leading 'OR' from the first condition
-        $searchConditions = ltrim($searchConditions, 'AND');
     }
+
+    // Add to the search conditions
+    if(count($filters) > 0) {
+        $i = 0;
+        foreach($filters as $filter) {
+            if($i != 0 || $searchFilter !== null) {
+                $searchConditions .= "AND ";
+            }
+            $searchConditions .= $filter . " ";
+            $i++;
+        }
+    }
+
 
     // Build the SQL query
     $query = "SELECT *, r.id AS result_id FROM results r LEFT JOIN lots i ON i.lot_number = r.lot_number ";
@@ -259,7 +326,9 @@ function getResults($params, $itemsPerPage) {
     $query .= "ORDER BY $sortParam $sortDirection ";
 
     // Apply pagination
-    $query .= " LIMIT $itemsPerPage OFFSET $offset";
+    if($itemsPerPage) {
+        $query .= " LIMIT $itemsPerPage OFFSET $offset";
+    }
 
     // Get the results
     $results = $cainDB->selectAll($query, $queryParams);
@@ -332,6 +401,22 @@ function testInput($data) {
     $data = stripslashes($data);
     $data = htmlspecialchars($data);
     return $data;
+}
+
+function getParams($url) {
+    // Parse the URL to get the query string
+    $queryString = parse_url($url, PHP_URL_QUERY);
+    
+    // Initialize an empty array to store parameters
+    $parameters = array();
+    
+    // If there are query parameters
+    if ($queryString) {
+        // Parse the query string into an associative array
+        parse_str($queryString, $parameters);
+    }
+    
+    return $parameters;
 }
 
 function truncate($string, $length = 100, $append = "&hellip;") {
