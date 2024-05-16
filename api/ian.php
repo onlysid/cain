@@ -36,8 +36,6 @@ foreach($data['data'] as $key => $value) {
     $i++;
 }
 
-var_dump($query);
-
 try {
     // Begin transaction to ensure safety
     $cainDB->beginTransaction();
