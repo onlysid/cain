@@ -7,7 +7,7 @@ if(!$data) {
     exit;
 }
 
-$response = "Ian, stop sending me logger stuff!";
+$response = "Unsuccessful";
 
 $query = "INSERT INTO ian (time, temp, humidity, surf_temp, pressure, magx, magy, magz, battery) VALUES ";
 $i = 0;
@@ -50,9 +50,10 @@ try {
     // Rollback the transaction on error
     $cainDB->rollBack();
     $errors = $e;
-    var_dump($e);
+    echo("We had an error... send this to Sid!");
+    print_r($e);
 }
 
 
 // Provide the response
-echo json_encode(["status" => $response, "areWeRaw?" => $raw, "data" => $data]);
+echo json_encode(["status" => $response,]);

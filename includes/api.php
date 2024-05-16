@@ -26,8 +26,6 @@ header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers
 $data = $_POST;
 $raw = false;
 
-var_dump($data);
-
 // If we don't have post data, it's probably written raw...
 if(!$data) {
     $raw = true;
