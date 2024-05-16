@@ -40,12 +40,19 @@ try {
     // Begin transaction to ensure safety
     $cainDB->beginTransaction();
 
+    // Delete old stuff
+    $cainDB->query("DELETE FROM ian WHERE 1");
 
     // Add items to db
     $cainDB->query($query, $params);
 
+    $numItems = $cainDB->select("SELECT COUNT(id) FROM ian;")['COUNT(id)'];
+
     // Commit the transaction
     $cainDB->commit();
+
+    // Return success
+    $response = "Successfully added $numItems items to the database";
 } catch(PDOException $e) {
     // Rollback the transaction on error
     $cainDB->rollBack();
