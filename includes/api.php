@@ -24,9 +24,11 @@ header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers
 
 // Get the data
 $data = $_POST;
+$raw = false;
 
 // If we don't have post data, it's probably written raw...
 if(!$data) {
+    $raw = true;
     $data = json_decode(file_get_contents("php://input"), true);
 }
 

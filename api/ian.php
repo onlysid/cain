@@ -9,6 +9,52 @@ if(!$data) {
 
 $response = "Ian, stop sending me logger stuff!";
 
-// Provide the response
-echo json_encode(["status" => $response]);
+$query = "INSERT INTO ian (time, temp, humidity, surf_temp, pressure, magx, magy, magz, battery) VALUES ";
+$i = 0;
+$params = [];
+foreach($data['data'] as $key => $value) {
+    if($i != 0) {
+        $query .= ", ";
+    }
 
+    $query .= "(";
+
+    // Add the values
+    $params[] = $time = $value['time'] ?? null;
+    $params[] = $temp = $value['air temperature'] ?? null;
+    $params[] = $humidity = $value['humidity'] ?? null;
+    $params[] = $surfTemp = $value['surface temperature'] ?? null;
+    $params[] = $pressure = $value['air pressure'] ?? null;
+    $params[] = $magX = $value['magnetometer x'] ?? null;
+    $params[] = $magY = $value['magnetometer y'] ?? null;
+    $params[] = $magZ = $value['magnetometer z'] ?? null;
+    $params[] = $battery = $value['battery voltage'] ?? null;
+
+    $query .= "?, ?, ?, ?, ?, ?, ?, ?, ?";
+
+    $query .= ")";
+    $i++;
+}
+
+var_dump($query);
+
+try {
+    // Begin transaction to ensure safety
+    $cainDB->beginTransaction();
+
+
+    // Add items to db
+    $cainDB->query($query, $params);
+
+    // Commit the transaction
+    $cainDB->commit();
+} catch(PDOException $e) {
+    // Rollback the transaction on error
+    $cainDB->rollBack();
+    $errors = $e;
+    var_dump($e);
+}
+
+
+// Provide the response
+echo json_encode(["status" => $response, "areWeRaw?" => $raw, "data" => $data]);
