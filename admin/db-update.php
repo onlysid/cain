@@ -416,7 +416,7 @@ function runUpdates($version, $dbVersion) {
                 `operator_id` varchar(50) NULL,
                 `qc_result` TINYINT,
                 `reference` TEXT,
-                `test_result` BIGINT,
+                `test_result` INT,
                 FOREIGN KEY (lot) REFERENCES lots(id),
                 FOREIGN KEY (`test_result`) REFERENCES results(id) ON DELETE SET NULL
             );";

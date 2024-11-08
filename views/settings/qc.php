@@ -19,12 +19,12 @@ $qcSettings = array_intersect_key($settings, array_flip($qcKeys));
     <input type="hidden" name="return-path" value="<?= $currentURL;?>">
     <div class="form-fields">
         <div class="field">
-            <label for="qcPolicy">QC Enforcement</label>
+            <label for="qcPolicy">QC Policy</label>
             <div class="input-wrapper select-wrapper">
                 <select name="qcPolicy" id="qcPolicy">
-                    <option value="off" <?= $qcSettings['qc_policy'] === "off" ? "selected" : "";?>>Off</option>
-                    <option value="lockout" <?= $qcSettings['qc_policy'] === "lockout" ? "selected" : "";?>>Lockout</option>
-                    <option value="warn" <?= $qcSettings['qc_policy'] === "warn" ? "selected" : "";?>>Warn</option>
+                    <option value="0" <?= $qcSettings['qc_policy'] === "0" ? "selected" : "";?>>Off</option>
+                    <option value="1" <?= $qcSettings['qc_policy'] === "1" ? "selected" : "";?>>Automatic</option>
+                    <option value="2" <?= $qcSettings['qc_policy'] === "2" ? "selected" : "";?>>Manual</option>
                 </select>
             </div>
         </div>
