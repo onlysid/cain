@@ -358,7 +358,7 @@ function runUpdates($version, $dbVersion) {
                 `current_assay` varchar(255),
                 `assay_start_time` bigint,
                 `duration` int,
-                `device_error` tinyint,
+                `device_error` varchar(255),
                 `tablet_version` varchar(100),
                 `enforcement` tinyint,
                 `last_connected` bigint,

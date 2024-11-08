@@ -112,8 +112,7 @@
 }
 
 .result-details::-webkit-scrollbar-thumb {
-    @apply rounded-r-xl;
-	background-color: #FFF;
+    @apply rounded-r-xl bg-white;
 	background-image: -webkit-gradient(linear, 40% 0%, 75% 84%, from(#4D9C41), to(#199181), color-stop(.6,#54DE5D))
 }
 
