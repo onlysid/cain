@@ -817,7 +817,7 @@ function updateLot($lotNumber, $params = null) {
     global $cainDB;
 
     // We need to add this to the query.
-    $timestamp = time();
+    $timestamp = Date("Y:m:d H:i:s");
 
     if($lotNumber) {
         // Check if we have the lot number in the DB
@@ -832,7 +832,7 @@ function updateLot($lotNumber, $params = null) {
             $i = 1;
             if($params) {
                 foreach($params as $dbCol => $param) {
-                    $sql .= " AND " . $dbCol . " = ?";
+                    $sql .= ",  " . $dbCol . " = ?";
                     $queryParams[] = $param;
                     $i++;
                 }
@@ -848,8 +848,6 @@ function updateLot($lotNumber, $params = null) {
             // Return ID of lot
             return $lotExists['id'];
         }
-
-        $timestamp = Date("Y:m:d H:i:s");
 
         // The lot does not exist. Insert it!
         $sql = "INSERT INTO lots (lot_number, last_updated" . ($params ? ", " : "") . implode(", ", array_keys($params ?? [])) . ") VALUES (?, ?" . ($params ? ", " : "") . implode(", ", array_fill(0, count((array) $params), "?")) . ");";
@@ -927,8 +925,6 @@ function lotAutoQCCheck($lot) {
  */
 function newLotQC($lotID, $resultID) {
     global $cainDB;
-
-    var_dump("INSERT INTO lots_qc_results (`lot`, `test_result`) VALUES (?, ?);");
 
     // Add the result QC
     if($cainDB->query("INSERT INTO lots_qc_results (`lot`, `test_result`) VALUES (?, ?);", [$lotID, $resultID])) {
