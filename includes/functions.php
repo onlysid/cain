@@ -113,7 +113,7 @@ function systemInfo() {
 // Retrieve LIMS connectivity status from db
 function limsConnectivity() {
     global $cainDB;
-    return $cainDB->select("SELECT value FROM settings WHERE `name` = 'comms_status';");
+    return $cainDB->select("SELECT value FROM settings WHERE `name` = 'comms_status';")['value'];
 }
 
 function updateInstruments($tabletData) {
@@ -753,7 +753,7 @@ function getInstrumentQCOutcome($qcTest) {
 }
 
 // Function to get the behaviour of all fields (for the tablet)
-function getFieldBehaviourSettings($dataFields, $behaviourFields) {
+function getFieldBehaviourSettings($dataFields, $behaviourFields, $tablet = false) {
     $result = [];
     foreach($dataFields as $index => $dataField) {
         $behaviour = "OFF";
@@ -774,7 +774,11 @@ function getFieldBehaviourSettings($dataFields, $behaviourFields) {
             $behaviour = "AUTOMATIC";
         }
 
-        $result[$dataField->dbName] = $behaviour;
+        if($tablet) {
+            $result[$dataField->tabletName] = $behaviour;
+        } else {
+            $result[$dataField->dbName] = $behaviour;
+        }
     }
 
     return $result;

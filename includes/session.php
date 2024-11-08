@@ -1,4 +1,4 @@
-<?php 
+<?php
 class Session {
     // Set session expiry time (in seconds)
     private static $sessionExpiry = 30; // 30 minutes
@@ -118,7 +118,7 @@ class Session {
         global $cainDB;
 
         $passwordRequired = isPasswordRequired();
-    
+
         // Check if operator is in the database
         if(operatorExists($operatorId)) {
             // Get user information password
@@ -154,7 +154,7 @@ class Session {
                 return false;
             }
 
-            
+
             // Otherwise, Authenticate username and password
             if(password_verify($password, $operatorInfo['password'])) {
                 // Update the user's password with a new salty hash (salt auto-generated)
@@ -171,17 +171,19 @@ class Session {
             return false;
         }
 
-        // The operator doesn't exist locally. Check externally.
-        $limsResponse = limsRequest(["operatorId" => $operatorId], 40, 42);
-        if(isset($limsResponse['operatorResult']) ? $limsResponse['operatorResult'] == 'true' : false) {
-            // If the operator exists externally, create a clinician and log them in.
-            $cainDB->query("INSERT INTO `users` (`operator_id`, `user_type`) VALUES (:operatorId, 1);", [':operatorId' => $operatorId]);
+        // The operator doesn't exist locally. Check externally (if an option).
+        if(limsConnectivity()) {
+            $limsResponse = limsRequest(["operatorId" => $operatorId], 40, 42);
+            if(isset($limsResponse['operatorResult']) ? $limsResponse['operatorResult'] == 'true' : false) {
+                // If the operator exists externally, create a clinician and log them in.
+                $cainDB->query("INSERT INTO `users` (`operator_id`, `user_type`) VALUES (:operatorId, 1);", [':operatorId' => $operatorId]);
 
-            // Let the session know that this is a new operator
-            self::set('new-operator', true);
+                // Let the session know that this is a new operator
+                self::set('new-operator', true);
 
-            // Recur the function with the new operatorId
-            return self::authenticate($operatorId, null);
+                // Recur the function with the new operatorId
+                return self::authenticate($operatorId, null);
+            }
         }
 
         return false;
@@ -191,7 +193,7 @@ class Session {
     public static function getUserType() {
         return intval(self::get('user-type')) ?? 0;
     }
-    
+
     // Login user
     public static function login($operatorId) {
         global $cainDB;
@@ -210,7 +212,7 @@ class Session {
 
         // Get the user type
         $userType = $cainDB->select("SELECT `user_type` FROM `users` WHERE `operator_id` = :operatorId", [':operatorId' => $operatorId]);
-        
+
         // Set the user type in the session
         self::set('user-type', $userType['user_type']);
         return true;

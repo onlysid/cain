@@ -27,7 +27,7 @@ $behaviourFields = getSettingsBitmap(count($dataFields), 3, $fieldInfo['field_be
 // updateTablet($tabletId, $appVersion);
 
 // Get the config settings ready for the response
-$response = getFieldBehaviourSettings($dataFields, $behaviourFields);
+$response = getFieldBehaviourSettings($dataFields, $behaviourFields, true);
 
 // Provide the response
 if(isset($response)) {

@@ -6,12 +6,14 @@
 class Field {
     public $name;
     public $dbName;
+    public $tabletName;
     public $behaviourLock;
     public $visibilityLock;
 
-    public function __construct(string $name, string $dbName, bool $behaviourLock = false, bool $visibilityLock = false) {
+    public function __construct(string $name, string $dbName, string $tabletName = null, bool $behaviourLock = false, bool $visibilityLock = false) {
         $this->name = $name;
         $this->dbName = $dbName;
+        $this->tabletName = $tabletName ?? $dbName;
         $this->behaviourLock = $behaviourLock;
         $this->visibilityLock = $visibilityLock;
     }
@@ -78,15 +80,15 @@ $fieldInfo = array_intersect_key($settings, array_flip($hospitalInfoKeys));
 $dataFields = [
     new Field("Patient ID", "patientId"),
     new Field("NHS Number", "nhsNumber"),
-    new Field("First Name", "firstName"),
-    new Field("Last Name", "lastName"),
-    new Field("Date of Birth", "dob"),
+    new Field("First Name", "firstName", "patientFirstName"),
+    new Field("Last Name", "lastName", "patientLastName"),
+    new Field("Date of Birth", "dob", "patientDoB"),
     new Field("Patient Age", "patientAge"),
     new Field("Gender", "patientSex"),
     new Field("Hospital ID", "hospitalId"),
     new Field("Patient Location", "patientLocation"),
-    new Field("Sample Collected", "sampleCollected"),
-    new Field("Sample Received", "sampleReceived"),
-    new Field("Comment 1", "reserve1"),
-    new Field("Comment 2", "reserve2"),
+    new Field("Sample Collected", "sampleCollected", "collectedTime"),
+    new Field("Sample Received", "sampleReceived", "receivedTime"),
+    new Field("Comment 1", "reserve1", "comment1"),
+    new Field("Comment 2", "reserve2", "comment2"),
 ];

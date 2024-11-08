@@ -28,12 +28,12 @@ Returns:
 "patientSet"
 */
 
-// Log data to a text file
-$logFile = __DIR__ . '/../logs/lookup-log.txt'; // Specify the path to your log file
-$logData = print_r($data, true); // Format the data as a string
+// // Log data to a text file
+// $logFile = __DIR__ . '/../logs/lookup-log.txt'; // Specify the path to your log file
+// $logData = print_r($data, true); // Format the data as a string
 
-// Append data to the log file
-file_put_contents($logFile, $logData . "\n\n", FILE_APPEND);
+// // Append data to the log file
+// file_put_contents($logFile, $logData . "\n\n", FILE_APPEND);
 
 // Main logic
 try {
