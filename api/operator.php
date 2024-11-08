@@ -1,6 +1,6 @@
 <?php // API to log in via tablet (on tablet app)
 
-/* 
+/*
 Standard authentication happens elsewhere for the DMS.
 This is solely for the purpose of taking data from the tablet, inserting it into the database and,
 optionally, awaiting a response from LIMS.
@@ -8,18 +8,41 @@ optionally, awaiting a response from LIMS.
 The DMS->LIMS application (AL) polls the database looking for changes in the status field.
 
 Returns:
-"status"
+"status" (< SAMBA II)
+    This is for the old system. All requests are now processed within this script so 42 is always returned.
     - 40: Request received but not yet processed
     - 41: Request being processed
     - 42: Request is processed
-*/
 
-// Firstly, if we have no data, quit.
-if(!$data) {
-    // Throw error and stop processing things.
-    echo(json_encode(["status" => 42]));
-    exit;
-}
+"auth"
+    - true: Login credentials are valid and authorised
+    - false: Login is invalid
+
+"res"
+    - 0: No operator ID provided
+    - 1: Operator does not exist
+    - 2: No password required. Successfully authenticated.
+    - 3: This operator has not been set up properly. Please create an account by logging into the DMS first.
+    - 4: Password required. Please enter a password.
+    - 5: Password accepted. Successfully authenticated.
+    - 6: Password rejected. Authentication failed.
+
+"operator"
+    "operatorId"
+    "firstName"
+    "lastName"
+    "userType"
+        - 1: Clinician
+        - 2: Admin clinician
+        - 3: Service engineer
+    "status"
+        To determine if a user has been deactivated.
+        - 0: Inactive user
+        - 1: Active user
+
+"message"
+    - String to verify what just happened.
+*/
 
 // Main logic
 try {
@@ -48,7 +71,7 @@ try {
                 return;
             }
         }
-        
+
         // At this point, we have an operator. Get it!
         $operator = $cainDB->getOperatorInfo($operatorId);
 

@@ -41,14 +41,13 @@ $qcSettings = array_intersect_key($settings, array_flip($qcKeys));
     </div>
     <div class="flex items-center gap-2">
         <div id="backupBtn" class="btn smaller-btn btn-green cursor-pointer">Backup</div>
-        <div id="deleteBtn" class="btn smaller-btn btn-red cursor-pointer">Delete</div>
+        <div id="deleteBtn" class="btn smaller-btn btn-red cursor-pointer" data-modal-open="deleteModal">Delete</div>
     </div>
 </form>
 
-<div id="genericModalWrapper">
-    <div class="overlay"></div>
+<div class="modal-wrapper">
     <div id="deleteModal" class="generic-modal">
-        <div class="close-modal">
+        <div class="close-modal" data-modal-close>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                 <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/>
             </svg>
@@ -63,7 +62,7 @@ $qcSettings = array_intersect_key($settings, array_flip($qcKeys));
             <input type="hidden" name="dateRange" class="hidden-date-range" value="">
             <div class="w-full flex justify-center items-center gap-3 mt-3">
                 <button type="submit" class="btn smaller-btn trigger-loading">Yes</button>
-                <div class="cursor-pointer btn smaller-btn close-modal no-styles">Cancel</div>
+                <div class="cursor-pointer btn smaller-btn close-modal no-styles" data-modal-close>Cancel</div>
             </div>
         </form>
     </div>

@@ -4,12 +4,17 @@
 Get tabletId, tableData => {frontPanelId, status, progress, timeRemaining, faultCode, versionNumber} for each instrument
 Codes:
     Status:
-    - 0: UNKNOWN
-    - 1: IDLE
-    - 2: RUNNING TEST
-    - 3: TEST ABORTED
-    - 4: RESULT AVAILABLE
-    - 5: FAULT CONDITION
+    - 0: Unknown
+    - 1: Idle
+    - 2: Preparing Assay
+    - 3: Running
+    - 4: Aborting
+    - 5: Result Available
+    - 6: Error
+    - 7: Uninitialised
+    - 8: Initialising
+    - 9: Assay Complete
+    - 99: Disconnected
 
     Fault Code:
     - TODO: TBD
@@ -25,6 +30,13 @@ Codes:
     - 60: Success
 */
 
+// Log data to a text file
+$logFile = __DIR__ . '/../logs/instrument-log.txt'; // Specify the path to your log file
+$logData = print_r($data, true); // Format the data as a string
+
+// Append data to the log file
+file_put_contents($logFile, $logData . "\n\n", FILE_APPEND);
+
 // Firstly, if we have no data, quit.
 if(!$data) {
     // Throw error and stop processing things.
@@ -33,14 +45,7 @@ if(!$data) {
 }
 
 // We have data! Clean it and add it to the instruments db if it is good.
-$instrumentData['tablet_id'] = $data['tabletId'] ?? null;
-
-if($instrumentData['tablet_id']) {
-    $instrumentData['tablet_data'] = $data['tabletData'] ?? null;
-    
-    $response = updateInstruments($instrumentData);
-}
-
+$response = updateInstruments($data);
 
 // Provide the response
 if(isset($response) && $response) {

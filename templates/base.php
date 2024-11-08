@@ -25,11 +25,11 @@ $resultsNum = checkResultCapacity();
                     <div id="desktopMenu">
                         <?php include 'templates/menu.php';?>
                     </div>
-    
+
                     <div class="menu-brush bottom-8 bg-gradient-to-b"></div>
                     <div class="menu-brush top-8 bg-gradient-to-t"></div>
                 </div>
-    
+
                 <div id="mobileMenu">
                     <div class="fixed top-4 w-full flex justify-between mx-auto container">
                         <a href="/settings" id="mobileSettingsIcon" class="cursor-pointer group flex justify-center items-center">
@@ -58,11 +58,11 @@ $resultsNum = checkResultCapacity();
                     </div>
                 </div>
             <?php endif;?>
-    
+
             <?php if($showMenu) : ?>
             </div>
         <?php endif;
-    
+
         // Check for updates
         require_once BASE_DIR . '/admin/updating.php';
 
@@ -87,7 +87,7 @@ $resultsNum = checkResultCapacity();
 
         // Show notices ?>
         <div id="notices">
-            <?php foreach(Session::getNotices() as $notice) : 
+            <?php foreach(Session::getNotices() as $notice) :
                 $severity = "";
                 switch($notice[1]) {
                     case 1:
@@ -115,7 +115,7 @@ $resultsNum = checkResultCapacity();
         <?php if($showMenu) {
             include 'templates/footer.php';
         }?>
-    
+
     </main>
 
 </body>
@@ -123,6 +123,7 @@ $resultsNum = checkResultCapacity();
 
 <!-- Scripts etc -->
 <script type="module" src="/js/app.js"></script>
+<script type="module" src="/js/modals.js"></script>
 </html>
 
 <?php // Housekeeping

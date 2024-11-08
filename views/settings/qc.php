@@ -1,6 +1,7 @@
 <?php // QC Settings
+
 // Hospital Info Settings Subset
-$qcKeys = ['qc_enforcement', 'qc_positive_requirements', 'qc_negative_requirements', 'qc_enable_independence'];
+$qcKeys = ['qc_policy', 'qc_positive_requirements', 'qc_negative_requirements', 'qc_enable_independence'];
 $qcSettings = array_intersect_key($settings, array_flip($qcKeys));
 ?>
 
@@ -12,16 +13,18 @@ $qcSettings = array_intersect_key($settings, array_flip($qcKeys));
 </section>
 
 <form action="/process" method="POST">
+    <h3 class="text-dark mt-4 w-full text-center rounded-xl px-4 py-2 bg-blue-200/75 shadow-lg">General QC Settings</h3>
+
     <input type="hidden" name="action" value="qc-settings">
     <input type="hidden" name="return-path" value="<?= $currentURL;?>">
     <div class="form-fields">
         <div class="field">
-            <label for="qcEnforcement">QC Enforcement</label>
+            <label for="qcPolicy">QC Enforcement</label>
             <div class="input-wrapper select-wrapper">
-                <select name="qcEnforcement" id="qcEnforcement">
-                    <option value="off" <?= $qcSettings['qc_enforcement'] === "off" ? "selected" : "";?>>Off</option>
-                    <option value="lockout" <?= $qcSettings['qc_enforcement'] === "lockout" ? "selected" : "";?>>Lockout</option>
-                    <option value="warn" <?= $qcSettings['qc_enforcement'] === "warn" ? "selected" : "";?>>Warn</option>
+                <select name="qcPolicy" id="qcPolicy">
+                    <option value="off" <?= $qcSettings['qc_policy'] === "off" ? "selected" : "";?>>Off</option>
+                    <option value="lockout" <?= $qcSettings['qc_policy'] === "lockout" ? "selected" : "";?>>Lockout</option>
+                    <option value="warn" <?= $qcSettings['qc_policy'] === "warn" ? "selected" : "";?>>Warn</option>
                 </select>
             </div>
         </div>
@@ -40,17 +43,5 @@ $qcSettings = array_intersect_key($settings, array_flip($qcKeys));
             </div>
         </div>
     </div>
-    <div class="form-fields">
-        <label for="enableIndependence" class="field !flex-row toggle-field !px-6 py-2 rounded-full bg-white shadow-md">
-            <div class="flex flex-col w-full">
-                <div class="shrink">Enable Independence</div>
-                <div class="description !text-xs text-grey mr-4">Allow each instrument to have its own QC policy if necessary.</div>
-            </div>
-            <div class="checkbox-wrapper">
-                <input class="tgl" name="enableIndependence" id="enableIndependence" type="checkbox" <?= $qcSettings['qc_enable_independence'] ? "checked" : "";?>>
-                <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="enableIndependence"><span></span></label>
-            </div>
-        </label>
-    </div>
-    <button class="btn smaller-btn trigger-loading" type="submit">Save Settings</button>
+    <button class="btn smaller-btn" type="submit">Save Settings</button>
 </form>

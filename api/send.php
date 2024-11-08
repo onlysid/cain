@@ -2,39 +2,78 @@
 
 /*
 Get: {
-    "site": "Test Site Alpha",
-    "testStartTimestamp": "2018-09-24 09:13",
-    "testCompleteTimestamp": "2018-09-24 11:09",
-    "clinicId": "Clinic Beta",
-    "operatorId": "Smith",
-    "moduleSerialNumber": "1098",
+    "version": "A", // SAMBA 3.X otherwise it's SAMBA II (2.0)
+
+    "assayType": "89",
+    "assaySubType": "01",
+    "assayName": "Covid + HIV-1 Blood Qual"
+    "lotNumber": "1234",
+    "subLotNumber": "12",
+    "expirationDate": "2024/09",
+
+    "sampleId": "S8427",
     "patientId": "P02446782",
-    "patientLocation": "Ward 10",
-    "firstName": "John",
-    "lastName": "Smith",
+    "patientFirstName": "John",
+    "patientLastName": "Smith",
+    "patientAge": "23",
+    "patientDoB": "1975-07-24",
+    "patientSex": "M",
     "hospitalId": "38807462",
     "nhsNumber": "1234567890",
-    "dob": "1975-07-24",
-    "patientAge": "23",
-    "patientSex": "M",
-    "sampleId": "S8427",
-    "sampleCollected": "2018-09-23 14:50",
-    "sampleReceived": "2018-09-24 08:10",
-    "product": "HIV-1 Blood Qual",
-    "result": "TBD",
+    "patientLocation": "Ward 10",
+    "collectedTime": "2018-09-23 14:50",
+    "receivedTime": "2018-09-24 08:10",
+    "comment1": "Blah blah blah",
+    "comment2": "",
+
+    "startTime": "2018-09-24 09:13",
+    "endTime": "2018-09-24 11:09",
     "testPurpose": "1",
-    "lotNumber": "",
-	"sender": "",
-	"version": "",
-	"sequenceNumber": "",
-	"trackingCode": "",
-	"abortErrorCode": "",
-	"assayStepNumber": "",
-	"reserve1": "",
-	"reserve2": "",
-	"cameraReading": "",
-	"flag": ""
-    
+    "deviceError": "",
+    "expectedResult": "All Positive (free text field)",
+
+    "clinicId": "Clinic Beta",
+    "site": "Test Site Alpha",
+    "operatorId": "Smith",
+    "moduleSerialNumber": "89674523",
+
+    "result": [
+        {
+            "control": {
+                "result": "Positive",
+                "ct": 24
+            }
+            "targetResults": [
+                {
+                    "name": "FluA",
+                    "result": "Positive",
+                    "ct": "25",
+                },
+                {
+                    "name": "FluB",
+                    "result": "Negative",
+                    "ct": "0.23",
+                },
+                    "name": "RSV",
+                    "result": "Negative",
+                    "ct": "0.47",
+            ]
+        },
+        {
+            "control": {
+                "result": "Positive",
+                "ct": "22"
+            },
+            "targetResults": [
+                {
+                    "name": "HIV-1",
+                    "result": "Negative",
+                    "ct": "0.85"
+                }
+            ]
+        }
+    ],
+
 	The following is not to be saved in the DB, only in a CSV!
     "curveData": {
         "SCoV": "0.123,0.1241,0.32121,0.2132141,0.213213,…",
@@ -44,6 +83,7 @@ Get: {
 Return status
 
 Codes:
+    For SAMBA II only.
     - 6: Result received but not yet processed.
     - 7: Send is being processed
     - 8: Send completed successfully.
@@ -69,51 +109,94 @@ if(!$data) {
     exit;
 }
 
+// Log data to a text file
+$logFile = __DIR__ . '/../logs/send-log.txt'; // Specify the path to your log file
+$logData = print_r($data, true); // Format the data as a string
+
+// Append data to the log file
+file_put_contents($logFile, $logData . "\n\n", FILE_APPEND);
+
 $errors = null;
 
-// TODO: Firstly, we need to check that the result isn't already in the database
-
-// TODO: We likely also need to verify the purpose of the test (and understand how this should be parsed by our db insertion)
-
-// TODO: We also probably need to check that the moduleSerialNumber exists as an instrument's serial_number AND that the lotNumber exists as a lot's lot_number for foreign key checks
-
-// TODO: If these do not exist, we likely need to add these to the database first (with null unnecessary data)
-
 // We have data! Now we must clean it, add the result to the results table and make a CSV file. Separate what needs to go in the db and what needs to be a CSV.
+
+// Check that the lot number exists in the DB (as it relies on a foreign key)
+$lotNumber = null;
+if($data['lotNumber']) {
+    // Update the lot number in our DB
+    $lotID = updateLot($data['lotNumber']);
+}
+
+// TODO: Do the same thing for Instrument eventually
+
+// We need to verify the test purpose
+$purpose = 0;
+if($data['testPurpose']) {
+    /*
+        Purpose:
+        0 - Unknown
+        1 - Patient Result
+        2 - QC Test
+        3 - Training
+    */
+
+    $purpose = $data['testPurpose'];
+
+    // If the purpose is anything other than those listed above, change it to 0.
+    if(!in_array($purpose, [0, 1, 2, 3])) {
+        $purpose = 0;
+    }
+}
+
+// Add the data to an array which can be iterated over to add each field to the db.
 $dbData = [
-    "sender" => $data['sender'] ?? "",
     "version" => $data['version'] ?? "",
-    "sequenceNumber" => $data['sequenceNumber'] ?? "",
-    "site" => $data['site'] ?? "",
-    "firstName" => $data['firstName'] ?? "",
-    "lastName" => $data['lastName'] ?? "",
-    "dob" => $data['dob'] ?? "",
+
+    "assayType" => $data['assayType'] ?? "",
+    "assaySubType" => $data['assaySubType'] ?? "",
+    // This has been changed to assayName on the tablet
+    "product" => $data['assayName'] ?? "",
+    "lotNumber" => $lotNumber ?? null,
+
+    "sampleId" => $data['sampleId'] ?? "",
+    "patientId" => $data['patientId'] ?? "",
+    // Names have been adjusted on tablet
+    "firstName" => $data['patientFirstName'] ?? "",
+    "lastName" => $data['patientLastName'] ?? "",
+    "patientAge" => $data['patientAge'] ?? "",
+    // This has been changed to patientDoB on the tablet
+    "dob" => $data['patientDoB'] ?? "",
+    "patientSex" => $data['patientSex'] ?? "",
     "hospitalId" => $data['hospitalId'] ?? "",
     "nhsNumber" => $data['nhsNumber'] ?? "",
-    "timestamp" => $data['timestamp'] ?? "",
-    "testCompleteTimestamp" => $data['testCompleteTimestamp'] ?? "",
+    "patientLocation" => $data['patientLocation'] ?? "",
+    // This has been changed to collectedTime on the tablet
+    "sampleCollected" => $data['collectedTime'] ?? "",
+    // This has been changed to receivedTime on the tablet
+    "sampleReceived" => $data['receivedTime'] ?? "",
+    // These have also been changed to comment1 and comment2 on the tablet
+    "reserve1" => $data['comment1'] ?? "",
+    "reserve2" => $data['comment2'] ?? "",
+
+    "flag" => $data['flag'] ?? 100,
+
+    // This has been changed to startTime on the tablet
+    "timestamp" => $data['startTime'] ?? "",
+    // This has been changed to endTime on the tablet
+    "testcompletetimestamp" => $data['endTime'] ?? "",
+    "testPurpose" => $purpose,
+    // This has been changed to deviceError on the tablet
+    "abortErrorCode" => $data['deviceError'] ?? "",
+
     "clinicId" => $data['clinicId'] ?? "",
+    "site" => $data['site'] ?? "",
     "operatorId" => $data['operatorId'] ?? "",
     "moduleSerialNumber" => $data['moduleSerialNumber'] ?? "",
-    "patientId" => $data['patientId'] ?? "",
-    "patientAge" => $data['patientAge'] ?? "",
-    "patientSex" => $data['patientSex'] ?? "",
-    "sampleId" => $data['sampleId'] ?? "",
-    "trackingCode" => $data['trackingCode'] ?? "",
-    "product" => $data['product'] ?? "",
-    "result" => $data['result'] ?? "",
-    "testPurpose" => $data['testPurpose'] ?? "",
-    "abortErrorCode" => $data['abortErrorCode'] ?? "",
-    "assayStepNumber" => $data['assayStepNumber'] ?? "",
-    "cameraReadings" => $data['cameraReading'] ?? "",
-    "patientLocation" => $data['patientLocation'] ?? "",
-    "reserve1" => $data['reserve1'] ?? "",
-    "reserve2" => $data['reserve2'] ?? "",
-    "sampleCollected" => $data['sampleCollected'] ?? "",
-    "sampleReceived" => $data['sampleReceived'] ?? "",
-    "flag" => $data['flag'] ?? 100,
-    "lot_number" => $data['lotNumber'] ?? null,
+
     "post_timestamp" => time(),
+
+    // We are expecting the result in the format described above
+    "result" => json_encode($data['result']) ?? "",
 ];
 
 // Everything is in the database, not much is allowed to be null and most things instead default to an empty string.
@@ -129,19 +212,29 @@ $params = array_values($dbData);
 try {
     // Begin transaction to ensure safety
     $cainDB->beginTransaction();
-    
+
     // Add items to db
     $cainDB->query($query, $params);
-    
+
     // Get the last inserted ID
-    $resultId = $cainDB->conn->lastInsertId();
-    
+    $resultID = $cainDB->conn->lastInsertId();
+
     // Commit the transaction
     $cainDB->commit();
 } catch(PDOException $e) {
     // Rollback the transaction on error
     $cainDB->rollBack();
     $errors = $e;
+}
+
+// If the test purpose was QC, we now need to add QC information to the DMS
+if($purpose == 2) {
+    // Add to QC
+    $success = newLotQC($lotID, $resultID);
+
+    if(!$success) {
+        $errors = "Something went wrong putting the QC test in the DMS. Please contact an admin.";
+    }
 }
 
 if($errors) {
@@ -160,7 +253,7 @@ if($errors) {
 
             // Set the max data points to be the larger of itself or the length of the curve values
             $maxDataPoints = max($maxDataPoints, count($curveValues));
-            
+
             // Add curve data to $csvData array
             $csvData[$curveTitle] = $curveValues;
         }
@@ -176,7 +269,7 @@ if($errors) {
         }
 
         // Define file path
-        $filePath = "$directory/$resultId.csv";
+        $filePath = "$directory/$resultID.csv";
 
         // Open file for writing
         $file = fopen($filePath, "w");
@@ -199,7 +292,7 @@ if($errors) {
     $response["status"] = 7;
 
     // Give the user the unique ID of the result because why not
-    $response["resultId"] = $resultId;
+    $response["resultID"] = $resultID;
 }
 
 // Provide the response

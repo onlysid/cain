@@ -39,7 +39,7 @@ function checkForUpdates($version) {
             VALUES ('web-app', '0.0.0');"
         );
         $dbVersionInfo = $cainDB->select("SELECT value FROM versions WHERE info = 'web-app'");
-    } 
+    }
 
     // Process the response
     if ($dbVersionInfo['value'] == 'updating') {
@@ -68,6 +68,42 @@ function userInfo($operatorId = null) {
     return $user;
 }
 
+// String interpretation of time differences and a sprinkle of severity information
+function timeDifferenceMessage($timestamp) {
+    $now = time();
+    $diff = $timestamp - $now;
+
+    if ($diff > 86400) {
+        $days = floor($diff / 86400);
+        return [
+            'string' => "$days day" . ($days > 1 ? "s" : "") . " away",
+            'severity' => 0
+        ];
+    } elseif ($diff > 3600) {
+        $hours = floor($diff / 3600);
+        return [
+            'string' => "$hours hour" . ($hours > 1 ? "s" : "") . " away",
+            'severity' => 0
+        ];
+    } elseif ($diff > 60) {
+        $minutes = floor($diff / 60);
+        return [
+            'string' => "$minutes minute" . ($minutes > 1 ? "s" : "") . " away",
+            'severity' => 1
+        ];
+    } elseif ($diff > 0) {
+        return [
+            'string' => "Less than a minute away",
+            'severity' => 1
+        ];
+    } else {
+        return [
+            'string' => "Elapsed",
+            'severity' => 2
+        ];
+    }
+}
+
 // Retrieve everything from the settings table in the db
 function systemInfo() {
     global $cainDB;
@@ -77,16 +113,14 @@ function systemInfo() {
 // Retrieve LIMS connectivity status from db
 function limsConnectivity() {
     global $cainDB;
-    // Whilst we're doing this often enough anyway, check login status and redirect to the login page if necessary.
-    // if(!$session->isLoggedIn()) {
-    //     return ["refresh" => true];
-    // }
     return $cainDB->select("SELECT value FROM settings WHERE `name` = 'comms_status';");
 }
 
 function updateInstruments($tabletData) {
     global $cainDB;
     /*
+        NOTE: This has slightly changed. We no longer group things by tablet.
+
         We get a JSON object of ALL instruments for a given tablet {"tablet_id" => {"serial_number" => {Instrument Data}, {"serial_number" => {Instrument Data}}}
         Each tablet can have up to 8 instruments (not really relevant for this section but important to understand globally)
         Select all instruments in the db with the associated tablet.
@@ -95,28 +129,16 @@ function updateInstruments($tabletData) {
         If an instrument in the db does not have a corresponding object in the JSON data, set its status to 0.
     */
 
-    $tabletSerial = $tabletData['tablet_id'];
-    $tabletData = $tabletData['tablet_data'];
-
-    if($tabletSerial) {
+    if($tabletData) {
         // We have some data to parse! Start a transaction.
         try {
             $cainDB->beginTransaction();
 
-            // Get the tablet ID
-            $tabletId = $cainDB->select("SELECT id FROM tablets WHERE tablet_id = :tabletSerial;", [":tabletSerial" => $tabletSerial])['id'];
-
-            if(!$tabletId) {
-                // Insert the tablet into the database
-                $cainDB->query("INSERT INTO tablets (`tablet_id`) VALUES ('$tabletSerial');");
-
-                // Get the last inserted process ID
-                $tabletId = $cainDB->conn->lastInsertId();
-            }
-
             // At this stage, we definitely have an ID for the tablet. Now we need to get a list of instrument IDs who have this tablet ID.
-            $oldTabletInstrumentsArray = $cainDB->selectAll("SELECT serial_number FROM instruments WHERE tablet = :tabletId;", [":tabletId" => $tabletId]);
+            $oldTabletInstrumentsArray = $cainDB->selectAll("SELECT serial_number FROM instruments;");
             $oldTabletInstruments = [];
+
+            $serialNumber = $tabletData['moduleSerialNumber'] ?? null;
 
             // Make a standard array of old instrument serial numbers
             foreach($oldTabletInstrumentsArray as $oldInstrument) {
@@ -133,64 +155,58 @@ function updateInstruments($tabletData) {
             }
 
             // We know all the new data for instruments connected to the tablet (tabletData). Loop through them and update the ones still connected.
-            foreach($tabletData as $serialNumber => $data) {
-                $instrumentData['module_id'] = $data['frontPanelId'] ?? null;
-                $instrumentData['status'] = $data['status'] ?? null;
-                $instrumentData['progress'] = $data['progress'] ?? null;
-                $instrumentData['time_remaining'] = $data['timeRemaining'] ?? null;
-                $instrumentData['last_connected'] = time();
-                $instrumentData['fault_code'] = $data['faultCode'] ?? null;
-                $instrumentData['version_number'] = $data['versionNumber'] ?? null;
-                $instrumentData['tablet'] = $tabletId;
+            $instrumentData['module_version'] = $tabletData['moduleVersion'] ?? null;
+            $instrumentData['front_panel_id'] = $tabletData['frontPanelId'] ?? null;
+            $instrumentData['status'] = $tabletData['moduleStatus'] ?? null;
+            $instrumentData['current_assay'] = $tabletData['runningAssay'] ?? null;
+            $instrumentData['assay_start_time'] = !empty($tabletData['assayStartTime']) ? strtotime($tabletData['assayStartTime']) : null;
+            $instrumentData['duration'] = !empty($tableData['assayDuration']) ? (int)$tabletData['assayDuration'] : null;
+            $instrumentData['device_error'] = $tabletData['deviceError'] ?? null;
+            $instrumentData['tablet_version'] = $tabletData['tabletVersion'] ?? null;
+            $instrumentData['last_connected'] = time();
 
-                $instrumentExists = in_array($serialNumber, $allDbInstruments);
+            $instrumentExists = in_array($serialNumber, $allDbInstruments);
 
-                if(!$instrumentExists) {
-                    $query = "INSERT INTO instruments ";
-                    $query1 = "(serial_number, ";
-                    $query2 = " VALUES ('$serialNumber', ";
-                } else {
-                    $query = "UPDATE instruments SET ";
+            if(!$instrumentExists) {
+                $query = "INSERT INTO instruments ";
+                $query1 = "(serial_number, ";
+                $query2 = " VALUES ('$serialNumber', ";
+            } else {
+                $query = "UPDATE instruments SET ";
+            }
+
+            $validDataCount = 0;
+            foreach($instrumentData as $data) {
+                if(isset($data)) {
+                    $validDataCount++;
                 }
-                
-                $validDataCount = 0;
-                foreach($instrumentData as $data) {
-                    if(isset($data)) {
-                        $validDataCount++;
-                    }
-                }
-            
-                $i = 1;
-                foreach($instrumentData as $dbCol => $data) {
-                    if(isset($data)) {
-                        if(!$instrumentExists) {
-                            $query1 .= $dbCol . (($i < $validDataCount) ? ", " : ")");
-                            $query2 .= "'" . $data . "'" . (($i < $validDataCount) ? ", " : ");");
-                        } else {
-                            $query .= $dbCol . " = '" . $data . "'" . (($i < $validDataCount) ? ", " : "");
-                        }
-                        $i++;
-                    }
-                }
-                
-                if($validDataCount > 0) {
-                    if($instrumentExists) {
-                        $query .= " WHERE serial_number = '$serialNumber';";
+            }
+
+            $i = 1;
+            foreach($instrumentData as $dbCol => $data) {
+                if(isset($data)) {
+                    if(!$instrumentExists) {
+                        $query1 .= $dbCol . (($i < $validDataCount) ? ", " : ")");
+                        $query2 .= "'" . $data . "'" . (($i < $validDataCount) ? ", " : ");");
                     } else {
-                        $query .= $query1 . $query2;
+                        $query .= $dbCol . " = '" . $data . "'" . (($i < $validDataCount) ? ", " : "");
                     }
-        
-                    // Run the query
-                    $cainDB->query($query);
+                    $i++;
+                }
+            }
+
+            if($validDataCount > 0) {
+                if($instrumentExists) {
+                    $query .= " WHERE serial_number = '$serialNumber';";
+                } else {
+                    $query .= $query1 . $query2;
                 }
 
-                $oldTabletInstruments = array_diff($oldTabletInstruments, [$serialNumber]);
+                // Run the query
+                $cainDB->query($query);
             }
 
-            // Loop through the remaining instruments which were once associated with the tablet and dissociate them
-            foreach($oldTabletInstruments as $disconnectedInstrument) {
-                $cainDB->query("UPDATE instruments SET `status` = 0, tablet = null WHERE `serial_number` = :serialNumber;", [":serialNumber" => $disconnectedInstrument]);
-            }
+            $oldTabletInstruments = array_diff($oldTabletInstruments, [$serialNumber]);
 
             // Commit the transaction
             $cainDB->commit();
@@ -209,14 +225,206 @@ function updateInstruments($tabletData) {
     return false;
 }
 
-function getInstrumentSnapshot($instrumentId = null) {
+function getInstrumentStatusText($code = 0) {
+    switch($code) {
+        case 0:
+            return "Unknown";
+            break;
+        case 1:
+            return "Idle";
+            break;
+        case 2:
+            return "Preparing Assay";
+            break;
+        case 3:
+            return "Running";
+            break;
+        case 4:
+            return "Aborting";
+            break;
+        case 5:
+            return "Result Available";
+            break;
+        case 6:
+            return "Error";
+            break;
+        case 7:
+            return "Uninitialised";
+            break;
+        case 8:
+            return "Initialising";
+            break;
+        case 9:
+            return "Assay Complete";
+            break;
+        default:
+            return "Disconnected";
+            break;
+    }
+}
+
+// Add QC and number of tests to the instrument snapshot
+function enrichInstrumentWithQC($instrument) {
+    global $cainDB;
+    // We need to know if the instrument has passed QC. Get all QC Types.
+    $qcTypes = getInstrumentQCTypes();
+
+    // Add QC Types to the result
+    $instrument['qc'] = [
+        // QC Pass, 0=fail, 1=pass, 2=expired, 3=untested. Priority order: 0, 3, 2, 1
+        'pass' => 1,
+        'res' => []
+    ];
+
+    // Add the number of tests that the instrument has performed in total.
+
+    foreach($qcTypes as $qcType) {
+        // Get the latest QC test for this QC type for this instrument
+        $latestTest = $cainDB->select("SELECT * FROM instrument_qc_results WHERE instrument = ? AND `type` = ? ORDER BY `timestamp` DESC LIMIT 1;", [$instrument['id'], $qcType['id']]);
+
+        // If this is false, no test has been carried out yet
+        $instrument['qc']['res'][$qcType['id']] = $latestTest;
+
+        if($latestTest) {
+            $formattedTimestamp = date("Y-m-d H:i", $latestTest['timestamp']);
+        }
+
+        // If we've already failed QC test, we need no more info
+        if(in_array($instrument['qc']['pass'], [0])) {
+            continue;
+        }
+
+        // If there are QC type conditions of any kind AND EITHER the latest test failed or does not exist, fail the test.
+        if(($qcType['time_intervals'] || $qcType['result_intervals'])) {
+            if($latestTest && !$latestTest['result']) {
+                // QC has been tested and failed
+                $instrument['qc']['pass'] = 0;
+                continue;
+            }
+
+            if((!$latestTest)) {
+                // QC has never been run, but it is required
+                $instrument['qc']['pass'] = 3;
+                continue;
+            }
+        }
+
+        // If we've already determined something is untested, we need no more info
+        if(in_array($instrument['qc']['pass'], [0, 3])) {
+            continue;
+        }
+
+        // Check if the QC test requires time intervals
+        if ($qcType['time_intervals']) {
+            // Determine if the time has expired
+            $testTimestamp = $latestTest['timestamp'];
+
+            // The number of days before it expires converted to seconds
+            $intervalSeconds = $qcType['time_intervals'] * 86400;
+
+            // The day of expiration as a timestamp
+            $expiredTimestamp = $testTimestamp + $intervalSeconds;
+
+            // Current timestamp
+            $currentTimestamp = time();
+
+            // Calculate one day after the expiration timestamp
+            $nextDayAfterExpired = strtotime(gmdate("Y-m-d", $expiredTimestamp) . ' +1 day');
+
+            // Check if the QC test has expired only if it's the day after the expiration date
+            if ($currentTimestamp >= $nextDayAfterExpired) {
+                // The QC test has expired
+                $instrument['qc']['pass'] = 2;
+                continue;
+            }
+        }
+
+        if($qcType['result_intervals']) {
+            // If we are here, we require that this test is carried out every x results generated. Check this.
+
+            // Result count comparison
+            if($latestTest['result_counter'] > $qcType['result_intervals']) {
+                // The QC test has expired
+                $instrument['qc']['pass'] = 2;
+                continue;
+            }
+        }
+
+        // Otherwise, QC Test has passed!
+    }
+
+    return $instrument;
+}
+
+function getInstrumentSnapshot($instrumentId = null, $sn = null) {
     global $cainDB;
 
-    // If the instrument ID is not passed, we get all instrument data
     if($instrumentId) {
-        return $cainDB->select("SELECT * FROM instruments i INNER JOIN tablets t ON i.tablet = t.id WHERE ? ORDER BY last_connected DESC, time_remaining ASC;", [$instrumentId]);
+        // Single instrument case
+        $instrument = $cainDB->select("SELECT *, (assay_start_time + duration) as end_time FROM instruments WHERE id = ? ORDER BY last_connected DESC, end_time ASC;", [$instrumentId]);
+        if($instrument) {
+            $instrument = enrichInstrumentWithQC($instrument, $cainDB);
+            return $instrument;
+        }
     } else {
-        return $cainDB->selectAll("SELECT * FROM instruments i INNER JOIN tablets t ON i.tablet = t.id ORDER BY last_connected DESC, time_remaining ASC;");
+        if($sn) {
+            // If we have a serial number, get the instrument from that
+            $instrument = $cainDB->select("SELECT *, (assay_start_time + duration) as end_time FROM instruments WHERE serial_number = ? ORDER BY last_connected DESC, end_time ASC;", [$sn]);
+            if($instrument) {
+                $instrument = enrichInstrumentWithQC($instrument, $cainDB);
+            }
+            return $instrument;
+        }
+
+        // Multiple instruments case
+        $instruments = $cainDB->selectAll("SELECT *, (assay_start_time + duration) as end_time FROM instruments ORDER BY last_connected DESC, end_time ASC;");
+
+        foreach ($instruments as &$instrument) {
+            $instrument = enrichInstrumentWithQC($instrument, $cainDB);
+        }
+
+        return $instruments;
+    }
+}
+
+function getIndividualInstrumentQCResult($id) {
+    global $cainDB;
+
+    // If we have an ID, get it!
+    if($id) {
+        return $cainDB->select("SELECT * FROM instrument_qc_results WHERE id = ?;", [$id]);
+    }
+
+    return null;
+}
+
+// Get all instrument QC results for a given instrument
+function getInstrumentQCResults($instrumentId = null, $orderByTime = false) {
+    global $cainDB;
+
+    // If there is an instrument ID, get its specific results. Otherwise, get all results.
+    if($instrumentId) {
+        return $cainDB->selectAll("SELECT * FROM instrument_qc_results WHERE instrument = ? ORDER BY `timestamp`;", [$instrumentId]);
+    } else {
+        return $cainDB->selectAll("SELECT * FROM instrument_qc_results ORDER BY `timestamp`;");
+    }
+}
+
+// Get instrument QC result text
+function getInstrumentQCResult($result) {
+    switch($result) {
+        case 0:
+            return "failed";
+            break;
+        case 1:
+            return "passed";
+            break;
+        case 2:
+            return "expired";
+            break;
+        default:
+            return "untested";
+            break;
     }
 }
 
@@ -248,7 +456,7 @@ function getResults($params, $itemsPerPage) {
     }
 
     if($age) {
-        // We need to parse the age 
+        // We need to parse the age
         $ageRange = explode('-', $age);
         if(count($ageRange) > 1) {
             $minAge = $ageRange[0];
@@ -317,7 +525,7 @@ function getResults($params, $itemsPerPage) {
 
 
     // Build the SQL query
-    $query = "SELECT *, r.id AS result_id FROM results r LEFT JOIN lots i ON i.lot_number = r.lot_number ";
+    $query = "SELECT *, r.id AS result_id FROM results r LEFT JOIN lots i ON i.lot_number = r.lotNumber ";
     $countQuery = "SELECT COUNT(*) FROM results ";
     if (!empty($searchConditions)) {
         $query .= "WHERE $searchConditions ";
@@ -399,35 +607,34 @@ function getLots($params, $itemsPerPage) {
 function testInput($data) {
     $data = trim($data);
     $data = stripslashes($data);
-    $data = htmlspecialchars($data);
     return $data;
 }
 
 function getParams($url) {
     // Parse the URL to get the query string
     $queryString = parse_url($url, PHP_URL_QUERY);
-    
+
     // Initialize an empty array to store parameters
     $parameters = array();
-    
+
     // If there are query parameters
     if ($queryString) {
         // Parse the query string into an associative array
         parse_str($queryString, $parameters);
     }
-    
+
     return $parameters;
 }
 
 function truncate($string, $length = 100, $append = "&hellip;") {
     $string = trim($string);
-  
+
     if(strlen($string) > $length) {
         $string = wordwrap($string, $length);
         $string = explode("\n", $string, 2);
         $string = $string[0] . $append;
     }
-  
+
     return $string;
 }
 
@@ -489,17 +696,73 @@ function getOperators($currentUserId = null) {
     }
 }
 
+// Get QC Types
+function getInstrumentQCTypes($arr = false) {
+    global $cainDB;
+
+    $instrumentQCTypes = $cainDB->selectAll("SELECT * FROM instrument_test_types;");
+    if($arr) {
+        return $instrumentQCTypes;
+    }
+
+    $ret = [];
+
+    foreach($instrumentQCTypes as $qcType) {
+        $ret[$qcType['id']] = $qcType;
+    }
+
+    return $ret;
+}
+
+/*
+    Get instrument QC individual test result outcome
+    returns 0=fail, 1=pass, 2=expired, 3=untested
+*/
+function getInstrumentQCOutcome($qcTest) {
+    // Get the possible QC types
+    $qcTypes = getInstrumentQCTypes();
+
+    // If the test is false, it is untested
+    if($qcTest == false) {
+        return 3;
+    }
+
+    // If the test failed, return failure
+    if($qcTest['result'] == 0) {
+        return 0;
+    }
+
+    // If the timestamp plus the test type's interval period exceeds the current timestamp, it has expired.
+    $testTimestamp = $qcTest['timestamp'];
+    $intervalSeconds = $qcTypes[$qcTest['type']]['time_intervals'] * 3600;
+    $expiredTimestamp = $intervalSeconds ? $testTimestamp + $intervalSeconds : null;
+    $currentTimestamp = time();
+
+    if($expiredTimestamp && $currentTimestamp >= $expiredTimestamp) {
+        // It's expired
+        return 2;
+    }
+
+    // If the number of tests allowed is less than the result counter, it has expired
+    if($qcTypes[$qcTest['type']]['result_intervals'] && $qcTest['result_counter'] >= $qcTypes[$qcTest['type']]['result_intervals'] ) {
+        return 2;
+    }
+
+    return 1;
+
+}
+
 // Function to get the behaviour of all fields (for the tablet)
 function getFieldBehaviourSettings($dataFields, $behaviourFields) {
     $result = [];
     foreach($dataFields as $index => $dataField) {
-        $behaviour = "Hidden";
+        $behaviour = "OFF";
         switch($behaviourFields[$index]) {
             case 1:
-                $behaviour = "Visible";
+                $behaviour = "ON";
                 break;
             case 2:
-                $behaviour = "Mandatory";
+                $behaviour = "MANDATORY";
                 break;
             default:
                 break;
@@ -507,11 +770,11 @@ function getFieldBehaviourSettings($dataFields, $behaviourFields) {
         }
 
         // Account for data field overrides
-        if($field->behaviourLock) {
-            $behaviour = "Automatic";
+        if($dataField->behaviourLock) {
+            $behaviour = "AUTOMATIC";
         }
 
-        $result[$dataField->name] = $behaviour;
+        $result[$dataField->dbName] = $behaviour;
     }
 
     return $result;
@@ -520,7 +783,7 @@ function getFieldBehaviourSettings($dataFields, $behaviourFields) {
 function getFieldVisibilitySettings($dataFields, $visibilityFields) {
     $result = [];
     foreach($dataFields as $index => $dataField) {
-        if($visibilityFields[$index] && !$dataField->visibilityLock) {
+        if($visibilityFields[$index] && !$dataField->behaviourLock) {
             $result[$dataField->dbName] = $dataField->name;
         }
     }
@@ -550,23 +813,129 @@ function updateTablet($tabletId, $appVersion) {
 }
 
 // Add a Lot to the db
-function updateLot($lotNumber, $qcResult = null) {
+function updateLot($lotNumber, $params = null) {
     global $cainDB;
+
+    // We need to add this to the query.
+    $timestamp = time();
 
     if($lotNumber) {
         // Check if we have the lot number in the DB
         $lotExists = $cainDB->select("SELECT * FROM lots WHERE lot_number = ?;", [$lotNumber]);
 
         if($lotExists) {
-            $cainDB->query("UPDATE lots SET qc_result = ? WHERE lot_number = ?;", [$qcResult, $lotNumber]);
-            return true;
+            // Update the lot with the new params
+            $sql = "UPDATE lots SET last_updated = ?";
+            $queryParams = [$timestamp];
+
+            // Loop through params and
+            $i = 1;
+            if($params) {
+                foreach($params as $dbCol => $param) {
+                    $sql .= " AND " . $dbCol . " = ?";
+                    $queryParams[] = $param;
+                    $i++;
+                }
+            }
+
+            // Complete the query
+            $queryParams[] = $lotNumber;
+            $sql .= " WHERE lot_number = ?;";
+
+            // Execute the query
+            $cainDB->query($sql, $queryParams);
+
+            // Return ID of lot
+            return $lotExists['id'];
         }
 
-        $cainDB->query("INSERT INTO lots (lot_number, qc_result) VALUES (?, ?);", [$lotNumber, $qcResult]);
-        return true;
+        $timestamp = Date("Y:m:d H:i:s");
+
+        // The lot does not exist. Insert it!
+        $sql = "INSERT INTO lots (lot_number, last_updated" . ($params ? ", " : "") . implode(", ", array_keys($params ?? [])) . ") VALUES (?, ?" . ($params ? ", " : "") . implode(", ", array_fill(0, count((array) $params), "?")) . ");";
+        $cainDB->beginTransaction();
+        $cainDB->query($sql, array_merge([$lotNumber, $timestamp], array_values((array) $params)));
+        $lotID = $cainDB->conn->lastInsertId();
+        $cainDB->commit();
+
+        // Return ID of inserted lot
+        return $lotID;
     }
 
     // Something has gone wrong
+    return false;
+}
+
+// Check a lot's QC and update it if necessary
+function lotQCCheck($lot) {
+    global $cainDB;
+
+    // Check QC policy
+    $qcPolicy = $cainDB->select("SELECT `value` FROM settings WHERE `name` = 'qc_policy'")['value'];
+
+    // If the QC Policy is 0 (off), we can say QC is passed.
+    if($qcPolicy == 0) {
+        return true;
+    }
+
+    // Check the lot for its QC pass flag
+    if($qcPass = $cainDB->select("SELECT qc_pass FROM lots WHERE id = ?;", [$lot])['qc_pass'] == 1) {
+        return true;
+    }
+
+    // If the QC Policy is 1 (on), we must run an automatic QC check
+    if($qcPolicy == 1 && lotAutoQCCheck($lot)) {
+        // We should update the value of qc_pass to 1 and return that QC was passed
+        $cainDB->query("UPDATE lots SET qc_pass = 1 WHERE id = ?;", [$lot]);
+        return true;
+    }
+
+    // We have not passed QC! Set the flag to failure and return false.
+    $cainDB->query("UPDATE lots SET qc_pass = 2 WHERE id = ?;", [$lot]);
+    return false;
+}
+
+// Run an automatic QC check
+function lotAutoQCCheck($lot) {
+    global $cainDB;
+
+    // Firstly, check if we have QC set to on, otherwise we don't need this at all.
+    if($cainDB->select("SELECT value FROM settings WHERE `name` = 'qc_policy'")['value'] != 1) {
+        return false;
+    }
+
+    // Now, check how many successful positives and negatives we need
+    $positiveTestsRequired = $cainDB->select("SELECT `value` FROM settings WHERE `name` = 'qc_positive_requirements';")['value'];
+    $negativeTestsRequired = $cainDB->select("SELECT `value` FROM settings WHERE `name` = 'qc_negative_requirements';")['value'];
+
+    // Now, check the count of successful positive QC tests
+    $positiveTests = $cainDB->select("SELECT COUNT(*) as count FROM lots_qc_results as qc JOIN results ON qc.test_result = results.id WHERE qc.lot = ? AND qc.qc_result = 1 AND results.result = 'positive';", [$lot])['count'];
+    $negativeTests = $cainDB->select("SELECT COUNT(*) as count FROM lots_qc_results as qc JOIN results ON qc.test_result = results.id WHERE qc.lot = ? AND qc.qc_result = 1 AND results.result = 'negative';", [$lot])['count'];
+
+    // If we have the right counts, we have passed QC!
+    if($positiveTests >= $positiveTestsRequired && $negativeTests >= $negativeTestsRequired) {
+        return true;
+    }
+
+    // Otherwise, we have not passed QC.
+    return false;
+}
+
+/*
+ * Add QC Result to DMS
+ * qcParams contains 'lot' and 'result' where 'result' is the actual result that's been committed.
+ */
+function newLotQC($lotID, $resultID) {
+    global $cainDB;
+
+    var_dump("INSERT INTO lots_qc_results (`lot`, `test_result`) VALUES (?, ?);");
+
+    // Add the result QC
+    if($cainDB->query("INSERT INTO lots_qc_results (`lot`, `test_result`) VALUES (?, ?);", [$lotID, $resultID])) {
+        return true;
+    }
+
+    // Something went wrong
     return false;
 }
 
@@ -586,7 +955,7 @@ function parseResult($result) {
             $parsedResult["result"][$resultKeyValue[0]] = $resultValue;
             if($resultValue) {
                 $parsedResult["posCount"]++;
-            } 
+            }
         }
     } else {
         $parsedResult["result"] = stripos($result, "Positive") !== false ? true : false;
@@ -596,4 +965,192 @@ function parseResult($result) {
     }
 
     return $parsedResult;
+}
+
+/* Functions for logging */
+
+// Adding a log entry and handling log rotation and compression
+function addLogEntry($logType, $message) {
+    // Get the directory associated with the log files
+    $logDir = __DIR__ . '/../logs/' . $logType;
+    $folderName = basename($logDir);
+
+    // Check if the log directory exists, if not create it
+    if(!is_dir($logDir)) {
+        mkdir($logDir, 0777, true); // Create directory recursively
+    }
+
+    // Get the log file
+    $currentLogFile = $logDir . '/' . $folderName . '.log';
+
+    // Get all log files (including those which are zipped)
+    $allFiles = glob($logDir . '/' . $folderName . '-*.log*');
+
+    // Natural sort to get the correct order
+    usort($allFiles, function($a, $b) {
+        return filemtime($a) <=> filemtime($b);
+    });
+
+    // Use the most recent files (or create a new one if none exist)
+    $latestFile = end($allFiles);
+
+    // Initialise a logNumber
+    $logNumber = 1;
+
+    // Get the latest log number
+    if (preg_match('/-(\d+)\.log(?:\.gz)?$/', $latestFile, $matches)) {
+        // If we don't have any zipped files, the logNumber will rightly remain 1
+        $logNumber = (int)$matches[1] + 1; // Capture and cast to integer
+
+        // Reset log number if it reaches 999
+        $logNumber = ($logNumber === 999) ? 1 : $logNumber;
+    }
+
+    // Define a maximum file size for log rotation (2MB in this example)
+    $maxFileSize = 1024 * 1024 * 2; // 2MB
+
+    // Initialise that a file has not been created
+    $fileCreated = false;
+
+    // Check if the latest file exists and is too large
+    if(file_exists($currentLogFile) && filesize($currentLogFile) >= $maxFileSize) {
+        // Compress the full log file before creating a new one
+        compressLogFile($currentLogFile, $logNumber, $logType);
+
+        $fileCreated = true;
+    }
+
+    if(!$latestFile || $fileCreated) {
+        // Create a new log file with the next index
+        $newFileIndex = $logNumber;
+        $latestFile = $logDir . '/' . $folderName . '-' . str_pad($newFileIndex, 3, '0', STR_PAD_LEFT) . '.log';
+    }
+
+    // Append the new log entry
+    $timestamp = date('Y-m-d H:i:s');
+    $logEntry = $timestamp . " - " . $message . PHP_EOL;
+
+    file_put_contents($currentLogFile, $logEntry, FILE_APPEND);
+}
+
+// Function to compress log files when they hit the size limit
+function compressLogFile($logFilePath, $logNumber, $logType) {
+    $gzFilePath = dirname($logFilePath) . '/' . $logType . '-' . str_pad($logNumber, 3, '0', STR_PAD_LEFT) . '.log.gz'; // Set the compressed file name
+
+    // Open the original log file and the new compressed file
+    $logFile = fopen($logFilePath, 'rb');
+    $gzFile = gzopen($gzFilePath, 'wb9'); // Max compression level 9
+
+    // Read the log file and write it into the compressed file
+    while(!feof($logFile)) {
+        gzwrite($gzFile, fread($logFile, 1024 * 512)); // Write in 512KB chunks
+    }
+
+    // Close both files
+    fclose($logFile);
+    gzclose($gzFile);
+
+    // Delete the original log file after compression
+    unlink($logFilePath);
+}
+
+// Reading log data (including gzipped files) and loading in reverse order
+function readLogFile($logType, $limit = 1000, $offset = 0) {
+    $logDir = __DIR__ . '/../logs/' . $logType;
+    $folderName = basename($logDir);
+
+    // Find all log files including gzipped ones and sort them naturally
+    $logFiles = array_merge(
+        glob($logDir . '/' . $folderName . '.log'),
+        glob($logDir . '/' . $folderName . '-*.log.gz')
+    );
+    natsort($logFiles); // Sort files naturally (logtype-000.log, logtype-001.log)
+
+    $lines = [];
+
+    // Read from the most recent log files (reverse order)
+    foreach (array_reverse($logFiles) as $logfile) {
+        $fileLines = [];
+
+        // Handle gzipped files
+        if (substr($logfile, -3) === '.gz') {
+            $gz = gzopen($logfile, 'rb');
+            if ($gz) {
+                while (!gzeof($gz)) {
+                    $fileLines[] = gzgets($gz);
+                }
+                gzclose($gz);
+            }
+        } else {
+            // Handle regular log files
+            $file = fopen($logfile, 'r');
+            if ($file) {
+                while (($line = fgets($file)) !== false) {
+                    $fileLines[] = $line;
+                }
+                fclose($file);
+            }
+        }
+
+        // Reverse the lines so the most recent ones come first
+        $fileLines = array_reverse($fileLines);
+
+        // Merge the lines from the current file to the overall list
+        $lines = array_merge($lines, $fileLines);
+
+        // Stop when we've loaded enough lines
+        if (count($lines) >= $offset + $limit) {
+            break;
+        }
+    }
+
+    // Slice the lines according to the offset and limit, then return them
+    return implode("", array_slice($lines, $offset, $limit));
+}
+
+// Convert the total size to a human-readable format
+function formatSize($size) {
+    $units = ['B', 'KB', 'MB', 'GB', 'TB'];
+    $unitIndex = 0;
+
+    while ($size >= 1024 && $unitIndex < count($units) - 1) {
+        $size /= 1024;
+        $unitIndex++;
+    }
+
+    return round($size, 2) . ' ' . $units[$unitIndex];
+}
+
+// Convert timestamps to their desired format
+function convertTimestamp($timestamp, $time = false) {
+    if($time) {
+        return date("d/m/Y H:i", $timestamp);
+    } else {
+        return date("d/m/Y", $timestamp);
+    }
+}
+
+// Get the total size of the expired log files
+function getExpiredLogSize() {
+    // Define the path to the logs directory
+    $folderPath = BASE_DIR . '/logs'; // Adjust if your logs directory is elsewhere
+
+    // Variable to hold the total size of `.gz` files
+    $totalGzSize = 0;
+
+    // Loop through files in the logs directory
+    $files = new RecursiveIteratorIterator(
+        new RecursiveDirectoryIterator($folderPath),
+        RecursiveIteratorIterator::LEAVES_ONLY
+    );
+
+    foreach ($files as $file) {
+        // Check if file is a `.gz` file
+        if (!$file->isDir() && $file->getExtension() === 'gz') {
+            // Add the file size to the total
+            $totalGzSize += $file->getSize();
+        }
+    }
+
+    return $totalGzSize;
 }

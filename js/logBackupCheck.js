@@ -1,6 +1,5 @@
 // Get the delete button
-var deleteBtn = document.getElementById('deleteBtn');
-var dateRangePicker = document.getElementById('dateRangePicker');
+var deleteBtn = document.getElementById('genericModalBtn');
 
 document.getElementById('backupBtn').addEventListener('click', function() {
     // Create the update alert element
@@ -42,10 +41,12 @@ document.getElementById('backupBtn').addEventListener('click', function() {
     this.disabled = true;
 
     // Export the data
-    var phpFileUrl = '/data/export-check.php';
+    var phpFileUrl = '/data/log-backup-check.php';
 
     // Create a new XMLHttpRequest object
     var xhr = new XMLHttpRequest();
+
+    xhr.responseType = 'blob';
 
     // Open a POST request to the PHP file
     xhr.open('POST', phpFileUrl, true);
@@ -53,10 +54,6 @@ document.getElementById('backupBtn').addEventListener('click', function() {
 
     // Get a message ready for displaying in the notices
     var message = null;
-    var promptToDelete = false;
-
-    // Get the date range
-    var dateRange = dateRangePicker.value;
 
     // When the file is ready
     xhr.onreadystatechange = function() {
@@ -69,22 +66,32 @@ document.getElementById('backupBtn').addEventListener('click', function() {
                 try {
                     response = JSON.parse(xhr.responseText);
                 } catch (error) {
-                    // This means we have the CSV and not some response
-                    console.log("Generating CSV...");
+                    // This means we have the ZIP File
+                    console.log("Generating ZIP File...");
                 }
 
                 // Handle response
                 if (response.status == 1) {
                     // File download initiated successfully
-                    var blob = new Blob([xhr.response], {type: 'text/csv'});
+                    var blob = new Blob([xhr.response], {type: 'blob'});
 
                     // Create a URL for the blob
                     var url = window.URL.createObjectURL(blob);
 
+                    // Get current date and time for filename
+                    var now = new Date();
+                    var year = now.getFullYear();
+                    var month = String(now.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+                    var day = String(now.getDate()).padStart(2, '0');
+                    var hours = String(now.getHours()).padStart(2, '0');
+                    var minutes = String(now.getMinutes()).padStart(2, '0');
+                    var seconds = String(now.getSeconds()).padStart(2, '0');
+                    var timestamp = `${year}${month}${day}_${hours}${minutes}${seconds}`;
+
                     // Create a temporary anchor element
                     var a = document.createElement('a');
                     a.href = url;
-                    a.download = (dateRange ? dateRange + "_results.csv" : "full_backup.csv");
+                    a.download = `log_${timestamp}.zip`;
 
                     // Programmatically click the anchor to trigger download
                     document.body.appendChild(a);
@@ -100,7 +107,7 @@ document.getElementById('backupBtn').addEventListener('click', function() {
                         deleteBtn.click();
                     }, 1000);
 
-                    message = "Successfully backed up " + (dateRange ? dateRange : "all") + " results.";
+                    message = "Successfully backed up all results.";
                     promptToDelete = true;
 
                     // Provide confirmation
@@ -115,6 +122,7 @@ document.getElementById('backupBtn').addEventListener('click', function() {
                     }, 1000);
                     message = response.message;
                 }
+
             } else {
                 // Cleanup
                 setTimeout(() => {
@@ -208,15 +216,49 @@ document.getElementById('backupBtn').addEventListener('click', function() {
     };
 
     // Send the AJAX request
-    xhr.send('dateRange=' + encodeURIComponent(dateRange));
+    xhr.send();
 });
 
+// Confirm deletion of logs
 deleteBtn.addEventListener('click', () => {
-    // Get the current value within the daterange picker.
-    var datesToDelete = dateRangePicker.value;
+    // Get the clearedSize span tag
+    var clearedSize = document.getElementById('clearedSize');
 
-    // Alter the delete form's dateRange
-    document.querySelector('input.hidden-date-range').value = datesToDelete;
+    // AJAX request to the log-size-check.php
+    var xhr = new XMLHttpRequest();
 
-    document.getElementById('datesToDelete').innerHTML = datesToDelete ? datesToDelete : "all";
+    // Open a GET request to the PHP file
+    xhr.open('POST', '/scripts/log-size-check.php', true);
+    xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+
+    // Begin the request
+    xhr.onreadystatechange = function() {
+        // If the file has been successfully opened, watch it for progress
+        if (xhr.readyState === 4) {
+            // Could add a loading state here (if necessary)
+
+            // If we got a valid response, interpret it
+            if (xhr.status === 200) {
+                // The response code/message
+                var data = JSON.parse(xhr.responseText);
+
+                // If we have an error in our JSON, display the error.
+                if(data.error) {
+                    console.log(data.error);
+                } else {
+                    // We have data!
+                    var size = data.formattedSize;
+
+                    clearedSize.innerHTML = size;
+                }
+
+            } else {
+                // Something went wrong
+                console.log("Something went wrong.");
+            }
+        }
+    };
+
+    // Send the AJAX request
+    xhr.send();
 });

@@ -1,4 +1,4 @@
-<?php // Menu items 
+<?php // Menu items
 
 // Include PageRoute class
 require_once 'utils/MenuItem.php';
@@ -19,8 +19,25 @@ $menuItems = [
 <div id="menu">
     <?php foreach($menuItems as $menuItem) : ?>
         <?php $targetRoute = array_search($menuItem->pageRoute, $routes);
+
+        // Check if the current route matches the target route or any children. First, we assume it does not.
+        $linkMatch = false;
+
+        // Now, check various scenarios
+        if($targetRoute !== "/") {
+            if(str_contains($currentPage, $targetRoute)) {
+                $linkMatch = true;
+            } else {
+                $linkMatch = false;
+            }
+        } else {
+            if($currentPage === $targetRoute && $currentPage === "/") {
+                $linkMatch = true;
+            }
+        }
+
         if(($currentUser['user_type'] ?? 0) >= $menuItem->pageRoute->accessLevel) : ?>
-            <a href="<?= $targetRoute;?>" class="btn w-full <?= $menuItem->icon ? "has-icon" : "";?> <?= $targetRoute === $currentPage ? 'active' : '';?>">
+            <a href="<?= $targetRoute;?>" class="btn w-full <?= $menuItem->icon ? "has-icon" : "";?> <?= $linkMatch ? 'active' : '';?>">
                 <?php if($menuItem->icon) {
                     include('assets/' . $menuItem->icon . '.svg');
                 };?>

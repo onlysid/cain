@@ -6,6 +6,15 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.0.1] - 12/09/2024
+
+Bug fixes, tests and API changes
+
+### Changed
+
+-   APIs are now case insensitive for backwards compatibility.
+-   /operator has been tested
+
 ## [v3.0.0] - 15/03/2024
 
 Init!

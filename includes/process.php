@@ -56,6 +56,21 @@ class Process {
                 case('network-settings'):
                     $this->updateNetworkSettings();
                     break;
+                case('clean-logs'):
+                    $this->cleanLogs();
+                    break;
+                case('qc-types'):
+                    $this->changeQCTypes();
+                    break;
+                case('toggle-instrument-lock'):
+                    $this->toggleInstrumentLock();
+                    break;
+                case('new-instrument-qc'):
+                    $this->newInstrumentQC();
+                    break;
+                case('edit-instrument-qc'):
+                    $this->editInstrumentQC();
+                    break;
                 default:
                     // Silence. This post has not been accounted for.
                     break;
@@ -63,7 +78,7 @@ class Process {
 
             // Once we are done, we may specify a return path
             if(!$redirectOverride) {
-                // There may be a redirect baked into the 
+                // There may be a redirect baked into the
                 if(!isset($_POST['intrinsic-redirect'])) {
                     if (!empty($_POST['return-path'])) {
                         header("Location: " . $_POST['return-path']);
@@ -92,7 +107,7 @@ class Process {
         // Attempt to authenticate the user
         $operatorId = $_POST['operatorId'];
         $password = $_POST['password'] ?? null;
-    
+
         if (Session::authenticate($operatorId, $password)) {
             // Authentication successful - log user in.
             try {
@@ -127,6 +142,7 @@ class Process {
 
     // Create an account
     function createAccount() {
+        // TODO: Make first name and last name validation logic consistent and abstract the ruleset so as to DRY up the code.
         global $form, $cainDB;
 
         // Get and sanitize input values
@@ -166,7 +182,7 @@ class Process {
             // Validate firstName
             $firstName = testInput($firstName);
             // Check if firstName contains only letters, whitespace, and apostrophes
-            if (!preg_match("/^[a-zA-Z]+(?:[ '][a-zA-Z]+)*$/",$firstName)) {
+            if (!preg_match("/^[a-zA-Z]+(?:[ '][a-zA-Z]+)*$/", $firstName)) {
                 $errors['firstName'] = 'First name not valid.';
             }
         }
@@ -175,7 +191,7 @@ class Process {
         if (!preg_match('/^(?=.*[A-Z].*[A-Z])(?=.*[a-z].*[a-z])(?=.*\d.*\d)(?=.*[^\w\d\s]).{8,}$/', $password)) {
             $errors['password'] = 'Password must contain at least 8 characters, 2 uppercase letters, 2 lowercase letters, 2 numbers, and 2 symbols.';
         }
-        
+
         // If there are errors, set them in the form object
         if (!empty($errors)) {
             foreach ($errors as $field => $error) {
@@ -263,7 +279,7 @@ class Process {
                 WHEN 'date_format' THEN :dateFormat
                 ELSE `value`
             END;";
-            
+
             // Bind parameters
             $params = [
                 ':hospitalName' => $hospitalName,
@@ -317,7 +333,7 @@ class Process {
             if(strpos($postLabel, "fieldBehaviour") !== false) {
                 $behaviourFields[str_replace("fieldBehaviour", "", $postLabel)] = $postData;
             }
-            
+
             if(strpos($postLabel, "fieldVisibility") !== false) {
                 $visibilityFields[str_replace("fieldVisibility", "", $postLabel)] = ($postData ? 1 : 0);
             }
@@ -330,7 +346,7 @@ class Process {
         // Add to the database!
         $cainDB->query("UPDATE settings SET `value` = :updatedBehaviour WHERE `name` = 'field_behaviour';", [":updatedBehaviour" => $updatedBehaviour]);
         $cainDB->query("UPDATE settings SET `value` = :updatedVisibility WHERE `name` = 'field_visibility';", [":updatedVisibility" => $updatedVisibility]);
-        
+
         Session::setNotice("Successfully updated settings.");
     }
 
@@ -386,7 +402,7 @@ class Process {
         if($dateRange) {
             // We need to parse the date range
             $dateRangeArr = explode(' - ', $dateRange);
-    
+
             if($dateRangeArr[0]) {
                 $query .= 'STR_TO_DATE(testcompletetimestamp, "%Y-%m-%d %H:%i") >= ?';
                 $params[] = $dateRangeArr[0] . " 00:00";
@@ -402,7 +418,7 @@ class Process {
             $query .= "1;";
         }
 
-        // First, we must select all the ID's of the query and 
+        // First, we must select all the ID's of the query and
         $queryCheck .= $query;
         $queryDelete .= $query;
 
@@ -471,11 +487,11 @@ class Process {
             // Validate firstName
             $firstName = testInput($firstName);
             // Check if firstName contains only letters, whitespace, and apostrophes
-            if (!preg_match("/^[a-zA-Z]+(?:[ '][a-zA-Z]+)*$/",$firstName)) {
-                $errors['firstName'] = 'First name not valid.';
+            if (!preg_match("/^[a-z]+(?:[ '][a-z]+)*$/i", $firstName)) {
+                $errors['firstName'] = 'LOOK AT ME! First name not valid.';
             }
         }
-        
+
         // If there are errors, set them in the form object
         if (!empty($errors)) {
             if($id) {
@@ -522,7 +538,7 @@ class Process {
         $params = [
             ':id' => $id,
         ];
-        
+
         if($userType) {
             $params[':userType'] = $userType;
         }
@@ -617,7 +633,7 @@ class Process {
         if($userType) {
             $form->setValue('userType', $userType);
         }
-        
+
         // If there are errors, set them in the form object
         if (!empty($errors)) {
             $form->setValue("form", "add");
@@ -712,7 +728,7 @@ class Process {
         }
 
         // Retrieve form data
-        $qcEnforcement = $_POST['qcEnforcement'];
+        $qcPolicy = $_POST['qcPolicy'];
         $posRequired = $_POST['posRequired'];
         $negRequired = $_POST['negRequired'];
         $enableIndependence = $_POST['enableIndependence'] == "on" ? 1 : 0;
@@ -721,16 +737,16 @@ class Process {
         try {
             // Prepare the query
             $query = "UPDATE settings SET `value` = CASE `name`
-                WHEN 'qc_enforcement' THEN :qcEnforcement
+                WHEN 'qc_policy' THEN :qcPolicy
                 WHEN 'qc_positive_requirements' THEN :posRequired
                 WHEN 'qc_negative_requirements' THEN :negRequired
                 WHEN 'qc_enable_independence' THEN :enableIndependence
                 ELSE `value`
             END;";
-            
+
             // Bind parameters
             $params = [
-                ':qcEnforcement' => $qcEnforcement,
+                ':qcPolicy' => $qcPolicy,
                 ':posRequired' => $posRequired,
                 ':negRequired' => $negRequired,
                 ':enableIndependence' => $enableIndependence,
@@ -776,7 +792,7 @@ class Process {
                 WHEN 'password_required' THEN :passwordRequired
                 ELSE `value`
             END;";
-            
+
             // Bind parameters
             $params = [
                 ':sessionTimeout' => $sessionTimeout,
@@ -835,7 +851,7 @@ class Process {
                 WHEN 'app_mode' THEN :appMode
                 ELSE `value`
             END;";
-            
+
             // Bind parameters
             $params = [
                 ':protocol' => $protocol,
@@ -877,7 +893,7 @@ class Process {
         $sentToLIMS = $_POST['sentToLIMS'] ?? null;
         $filterDates = $_POST['filterDates'] ?? null;
         $resultPolarity = ($_POST['resultPolarity'] ?? null) == "on" ? 1 : 0;
-        
+
         // Get the return path and the query params that already exist
         $url = $_POST['return-path'];
         $paramArr = getParams($url);
@@ -932,6 +948,229 @@ class Process {
         }
 
         header("Location: /" . $filter);
+    }
+
+    function cleanLogs() {
+        // Try deleting logs
+        try {
+            // Get the logs folder
+            $folderPath = rtrim(BASE_DIR . '/logs', '/');
+
+            // Counter for counting deleted files
+            $deletedFilesCount = 0;
+            $totalFileSize = 0;
+
+            // Loop through files in logs dir
+            $files = new RecursiveIteratorIterator(
+                new RecursiveDirectoryIterator($folderPath),
+                RecursiveIteratorIterator::LEAVES_ONLY
+            );
+
+            foreach($files as $file) {
+                // Check if it's a .gz file
+                if(!$file->isDir() && $file->getExtension() === 'gz') {
+                    // Add to the filesize
+                    $totalFileSize += $file->getSize();
+
+                    // Delete the file and increment counter if successful
+                    if(unlink($file->getRealPath())) {
+                        $deletedFilesCount++;
+                    } else {
+                        throw new Exception('Could not delete file.');
+                    }
+                }
+            }
+
+            $formattedFileSize = formatSize($totalFileSize);
+
+            Session::setNotice("Successfully deleted old logs. $formattedFileSize of space has been cleared and $deletedFilesCount file(s) have been deleted.", 1);
+        } catch (Exception $e) {
+            Session::setNotice("Could not delete expired logs. Please contact a service engineer.", 2);
+        }
+    }
+
+    function changeQCTypes() {
+        global $cainDB;
+
+        // Get the params
+        $testTypes = json_decode($_POST['qcTestTypes']) ?? null;
+
+        // Collect IDs from the input array for easy reference
+        $ids = array_map(function($testType) { return $testType->id; }, $testTypes);
+
+        // Prepare SQL statement with ON DUPLICATE KEY UPDATE for insert or update
+        $sql = "
+        INSERT INTO instrument_test_types (id, name, time_intervals, result_intervals)
+        VALUES (:id, :name, :time_intervals, :result_intervals)
+        ON DUPLICATE KEY UPDATE
+            name = VALUES(name),
+            time_intervals = VALUES(time_intervals),
+            result_intervals = VALUES(result_intervals)
+        ";
+
+        // Loop through each test type and execute the query
+        $cainDB->beginTransaction();
+
+        foreach ($testTypes as $testType) {
+            $timeIntervals = is_numeric($testType->time_intervals) ? $testType->time_intervals : null;
+            $resultIntervals = is_numeric($testType->result_intervals) ? $testType->result_intervals : null;
+
+            $cainDB->query($sql,
+            [
+                ':id' => $testType->id,
+                ':name' => $testType->name,
+                ':time_intervals' => $timeIntervals,
+                ':result_intervals' => $resultIntervals
+            ]);
+        }
+
+        // Delete entries from the database that are not in the current list of IDs (if no IDs available, delete all by suggesting ALL BUT that with the ID of 0 - bit of a hack)
+        $in  = $ids ? str_repeat('?,', count($ids) - 1) . '?' : 0; // Create a placeholder string
+        $deleteSql = "DELETE FROM instrument_test_types WHERE id NOT IN ($in)";
+        $cainDB->query($deleteSql, $ids);
+
+        $cainDB->commit();
+
+        Session::setNotice("Successfully updated test types. You may now use these in your instrument QC.", 1);
+    }
+
+    function toggleInstrumentLock() {
+        global $cainDB;
+
+        // Get the ID of the instrument
+        $instrument = $_POST['instrument'] ?? null;
+
+        if($instrument) {
+            // Get current instrument status
+            $locked = $cainDB->select("SELECT * FROM instruments WHERE id = ?;", [$instrument]);
+
+            if($locked['locked']) {
+                $cainDB->query("UPDATE instruments SET locked = 0 WHERE id = ?;", [$instrument]);
+                Session::setNotice("Unlocked instrument #$instrument.");
+            } else {
+                $cainDB->query("UPDATE instruments SET locked = 1 WHERE id = ?;", [$instrument]);
+                Session::setNotice("Locked instrument #$instrument.");
+            }
+        }
+    }
+
+    function newInstrumentQC() {
+        global $cainDB, $form;
+
+        // Get all the input values
+        $dateTime = $_POST['datetime'];
+        $instrument = $_POST['instrument'];
+        $qcType = $_POST['qc-type'];
+        $result = $_POST['result'];
+        $notes = $_POST['notes'];
+
+        $currentUser = userInfo();
+
+        $errors = [];
+
+        // Check that everything which should be set is set
+        if(!$dateTime) {
+            $dateTime = time();
+        }
+
+        if(!isset($instrument)) {
+            $errors['instrument'] = 'An instrument must be selected';
+        }
+
+        if(!isset($qcType)) {
+            $errors['qc-type'] = 'A QC type must be selected';
+        }
+
+        if(!isset($currentUser)) {
+            Session::setNotice("Must be logged in to log a QC result.", 1);
+            return;
+        }
+
+        // If there are errors, set them in the form object
+        if (!empty($errors)) {
+            foreach ($errors as $field => $error) {
+                $form->setError($field, $error);
+            }
+            header("Location: " . $_POST['return-path-err']);
+            exit(); // Exit early if there are errors
+        }
+
+
+        $params = [
+            ':dateTime' => strtotime($dateTime),
+            ':result' => $result ?? 1,
+            ':instrument' => $instrument,
+            ':user' => $currentUser['id'],
+            ':qcType' => $qcType,
+            ':notes' => $notes ?? null
+        ];
+
+        try {
+            $cainDB->query("INSERT INTO instrument_qc_results (`timestamp`, result, instrument, user, `type`, `notes`) VALUES (:dateTime, :result, :instrument, :user, :qcType, :notes);", $params);
+            Session::setNotice('QC Test Result successfully logged.');
+        } catch (Exception $e) {
+            Session::setNotice("Error: Something went wrong. Please contact an administrator.");
+            header("Location: " . $_POST['return-path-err']);
+            exit(); // Exit early if there are errors
+        }
+    }
+
+    function editInstrumentQC() {
+        global $cainDB, $form;
+
+        // Get all the input values
+        $qcID = $_POST['qc-result'];
+        $dateTime = $_POST['datetime'];
+        $instrument = $_POST['instrument'];
+        $qcType = $_POST['qc-type'];
+        $result = $_POST['result'];
+        $notes = $_POST['notes'];
+
+        $currentUser = userInfo();
+
+        $errors = [];
+
+        // Check that everything which should be set is set
+        if(!$dateTime) {
+            $dateTime = time();
+        }
+
+        if(!isset($instrument)) {
+            $errors['instrument'] = 'An instrument must be selected';
+        }
+
+        if(!isset($qcType)) {
+            $errors['qc-type'] = 'A QC type must be selected';
+        }
+
+        if(!isset($currentUser)) {
+            Session::setNotice("Must be logged in to log a QC result.", 1);
+            return;
+        }
+
+        // If there are errors, set them in the form object
+        if (!empty($errors)) {
+            foreach ($errors as $field => $error) {
+                $form->setError($field, $error);
+            }
+            return; // Exit early if there are errors
+        }
+
+
+        $params = [
+            ':dateTime' => strtotime($dateTime),
+            ':result' => $result ?? 1,
+            ':qcType' => $qcType,
+            ':notes' => $notes ?? null,
+            ':id' => $qcID
+        ];
+
+        try {
+            $cainDB->query("UPDATE instrument_qc_results SET `timestamp` = :dateTime, result = :result, `type` = :qcType, `notes` = :notes WHERE id = :id;", $params);
+            Session::setNotice('QC Test Result successfully updated.');
+        } catch (Exception $e) {
+            Session::setNotice("Error: Something went wrong. Please contact an administrator.");
+        }
     }
 }
 

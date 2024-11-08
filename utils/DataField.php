@@ -17,7 +17,7 @@ class Field {
     }
 }
 
-/* 
+/*
 We must display a bitfield representation of the varchar number stored in the database.
 arrSize = How many "settings" are stored in the integer?
 chunkSize = How many "options" are there per setting?
@@ -30,10 +30,10 @@ function getSettingsBitmap($arrSize, $chunkSize, $settingValue) {
 
     // Interpret chunksize by however many bits we need to represent that spread of data
     $bitsPerItem = ceil(log($chunkSize, 2));
-    
+
     // Pad the binary representation with leading zeros to ensure it has the same number of digits as the dataFields array
     $paddedBinary = str_pad($bitmap, $arrSize * $bitsPerItem, '0', STR_PAD_LEFT);
-    
+
     // Convert the padded binary string into an array of integers
     $bitsArray = array_map('intval', str_split($paddedBinary, $bitsPerItem));
 
@@ -41,7 +41,7 @@ function getSettingsBitmap($arrSize, $chunkSize, $settingValue) {
     $bitmap = array_map(function ($chunk) {
         return bindec($chunk);
     }, $bitsArray);
-    
+
     // Reverse the array to match the expected output format
     return array_reverse($bitmap);
 }
@@ -83,18 +83,10 @@ $dataFields = [
     new Field("Date of Birth", "dob"),
     new Field("Patient Age", "patientAge"),
     new Field("Gender", "patientSex"),
-    new Field("Result", "result", true, true),
     new Field("Hospital ID", "hospitalId"),
-    new Field("Site ID", "site"),
-    new Field("Clinic ID", "clinicId"),
     new Field("Patient Location", "patientLocation"),
-    new Field("Sample ID", "sampleid"),
     new Field("Sample Collected", "sampleCollected"),
     new Field("Sample Received", "sampleReceived"),
-    new Field("Assay Name", "product"),
-    new Field("Lot Number", "lot_number"),
-    new Field("Test Purpose", "testPurpose"),
-    new Field("Test Complete Time", "testcompletetimestamp"),
-    new Field("Operator ID", "operatorId"),
-    new Field("AM Serial No", "moduleSerialNumber"),
+    new Field("Comment 1", "reserve1"),
+    new Field("Comment 2", "reserve2"),
 ];

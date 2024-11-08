@@ -24,7 +24,7 @@ $visibilityFields = getSettingsBitmap(count($dataFields), 2, $fieldInfo['field_v
             <thead>
                 <th>Field</th>
                 <th>Tablet Entry</th>
-                <th>Hub Visibility</th>
+                <!-- <th>Hub Visibility</th> -->
             </thead>
             <tbody>
                 <?php foreach($dataFields as $index => $dataField) : ?>
@@ -40,12 +40,12 @@ $visibilityFields = getSettingsBitmap(count($dataFields), 2, $fieldInfo['field_v
                                 </select>
                             </div>
                         </td>
-                        <td>
+                        <!-- <td>
                             <div class="checkbox-wrapper">
                                 <input class="tgl" name="fieldVisibility<?= $index;?>" id="fieldVisibility<?= $index;?>" type="checkbox" <?= $dataField->visibilityLock ? "disabled" : "";?> <?= $dataField->visibilityLock || $visibilityFields[$index] ? "checked" : "";?>>
                                 <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="fieldVisibility<?= $index;?>"><span></span></label>
                             </div>
-                        </td>
+                        </td> -->
                     </tr>
                 <?php endforeach;?>
             </tbody>

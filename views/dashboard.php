@@ -26,7 +26,7 @@ $settings = array_column($hospitalInfo, 'value', 'name');
 require_once 'utils/DataField.php';
 
 // Get the bitmaps so we can use them to display the current DB values
-$visibilityFields = getSettingsBitmap(count($dataFields), 2, $fieldInfo['field_visibility']);
+$visibilityFields = getSettingsBitmap(count($dataFields), 3, $fieldInfo['field_behaviour']);
 
 // Fields we are interested in
 $listableFields = getFieldVisibilitySettings($dataFields, $visibilityFields);
@@ -60,7 +60,7 @@ include_once BASE_DIR . "/utils/AgeGroup.php";
             <div class="form-fields">
                 <div class="field">
                     <div class="input-wrapper !py-1 !pr-1">
-                        <input id="fakeSearch" required type="text" placeholder="Search..." name="s" value="<?= $filters['s'] ?? "";?>">
+                        <input id="fakeSearch" type="text" placeholder="Search..." name="s" value="<?= $filters['s'] ?? "";?>">
                         <button id="fakeSearchBtn" class="cursor-pointer aspect-square rounded-full p-2 bg-dark transition-all duration-500 hover:scale-110 hover:opacity-75">
                             <svg class="h-4 w-auto fill-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                                 <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/>
@@ -72,7 +72,7 @@ include_once BASE_DIR . "/utils/AgeGroup.php";
         </form>
         <div class="flex items-center w-full sm:w-auto">
             <p class="grow sm:hidden text-base md:text-lg"><?= $resultNumberText;?></p>
-            <button id="filter" class="p-2 transition-all duration-500 hover:scale-110 hover:opacity-75 tooltip" title="Filters & Actions">
+            <button id="filter" data-modal-open="filterModal" class="p-2 transition-all duration-500 hover:scale-110 hover:opacity-75 tooltip" title="Filters & Actions">
                 <svg class="h-7 fill-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                     <path d="M0 416c0 17.7 14.3 32 32 32l54.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48L480 448c17.7 0 32-14.3 32-32s-14.3-32-32-32l-246.7 0c-12.3-28.3-40.5-48-73.3-48s-61 19.7-73.3 48L32 384c-17.7 0-32 14.3-32 32zm128 0a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zM320 256a32 32 0 1 1 64 0 32 32 0 1 1 -64 0zm32-80c-32.8 0-61 19.7-73.3 48L32 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l246.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48l54.7 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-54.7 0c-12.3-28.3-40.5-48-73.3-48zM192 128a32 32 0 1 1 0-64 32 32 0 1 1 0 64zm73.3-64C253 35.7 224.8 16 192 16s-61 19.7-73.3 48L32 64C14.3 64 0 78.3 0 96s14.3 32 32 32l86.7 0c12.3 28.3 40.5 48 73.3 48s61-19.7 73.3-48L480 128c17.7 0 32-14.3 32-32s-14.3-32-32-32L265.3 64z"/>
                 </svg>
@@ -155,7 +155,7 @@ include_once BASE_DIR . "/utils/AgeGroup.php";
                                 </button>
                                 <?php endif;?>
                                 <button id="sendResult<?= $result['id'];?>" class="flex items-center">
-                                <?php 
+                                <?php
                                 // Determine the symbol (if any) to display
                                 $limsStatus = false;
                                 $limsStatusMessage = "Not sent to LIMS";
@@ -226,7 +226,7 @@ if($totalPageCount > 1) : ?>
 
 // Results modals
 foreach($resultItems as $result) : ?>
-    <?php 
+    <?php
     $positive = (strpos(strtolower($result['result']), "positive")) || strtolower($result['result']) == "positive";
     try {
         $dob = (new DateTime($result['dob']))->format($hospitalInfoArray['date_format']);
@@ -297,9 +297,9 @@ foreach($resultItems as $result) : ?>
                                 <td><?= $value;?></td>
                                 <td>
                                     <?php foreach($keys as $key) : ?>
-                                        <?= $result[$key];?> 
+                                        <?= $result[$key];?>
                                     <?php endforeach;?>
-                                </td>   
+                                </td>
                             </tr>
                         <?php endif;
                     endforeach;?>
@@ -316,10 +316,10 @@ foreach($resultItems as $result) : ?>
                     mywindow.document.write(document.querySelector("#result" + elem + "Modal .result-details").innerHTML);
                     mywindow.document.querySelector('.modal-close').remove();
                     mywindow.document.write('</body></html>');
-                    
+
                     mywindow.document.close(); // necessary for IE >= 10
                     mywindow.focus(); // necessary for IE >= 10*/
-                    
+
                     mywindow.print();
                     mywindow.close();
 
@@ -342,12 +342,12 @@ foreach($resultItems as $result) : ?>
 <?php endforeach;?>
 
 <?php if($currentUser['user_type'] >= ADMINISTRATIVE_CLINICIAN) : ?>
-    <div id="genericModalWrapper">
-        <div class="overlay"></div>
+    <div id="genericModalWrapper" class="modal-wrapper">
+        <div class="overlay" data-modal-close></div>
 
         <div id="deleteResultModal" class="generic-modal">
             <div class="close-modal">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                     <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/>
                 </svg>
             </div>
@@ -361,18 +361,16 @@ foreach($resultItems as $result) : ?>
                 <input type="hidden" name="id" class="form-result-id" value="">
                 <div class="w-full flex justify-center items-center gap-3 mt-3">
                     <button type="submit" class="btn smaller-btn trigger-loading">Yes</button>
-                    <div class="cursor-pointer btn smaller-btn close-modal no-styles">Cancel</div>
+                    <div class="cursor-pointer btn smaller-btn close-modal no-styles" data-modal-close>Cancel</div>
                 </div>
             </form>
         </div>
     </div>
 <?php endif;?>
 
-<div id="filterModalWrapper">
-    <div class="overlay"></div>
-
+<div id="filterModalWrapper" class="modal-wrapper">
     <div id="filterModal" class="generic-modal">
-        <div class="close-modal">
+        <div class="close-modal" data-modal-close>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                 <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/>
             </svg>
@@ -411,7 +409,7 @@ foreach($resultItems as $result) : ?>
                         <div class="description !text-xs text-grey mr-4">Show only positive results?</div>
                     </div>
                     <div class="checkbox-wrapper">
-                        <input <?= isset($filters['r']) ? "checked" : "";?> class="tgl" name="resultPolarity" id="resultPolarity" type="checkbox">
+                        <input <?= isset($filters['r']) && $filters['r'] == 1 ? "checked" : "";?> class="tgl" name="resultPolarity" id="resultPolarity" type="checkbox">
                         <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="resultPolarity"><span></span></label>
                     </div>
                 </label>
@@ -466,7 +464,7 @@ foreach($resultItems as $result) : ?>
             </div>
             <div class="flex items-center gap-2">
                 <button id="filterSearchBtn" type="submit" class="grow btn smaller-btn">Apply</button>
-                <div class="grow btn smaller-btn cursor-pointer close-modal no-styles">Cancel</div>
+                <div class="grow btn smaller-btn cursor-pointer close-modal no-styles" data-modal-close>Cancel</div>
             </div>
         </form>
     </div>

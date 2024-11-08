@@ -35,7 +35,7 @@ if(logoutModal) {
             logoutModal.classList.remove('active');
         }
     });
-    
+
     userIcons.forEach((icon) => {
         icon.addEventListener('click', (e) => {
             logoutModal.classList.add('active');
@@ -43,7 +43,7 @@ if(logoutModal) {
             e.stopPropagation();
         });
     });
-    
+
     cancelBtn.addEventListener('click', () => {
         logoutModal.classList.remove('active');
     });
@@ -54,7 +54,7 @@ var loadingBtns = document.querySelectorAll('.trigger-loading');
 var limsTimeout = document.querySelector('#php2js').dataset.limsTimeout;
 loadingBtns.forEach((btn) => {
     // Listen to if a button which requires some loading is clicked
-    btn.addEventListener('click', () => {          
+    btn.addEventListener('click', (e) => {
         // Get the button's text content
         var textContent = btn.textContent;
 
@@ -131,7 +131,7 @@ var resultsTable = document.getElementById('resultsTable');
 if(resultsTable) {
     var resultRows = document.querySelectorAll('tr.result');
     resultRows.forEach((result) => {
-        
+
         result.addEventListener('click', () => {
             var resultId = result.id;
 
@@ -148,7 +148,7 @@ if(resultsTable) {
                 // Get the result details
                 var resultDetails = resultModal.querySelector('.result-details');
                 var resultActions = resultModal.querySelector('.result-actions');
-                
+
                 if((!resultDetails.contains(e.target) && !resultActions.contains(e.target)) || e.target.classList.contains('modal-close')) {
                     resultModal.classList.remove('active');
                 }
@@ -160,26 +160,26 @@ if(resultsTable) {
             if(!canvas) {
                 // Load a graph (if it is not already loaded)
                 var phpFileUrl = '/scripts/graph-check.php';
-                
+
                 // Create a new XMLHttpRequest object
                 var xhr = new XMLHttpRequest();
-    
+
                 // Open a GET request to the PHP file
                 xhr.open('POST', phpFileUrl, true);
                 xhr.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    
+
                 // When the file is ready
                 xhr.onreadystatechange = function() {
                     // If the file has been successfully opened, watch it for progress
                     if (xhr.readyState === 4) {
                         // Could add a loading state here (if necessary)
-    
+
                         // If we got a valid response, interpret it
                         if (xhr.status === 200) {
                             // The response code/message
                             var data = JSON.parse(xhr.responseText);
                             var resultDetailsSection = resultModal.querySelector('.result-details');
-    
+
                             // If we have an error in our JSON, display the error.
                             if(data.error) {
                                 // Render an error div with relevant information.
@@ -290,14 +290,14 @@ if(resultsTable) {
                                     }
                                 });
                             }
-                            
+
                         } else {
                             // Handle error
                             statusSpan.innerHTML = 'Error updating. Please refresh and try again.';
                         }
                     }
                 };
-    
+
                 // Send the AJAX request
                 xhr.send('id=' + encodeURIComponent(id));
             }
@@ -306,178 +306,20 @@ if(resultsTable) {
     })
 }
 
-// Within user settings, we need to display the modal depending on the checked state of the time user out field
-var userTimeoutCheckbox = document.getElementById('userTimeout');
-var userTimeoutInput = document.getElementById('sessionTimeout');
-var userTimeoutAmount = document.getElementById('userTimeoutAmount');
-
-if(userTimeoutCheckbox && userTimeoutInput && userTimeoutAmount) {
-    userTimeoutCheckbox.addEventListener('change', () => {
-        if(userTimeoutCheckbox.checked) {
-            userTimeoutAmount.classList.add('active');
-            userTimeoutInput.value = 30;
-        } else {
-            userTimeoutAmount.classList.remove('active');
-            userTimeoutInput.value = 0;
-        }
-    });
-
-    userTimeoutInput.addEventListener('change', () => {
-        if(userTimeoutInput.value == 0) {
-            userTimeoutCheckbox.checked = false;
-            userTimeoutAmount.classList.remove('active');
-        } else {
-            userTimeoutCheckbox.checked = true;
-            userTimeoutAmount.classList.add('active');
-        }
-    });
-}
-
-// User modal triggers
-var userModals = document.getElementById('usersTable');
-
-if(userModals) {
-    document.addEventListener('click', (e) => {
-        var closestUser = null;
-        var target = e.target;
-        var userModals = document.querySelectorAll('.user-modal');
-
-        userModals.forEach((modal) => {
-            if(!modal.contains(e.target) || target.classList.contains('close-user-modal')) {
-                modal.classList.remove('active');
-            }
-        });
-
-        if(target.classList.contains('delete-user-button')) {
-            userModals.forEach((modal) => {
-                modal.classList.remove('active');
-            });
-            var operatorToDelete = target.dataset.operator;
-            var operatorId = target.dataset.id;
-            document.getElementById('operatorToDelete').innerHTML = operatorToDelete;
-            document.querySelectorAll('.form-operator-id').forEach((formId) => {
-                formId.value = operatorId;
-            });
-            document.getElementById('deleteUserModal').classList.add('active');
-        }
-
-        if(target.classList.contains('new-user-button')) {
-            document.getElementById('newUserModal').classList.add('active');
-        }
-    
-        while(target && !closestUser && !target.classList.contains('table-button')) {
-            if(target.classList.contains('user')) {
-                closestUser = target;
-            } else {
-                target = target.parentElement;
-            }
-        }
-    
-        if(closestUser) {
-            document.getElementById(`${closestUser.id}Modal`).classList.add('active');
-        }
-    })
-}
-
-// Delete results modal triggers
-var deleteResultModal = document.getElementById('deleteResultModal');
-
-if(deleteResultModal) {
-    // We need to load this when a delete button has been pressed.
-    document.addEventListener('click', (e) => {
-        if(e.target.classList.contains('delete-result')) {
-            var id = e.target.dataset.id;
-            deleteResultModal.classList.add('active');
-
-            deleteResultModal.querySelector("#resultToDelete").innerHTML = id;
-            deleteResultModal.querySelector(".form-result-id").value = id;
-        }
-
-        if(!e.target.classList.contains('delete-result') && (!deleteResultModal.contains(e.target) || e.target.classList.contains('close-modal'))) {
-            deleteResultModal.classList.remove('active');
-        }
-    })
-}
-
-// We need to open up filters (if this exists)
-var modalBtn = document.getElementById('filter');
-
-if(!modalBtn) {
-    modalBtn = document.getElementById('deleteBtn');
-}
-var modal = document.querySelector('#filterModalWrapper .generic-modal');
-
-if(!modal) {
-    modal = document.querySelector('.generic-modal');
-}
-
-if(modal) {
-
-    modalBtn.addEventListener('click', () => {
-        modal.classList.add('active');
-    });
-
-    // Function to check if "vanilla" is not present in any string
-    function isVanillaNotPresent(list) {
-        for (let i = 0; i < list.length; i++) {
-            if (list[i].includes("vanilla")) {
-                return false; // "vanilla" found in a string, so return false
-            }
-        }
-        return true; // "vanilla" not found in any string, so return true
-    }
-
-    // We need to load this when a delete button has been pressed.
-    document.addEventListener('click', (e) => {
-        if(!modalBtn.contains(e.target) && isVanillaNotPresent(e.target.classList) && (!modal.contains(e.target) || e.target.classList.contains('close-modal'))) {
-            modal.classList.remove('active');
-        }
-    })
-}
-
-// We need to be able to pop open lot information and display all the lots details
-var lotsTable = document.getElementById('lotsTable');
-
-if(lotsTable) {
-    var lotsRows = document.querySelectorAll('tr.lot');
-    lotsRows.forEach((lot) => {
-        
-        lot.addEventListener('click', () => {
-            var lotId = lot.id;
-
-            // Get the lot's corresponding modal
-            var lotModal = document.getElementById(lotId + "Modal");
-
-            // Show it!
-            lotModal.classList.add('active');
-
-            // Hide it!
-            lotModal.querySelector('.lot-modal-backdrop').addEventListener('click', (e) => {
-                // Get the lot details
-                var lotDetails = lotModal.querySelector('.lot-details');
-                
-                if(!lotDetails.contains(e.target) || e.target.classList.contains('modal-close')) {
-                    lotModal.classList.remove('active');
-                }
-            });
-        });
-    })
-}
-
 document.addEventListener('DOMContentLoaded', function() {
     const notices = document.querySelectorAll('#notices .notice');
-    
+
     notices.forEach((notice, index) => {
         let timeout;
 
         // Calculate delay for each notice
         const delay = index * 200; // Adjust the delay time as needed
-    
+
         // Add animation with delay
         setTimeout(() => {
             notice.classList.add('animate-in');
         }, delay);
-    
+
         // Function to start the timeout
         const startTimeout = () => {
             timeout = setTimeout(() => {
@@ -488,20 +330,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 }, 1000);
             }, 8000); // 8 seconds
         };
-    
+
         // Start the initial timeout
         startTimeout();
-    
+
         // Pause the timeout on hover
         notice.addEventListener('mouseenter', () => {
             clearTimeout(timeout);
         });
-    
+
         // Resume the timeout when not hovered
         notice.addEventListener('mouseleave', () => {
             startTimeout();
         });
-    
+
         // Add click event listener to toggle animate-out
         notice.addEventListener('click', function() {
             notice.classList.toggle('animate-out');
@@ -539,4 +381,31 @@ if(fakeSearchForm && fakeSearchInput && searchInput && filterSearchBtn) {
         searchInput.value = fakeSearchInput.value;
         filterSearchBtn.click();
     })
+}
+
+// Within user settings, we need to display the modal depending on the checked state of the time user out field
+var userTimeoutCheckbox = document.getElementById('userTimeout');
+var userTimeoutInput = document.getElementById('sessionTimeout');
+var userTimeoutAmount = document.getElementById('userTimeoutAmount');
+
+if(userTimeoutCheckbox && userTimeoutInput && userTimeoutAmount) {
+    userTimeoutCheckbox.addEventListener('change', () => {
+        if(userTimeoutCheckbox.checked) {
+            userTimeoutAmount.classList.add('active');
+            userTimeoutInput.value = 30;
+        } else {
+            userTimeoutAmount.classList.remove('active');
+            userTimeoutInput.value = 0;
+        }
+    });
+
+    userTimeoutInput.addEventListener('change', () => {
+        if(userTimeoutInput.value == 0) {
+            userTimeoutCheckbox.checked = false;
+            userTimeoutAmount.classList.remove('active');
+        } else {
+            userTimeoutCheckbox.checked = true;
+            userTimeoutAmount.classList.add('active');
+        }
+    });
 }

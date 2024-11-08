@@ -1,8 +1,15 @@
 <?php // Get the route of the path and set some headers so the webserver knows how to interpret the request.
 $route = $apiRoutes[$path];
 
+// There are a few routes in which we can GET:
+$getAllowedAPIs = [
+    'datafields',
+    'cartridgeqccheck',
+    'instrumentqccheck',
+];
+
 // If we aren't posting to this page, we aren't allowed to see it.
-if ($_SERVER["REQUEST_METHOD"] != "POST") {
+if ($_SERVER["REQUEST_METHOD"] != "POST" && !in_array(pathinfo($route['view'], PATHINFO_FILENAME), $getAllowedAPIs)) {
     // Redirect to the 403 error page
     header("HTTP/1.1 403 Forbidden");
     $route = new PageRoute('views/403.php', '403: Forbidden', false, false);

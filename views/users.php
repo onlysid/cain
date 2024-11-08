@@ -5,13 +5,15 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
 
 // Page setup?>
 
+<!-- Title and quick action -->
 <div class="flex justify-center md:justify-start items-center gap-2 mb-1.5 md:mb-3">
     <h1 class="mb-0">Users</h1>
-    <svg class="h-10 w-auto fill-green-600 p-1 cursor-pointer scale-95 transition-all duration-500 hover:scale-105 hover:fill-blue-500 new-user-button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+    <svg data-modal-open="newUserModal" class="h-10 w-auto fill-green-600 p-1 cursor-pointer scale-95 transition-all duration-500 hover:scale-105 hover:fill-blue-500 new-user-button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
         <path class="pointer-events-none" d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM232 344V280H168c-13.3 0-24-10.7-24-24s10.7-24 24-24h64V168c0-13.3 10.7-24 24-24s24 10.7 24 24v64h64c13.3 0 24 10.7 24 24s-10.7 24-24 24H280v64c0 13.3-10.7 24-24 24s-24-10.7-24-24z"/>
     </svg>
 </div>
 
+<!-- List all users -->
 <table id="usersTable">
     <thead>
         <th><span class="hidden sm:inline-block mr-1">Operator</span>ID</th>
@@ -21,9 +23,10 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
     </thead>
 
     <tbody>
-        <?php if(count($operators) > 0) : 
+        <?php if(count($operators) > 0) :
+            // List all the operators
             foreach($operators as $operator) : ?>
-                <tr id="user<?= $operator['id'];?>" class="user">
+                <tr class="user" data-modal-open="user<?= $operator['id'];?>">
                     <td><?= $operator['operator_id'];?></td>
                     <td><?= $operator['first_name'] ? ucfirst($operator['first_name']) . " " . ucfirst($operator['last_name'] ?? "") : "Unknown";?></td>
                     <td><?= $operator['user_type'] == 1 ? "Clinician" : "Admin";?></td>
@@ -37,7 +40,7 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
                             <div class="tooltip" title="<?= $operator['status'] == 0 ? 'Inactive' : 'Active';?>">
                                 <div class="status-indicator <?= $operator['status'] == 1 ? 'active' : '';?>"></div>
                             </div>
-                            <button id="delete<?= $operator['id'];?>" data-operator="<?= $operator['operator_id'];?>" data-id="<?= $operator['id'];?>" class="table-button tooltip delete-user-button" title="Delete">
+                            <button data-modal-open="delete<?= $operator['id'];?>" class="table-button tooltip delete-user-button" title="Delete">
                                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
                                     <path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/>
                                 </svg>
@@ -45,31 +48,33 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
                         </div>
                     </td>
                 </tr>
-            <?php endforeach;
+            <?php
+            endforeach;
+        // Otherwise, we have no operators other than ourselves.
         else : ?>
             <tr>
                 <td colspan="4" class="text-center">No operators to show.</td>
             </tr>
         <?php endif;?>
     </tbody>
-
 </table>
 
-<div id="userModalWrapper">
-    <div class="overlay"></div>
-    <?php // Create the user 
-    foreach($operators as $operator) : 
+<!-- All the modals -->
+<div class="modal-wrapper">
+    <?php foreach($operators as $operator) :
         // Check for errors in this user's editing
-        $hasErrors = $form->getValue("form") == "edit" && $form->getValue("id") == $operator['id'];
-        ?>
-        <div id="user<?= $operator['id'];?>Modal" class="user-modal <?= $hasErrors ? "active" : "";?>">
-            <div class="close-user-modal">
+        $hasErrors = $form->getValue("form") == "edit" && $form->getValue("id") == $operator['id'];?>
+
+        <div id="user<?= $operator['id'];?>" class="generic-modal <?= $hasErrors ? "active" : "";?>">
+            <div class="close-modal" data-modal-close>
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                     <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/>
                 </svg>
             </div>
+
             <h2 class="mb-3"><?= $operator['operator_id'];?></h2>
             <form action="/process" method="POST">
+
                 <?php if($hasErrors) : ?>
                     <ul class="form-errors">
                         <?php foreach($form->getErrors() as $errorKey => $error) : ?>
@@ -77,6 +82,7 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
                         <?php endforeach;?>
                     </ul>
                 <?php endif;?>
+
                 <input type="hidden" name="action" value="edit-operator">
                 <input type="hidden" name="return-path" value="<?= $currentURL;?>">
                 <input type="hidden" name="id" class="form-operator-id" value="<?= $operator['id'];?>">
@@ -85,7 +91,7 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
                     <div class="field">
                         <label>First Name</label>
                         <div class="input-wrapper <?= ($hasErrors && $form->getError('password2')) ? "error" : "";?>">
-                            <input required spellcheck="false" type="text" name="firstName" value="<?= $operator['first_name'];?>" placeholder="eg. Jane">
+                            <input spellcheck="false" type="text" name="firstName" value="<?= $operator['first_name'];?>" placeholder="eg. Jane">
                         </div>
                     </div>
                     <div class="field">
@@ -113,7 +119,7 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
                     <div class="field">
                         <label>User Type</label>
                         <div class="input-wrapper select-wrapper">
-                            <select required name="userType">
+                            <select name="userType">
                                 <?php foreach($userTypes as $userType => $userTypeValue) : ?>
                                     <option <?= ($userTypeValue == $operator['user_type']) ? 'selected' : '';?> value="<?= $userTypeValue;?>"><?= $userType;?></option>
                                 <?php endforeach;?>
@@ -123,51 +129,55 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
                 </div>
                 <div class="w-full flex justify-center items-center gap-3 mt-3">
                     <button type="submit" class="btn smaller-btn trigger-loading">Apply</button>
-                    <div class="cursor-pointer btn smaller-btn close-user-modal no-styles">Cancel</div>
+                    <div class="cursor-pointer btn smaller-btn close-user-modal close-modal no-styles" data-modal-close>Cancel</div>
                 </div>
             </form>
+
             <div class="divider"></div>
+
             <div class="flex gap-2 justify-center">
                 <form action="/process" method="POST" class="w-auto">
                     <input type="hidden" name="action" value="toggle-operator-status">
                     <input type="hidden" name="return-path" value="<?= $currentURL;?>">
                     <input type="hidden" name="id" class="form-operator-id" value="<?= $operator['id'];?>">
-    
+
                     <button type="submit" class="btn smaller-btn trigger-loading <?= $operator['status'] == '1' ? 'deactivate' : 'activate';?>"> <?= $operator['status'] == '1' ? 'Deactivate' : 'Activate';?> User</button>
                 </form>
-                <button id="delete<?= $operator['id'];?>" data-operator="<?= $operator['operator_id'];?>" data-id="<?= $operator['id'];?>" class="delete-user-button btn smaller-btn tooltip" title="Delete">
+                <button data-modal-open="delete<?= $operator['id'];?>" class="delete-user-button btn smaller-btn tooltip" title="Delete">
                     <svg class="h-10" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
                         <path d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/>
                     </svg>
                 </button>
             </div>
+
         </div>
+
+        <div id="delete<?= $operator['id'];?>" class="user-modal generic-modal">
+            <div class="close-user-modal close-modal" data-modal-close>
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                    <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/>
+                </svg>
+            </div>
+            <svg class="fill-red-500 h-10 w-auto mb-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                <path d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480H40c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24V296c0 13.3 10.7 24 24 24s24-10.7 24-24V184c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/>
+            </svg>
+            <p class="text-center">Are you sure you want to delete <span id="operatorToDelete" class="font-black text-red-500"><?= $operator['operator_id'];?></span>?</p>
+            <form action="/process" method="POST">
+                <input type="hidden" name="action" value="delete-operator">
+                <input type="hidden" name="return-path" value="<?= $currentURL;?>">
+                <input type="hidden" name="id" class="form-operator-id" value="<?= $operator['id'];?>">
+                <div class="w-full flex justify-center items-center gap-3 mt-3">
+                    <button type="submit" class="btn smaller-btn trigger-loading">Yes</button>
+                    <div class="cursor-pointer btn smaller-btn close-user-modal close-modal no-styles" data-modal-close>Cancel</div>
+                </div>
+            </form>
+        </div>
+
     <?php endforeach;?>
 
-    <div id="deleteUserModal" class="user-modal">
-        <div class="close-user-modal">
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/>
-            </svg>
-        </div>
-        <svg class="fill-red-500 h-10 w-auto mb-3" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-            <path d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480H40c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24V296c0 13.3 10.7 24 24 24s24-10.7 24-24V184c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/>
-        </svg>
-        <p class="text-center">Are you sure you want to delete <span id="operatorToDelete" class="font-black text-red-500"></span>?</p>
-        <form action="/process" method="POST">
-            <input type="hidden" name="action" value="delete-operator">
-            <input type="hidden" name="return-path" value="<?= $currentURL;?>">
-            <input type="hidden" name="id" class="form-operator-id" value="">
-            <div class="w-full flex justify-center items-center gap-3 mt-3">
-                <button type="submit" class="btn smaller-btn trigger-loading">Yes</button>
-                <div class="cursor-pointer btn smaller-btn close-user-modal no-styles">Cancel</div>
-            </div>
-        </form>
-    </div>
-
     <?php $addUserError = $form->getValue("form") == "add";?>
-    <div id="newUserModal" class="user-modal <?= $addUserError ? "active" : "";?>">
-        <div class="close-user-modal">
+    <div id="newUserModal" class="user-modal generic-modal <?= $addUserError ? "active" : "";?>">
+        <div class="close-user-modal close-modal" data-modal-close>
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                 <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/>
             </svg>
@@ -188,7 +198,7 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
                 <div class="field">
                     <label>Operator ID</label>
                     <div class="input-wrapper <?= $form->getError('operatorId') ? "error" : "";?>">
-                        <input required spellcheck="false" type="text" name="operatorId" value="<?= $form->getValue('operatorId');?>" placeholder="eg. 012345678">
+                        <input spellcheck="false" type="text" name="operatorId" value="<?= $form->getValue('operatorId');?>" placeholder="eg. 012345678">
                     </div>
                 </div>
             </div>
@@ -196,7 +206,7 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
                 <div class="field">
                     <label>First Name</label>
                     <div class="input-wrapper <?= $form->getError('firstName') ? "error" : "";?>">
-                        <input required spellcheck="false" type="text" name="firstName" value="<?= $form->getValue('firstName');?>" placeholder="eg. Jane">
+                        <input spellcheck="false" type="text" name="firstName" value="<?= $form->getValue('firstName');?>" placeholder="eg. Jane">
                     </div>
                 </div>
                 <div class="field">
@@ -224,7 +234,7 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
                 <div class="field">
                     <label>User Type</label>
                     <div class="input-wrapper <?= $form->getError('userType') ? "error" : "";?> select-wrapper">
-                        <select required name="userType">
+                        <select name="userType">
                             <?php foreach($userTypes as $userType => $userTypeValue) : ?>
                                 <option <?= $form->getValue('userType') == $userTypeValue ? "selected" : "";?> value="<?= $userTypeValue;?>"><?= $userType;?></option>
                             <?php endforeach;?>
@@ -234,7 +244,7 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
             </div>
             <div class="w-full flex justify-center items-center gap-3 mt-3">
                 <button type="submit" class="btn smaller-btn trigger-loading">Create Operator</button>
-                <div class="cursor-pointer btn smaller-btn close-user-modal no-styles">Cancel</div>
+                <div class="cursor-pointer btn smaller-btn close-user-modal close-modal no-styles" data-modal-close>Cancel</div>
             </div>
         </form>
     </div>
@@ -243,7 +253,7 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
 
 <div class="grow flex items-end">
     <div class="flex gap-3 flex-wrap">
-        <button class=" w-full sm:w-auto btn border-btn new-user-button">Add New User</button>
+        <button data-modal-open="newUserModal" class="w-full sm:w-auto btn border-btn new-user-button">Add New User</button>
         <a href="/settings/users" class=" w-full sm:w-auto btn border-btn">General User Settings</a>
         <a href="/settings" class=" w-full sm:w-auto btn border-btn">My Account Settings</a>
     </div>
