@@ -306,6 +306,26 @@ if(resultsTable) {
     })
 }
 
+// Delete results modal triggers
+var deleteResultModal = document.getElementById('deleteResultModal');
+
+if(deleteResultModal) {
+    // We need to load this when a delete button has been pressed.
+    document.addEventListener('click', (e) => {
+        if(e.target.classList.contains('delete-result')) {
+            var id = e.target.dataset.id;
+            deleteResultModal.classList.add('active');
+
+            deleteResultModal.querySelector("#resultToDelete").innerHTML = id;
+            deleteResultModal.querySelector(".form-result-id").value = id;
+        }
+
+        if(!e.target.classList.contains('delete-result') && (!deleteResultModal.contains(e.target) || e.target.classList.contains('close-modal'))) {
+            deleteResultModal.classList.remove('active');
+        }
+    })
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const notices = document.querySelectorAll('#notices .notice');
 

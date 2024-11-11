@@ -87,12 +87,13 @@ $routes = [
     '/assay-modules' => new PageRoute('views/assay-modules.php', 'Assay Modules'), // Assay Modules List
     '/users' => new PageRoute('views/users.php', 'Users', true, ADMINISTRATIVE_CLINICIAN), // User config
     '/qc-policy' => new PageRoute('views/qc-policy.php', 'Quality Control Policy'), // QC Policy config
-    '/lots' => new PageRoute('views/lots.php', 'Lots'), // Versions & About
+    '/lots' => new PageRoute('views/lots.php', 'Lots'), // Lots Management
+    '/lots-qc-results' => new PageRoute('views/lots-qc-results.php', 'Lots QC Results'), // Lots QC results
     '/login' => new PageRoute('auth/login.php', 'Login', false, GUEST), // Login page
     '/blocks' => new PageRoute('views/objects.php', 'Demo', true), // Demo blocks
-    '/changelog' => new PageRoute('views/changelog.php', 'Changelog', true), // About this website
-    '/backup' => new PageRoute('views/backup.php', 'Backup/Delete', true, ADMINISTRATIVE_CLINICIAN), // About this website
-    '/about' => new PageRoute('views/about.php', 'About', true),
+    '/changelog' => new PageRoute('views/changelog.php', 'Changelog', true), // Changelog for version updates
+    '/backup' => new PageRoute('views/backup.php', 'Backup/Delete', true, ADMINISTRATIVE_CLINICIAN), // Backup results
+    '/about' => new PageRoute('views/about.php', 'About', true), // About this website
 ];
 
 // Define "settings" routes

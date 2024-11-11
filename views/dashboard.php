@@ -137,17 +137,23 @@ include_once BASE_DIR . "/utils/AgeGroup.php";
             <tbody>
                 <?php foreach($resultItems as $result) : ?>
                     <?php // We need to parse the result sensibly
-                        $resultInfo = parseResult($result["result"]);
+                        $resultInfo = sanitiseResult($result["result"]);
                     ;?>
                     <tr id="result<?= $result['result_id'];?>" class="result">
                         <td><?= (new DateTime($result['testcompletetimestamp']))->format($hospitalInfoArray['date_format']);?></td>
-                        <td><?= $result['firstName'];?> <?= $result['lastName'];?></td>
+                        <td>
+                            <?php if($result['firstName'] || $result['lastName']) : ?>
+                                <?= $result['firstName'];?> <?= $result['lastName'];?>
+                            <?php else : ?>
+                                Unknown
+                            <?php endif;?>
+                        </td>
                         <td class="hidden xs:table-cell"><?= $result['product'];?></td>
-                        <td class="text-elipses hidden sm:table-cell <?= $resultInfo["posCount"] > 0 ? "active" : "";?>"><?= $resultInfo["posCount"] > 0 ? "Positive (" . $resultInfo["posCount"] . " target)" : "Negative";?></td>
+                        <td class="text-elipses hidden sm:table-cell <?= $resultInfo["summary"] == 'Positive' ? "active" : (!$resultInfol['summary'] || $resultInfo['summary'] == 'Invalid' ? 'invalid' : "");?>"><?= $resultInfo['summary'] ?? "Invalid";?></td>
                         <td>
                             <div class="h-full flex items-center gap-1.5 justify-end">
                                 <!-- Statuses and chevron -->
-                                <?php if($resultInfo["posCount"] > 0) : ?>
+                                <?php if($resultInfo && $resultInfo["summary"] == 'Positive') : ?>
                                 <button class="flex items-center tooltip" title="Positive Result">
                                     <svg class="h-5 fill-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
                                         <path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"/>
@@ -234,8 +240,9 @@ foreach($resultItems as $result) : ?>
     } catch (Exception $e) {
         $dob = "Undefined";
     }
+
     // Result info
-    $resultInfo = parseResult($result['result']);
+    $resultInfo = sanitiseResult($result['result']);
 
     // Get the result information
     ?>
@@ -248,7 +255,7 @@ foreach($resultItems as $result) : ?>
                     </svg>
                 </button>
                 <h2 class="flex text-center items-center gap-2.5 sm:text-start mx-12 sm:mx-0 sm:mr-12 mb-2.5 sm:mb-1">
-                    <?= (new DateTime($result['testcompletetimestamp']))->format($hospitalInfoArray['date_format']);?>: <?= $result['firstName'];?> <?= $result['lastName'];?>
+                    <?= convertTimestamp($result['testcompletetimestamp'], true);?>: <?= $result['firstName'];?> <?= $result['lastName'];?>
                     <?php // Determine the symbol (if any) to display
                     $limsStatus = false;
                     $limsStatusMessage = "Not sent to LIMS";
@@ -272,7 +279,12 @@ foreach($resultItems as $result) : ?>
                 <div class="bg-gradient-to-r from-transparent via-grey/75 sm:from-grey/75 to-transparent w-full mb-3 pb-0.5 rounded-full"></div>
 
                 <div class="flex result-details flex-wrap gap-2 items-stretch mb-2">
-                    <?php if(gettype($resultInfo["result"]) === "boolean") : ?>
+                    <?php if(!$resultInfo || $resultInfo['result'] === null) : ?>
+                        <div class="result-info invalid">
+                            <h4><?= $result["product"];?></h4>
+                            <p>Invalid</p>
+                        </div>
+                    <?php elseif(gettype($resultInfo["result"]) === "boolean") : ?>
                         <div class="result-info <?= $resultInfo["result"] ? "pos" : "";?>">
                             <h4><?= $result["product"];?></h4>
                             <p><?= $resultInfo["result"] ? "Positive" : "Negative";?></p>

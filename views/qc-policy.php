@@ -7,7 +7,7 @@ $hospitalInfo = systemInfo();
 $settings = array_column($hospitalInfo, 'value', 'name');
 
 // Hospital Info Settings Subset
-$qcKeys = ['qc_policy', 'qc_positive_requirements', 'qc_negative_requirements', 'qc_enable_independence'];
+$qcKeys = ['qc_policy', 'qc_positive_requirements', 'qc_negative_requirements'];
 $qcSettings = array_intersect_key($settings, array_flip($qcKeys));
 ?>
 
@@ -28,20 +28,20 @@ $qcSettings = array_intersect_key($settings, array_flip($qcKeys));
         </div>
     </div>
     <p class="cain-grid-content"><?= ucfirst($qcSettings['qc_policy']);?></p>
-    <div class="cain-grid-item">
+    <div class="<?= $qcSettings['qc_policy'] == 0 ? "disabled" : "";?> cain-grid-item">
         <div class="grid-title">
             <h4>Successful Positive Tests:</h4>
             <p>How many successful positive tests must be carried out before QC is passed.</p>
         </div>
     </div>
-    <p class="cain-grid-content"><?= ucfirst($qcSettings['qc_positive_requirements']);?></p>
-    <div class="cain-grid-item">
+    <p class="<?= $qcSettings['qc_policy'] == 0 ? "disabled" : "";?> cain-grid-content"><?= ucfirst($qcSettings['qc_positive_requirements']);?></p>
+    <div class="<?= $qcSettings['qc_policy'] == 0 ? "disabled" : "";?> cain-grid-item">
         <div class="grid-title">
             <h4>Successful Negative Tests:</h4>
             <p>How many successful negative tests must be carried out before QC is passed.</p>
         </div>
     </div>
-    <p class="cain-grid-content"><?= ucfirst($qcSettings['qc_negative_requirements']);?></p>
+    <p class="<?= $qcSettings['qc_policy'] == 0 ? "disabled" : "";?> cain-grid-content"><?= ucfirst($qcSettings['qc_negative_requirements']);?></p>
 </div>
 
 <?php if($currentUser['user_type'] >= ADMINISTRATIVE_CLINICIAN) : ?>

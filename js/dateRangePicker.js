@@ -91,6 +91,9 @@ document.addEventListener('DOMContentLoaded', () => {
         },
     };
 
-      const calendarInput = new VanillaCalendar('#dateTimePicker', options2);
-      calendarInput.init();
+    // If there is an element with dateTimePicker, load this.
+    if(document.querySelector('#dateTimePicker')) {
+        const calendarInput = new VanillaCalendar('#dateTimePicker', options2);
+        calendarInput.init();
+    }
 });

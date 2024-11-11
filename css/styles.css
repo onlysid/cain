@@ -892,11 +892,15 @@ body.show-menu #contentWrapper:not(.settings-wrapper) {
     @apply bg-gradient-to-r from-red-800 to-red-500;
 }
 
+.result-modal .result-info.invalid {
+    @apply bg-gradient-to-r from-gray-800 to-gray-500;
+}
+
 .lot-modal .lot-info.pos {
     @apply bg-gradient-to-r from-green-800 to-green-500;
 }
 
-.result-modal .result-info.pos h4, .result-modal .result-info.pos p, .lot-modal .lot-info.pos h4, .lot-modal .lot-info.pos p, .lot-modal .lot-info.neg h4, .lot-modal .lot-info.neg p {
+.result-modal .result-info.pos h4, .result-modal .result-info.pos p, .result-modal .result-info.invalid h4, .result-modal .result-info.invalid p, .lot-modal .lot-info.pos h4, .lot-modal .lot-info.pos p, .lot-modal .lot-info.neg h4, .lot-modal .lot-info.neg p {
     @apply text-white;
 }
 
@@ -1124,6 +1128,10 @@ a.log-link.active {
 
 .cain-grid-content {
     @apply bg-white shadow-white/30 shadow-lg rounded-r-lg p-4 text-center content-center font-extrabold;
+}
+
+.cain-grid-content.disabled, .cain-grid-item.disabled {
+    @apply grayscale cursor-not-allowed;
 }
 
 /* Assay Module Individual Page */

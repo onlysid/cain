@@ -525,7 +525,7 @@ function getResults($params, $itemsPerPage) {
 
 
     // Build the SQL query
-    $query = "SELECT *, r.id AS result_id FROM results r LEFT JOIN lots i ON i.lot_number = r.lotNumber ";
+    $query = "SELECT *, r.id AS result_id FROM results r LEFT JOIN lots i ON i.lot_number = r.lot_number ";
     $countQuery = "SELECT COUNT(*) FROM results ";
     if (!empty($searchConditions)) {
         $query .= "WHERE $searchConditions ";
@@ -927,16 +927,41 @@ function lotAutoQCCheck($lot) {
  * Add QC Result to DMS
  * qcParams contains 'lot' and 'result' where 'result' is the actual result that's been committed.
  */
-function newLotQC($lotID, $resultID) {
+function newLotQC($lotID, $resultID, $timestamp) {
     global $cainDB;
 
+    if(!$timestamp || $timestamp == "") {
+        // Set time to now
+        $timestamp = time();
+    }
+
+    // Convert timestamp strictly to int
+    $timestamp = strtotime($timestamp);
+
     // Add the result QC
-    if($cainDB->query("INSERT INTO lots_qc_results (`lot`, `test_result`) VALUES (?, ?);", [$lotID, $resultID])) {
+    if($cainDB->query("INSERT INTO lots_qc_results (`lot`, `test_result`, `timestamp`) VALUES (?, ?, ?);", [$lotID, $resultID, $timestamp])) {
         return true;
     }
 
     // Something went wrong
     return false;
+}
+
+// Get lot QC results
+function getLotQCResults($priority = false) {
+    global $cainDB;
+
+    $sql = "SELECT * FROM lots_qc_results as qc_results JOIN results ON qc_results.test_result = results.id JOIN lots on qc_results.lot = lots.id";
+
+    if($priority) {
+        $sql .= " WHERE qc_result IS NULL";
+    } else {
+        $sql .= " WHERE qc_result IS NOT NULL";
+    }
+
+    $sql .= " ORDER BY qc_results.timestamp DESC;";
+
+    return $cainDB->selectAll($sql);
 }
 
 // Turn a test result into an array of useful information about the test
@@ -947,24 +972,159 @@ function parseResult($result) {
     // Now we must fill it. Begin by exploding by comma
     $resultArray = explode(", ", $result);
 
-    // This function can handle if we are given multiplex results like SARS-CoV-2: 1Negative, RSV: 2Positive OR just simply positive and negative strings.
-    if(count($resultArray) >= 2) {
-        foreach($resultArray as $resultItem) {
+    // Handle multiplex results like "SARS-CoV-2: 1Negative, RSV: 2Positive" or simple "Positive" and "Negative" strings
+    if (count($resultArray) >= 2) {
+        foreach ($resultArray as $resultItem) {
             $resultKeyValue = explode(": ", $resultItem);
+
+            // If any part of the result is "Invalid", set the parsed result to invalid and return immediately
+            if (stripos($resultKeyValue[1], "Invalid") !== false) {
+                $parsedResult['posCount'] = null;
+                $parsedResult['result'] = null;
+                return $parsedResult;
+            }
+
             $resultValue = stripos($resultKeyValue[1], "Positive") !== false ? true : false;
             $parsedResult["result"][$resultKeyValue[0]] = $resultValue;
-            if($resultValue) {
+            if ($resultValue) {
                 $parsedResult["posCount"]++;
             }
         }
     } else {
+        // Handle simple result strings
+        if (stripos($result, "Invalid") !== false) {
+            $parsedResult['posCount'] = null;
+            $parsedResult['result'] = null;
+            return $parsedResult;
+        }
+
         $parsedResult["result"] = stripos($result, "Positive") !== false ? true : false;
-        if($parsedResult["result"]) {
+        if ($parsedResult["result"]) {
             $parsedResult["posCount"]++;
         }
     }
 
     return $parsedResult;
+}
+
+// Turn a SAMBA III test result into a SAMBA II test result and add a summary
+function sanitiseResult($result) {
+    // Define the return array
+    $ret = [
+        'result' => null,
+        'summary' => null,
+    ];
+
+    // Check if the result is in JSON format
+    if ($decodedResult = json_decode($result)) {
+        $ret = processJSONResults($decodedResult);
+    } else {
+        // Handle non-JSON format by parsing the result
+        $parsedResult = parseResult($result);
+
+        // If any part of the parsed result is invalid, set the summary to "Invalid" and return immediately
+        if ($parsedResult['result'] === null) {
+            $ret['summary'] = 'Invalid';
+            return $ret;
+        }
+
+        // Otherwise, assign the parsed result and determine the summary
+        $ret['result'] = $parsedResult['result'];
+
+        // Set summary based on positive count
+        if ($parsedResult['posCount'] > 0) {
+            $ret['summary'] = 'Positive';
+        } else {
+            $ret['summary'] = 'Negative';
+        }
+    }
+
+    return $ret;
+}
+
+function processJSONResults($results) {
+    $formattedResults = [];
+    $summary = 'Negative';
+    $hasPositiveControl = true;
+    $hasInvalidControlOrTarget = false;
+
+    // Process each result entry
+    foreach ($results as $result) {
+        $controlResult = $result->control->result;
+
+        // Check control results to determine if any are "Invalid" or "Negative"
+        if ($controlResult === 'Negative' || $controlResult === 'Invalid') {
+            $hasInvalidControlOrTarget = true; // Flag invalid control result
+            $summary = 'Invalid'; // Set summary to Invalid if any control is Negative or Invalid
+        }
+
+        if ($controlResult !== 'Positive') {
+            $hasPositiveControl = false;
+        }
+
+        // Process target results
+        foreach ($result->targetResults as $target) {
+            $targetName = str_replace(['-', ' '], '', ucwords(strtolower($target->name))); // Normalize target name
+            if($target->result === 'Invalid') {
+                $targetIsPositive = null;
+            } else {
+                $targetIsPositive = $target->result === 'Positive';
+            }
+
+            // Ensure a target is recorded as true if it was positive in any instance
+            if (!isset($formattedResults[$targetName]) || !$formattedResults[$targetName]) {
+                $formattedResults[$targetName] = $targetIsPositive;
+            }
+
+            // Set summary to Invalid if any target result is Invalid and break out of the loop early
+            if ($target->result === 'Invalid') {
+                $hasInvalidControlOrTarget = true;
+                $summary = 'Invalid';
+            } elseif ($target->result === 'Positive' && $summary !== 'Invalid') {
+                $summary = 'Positive';
+            }
+        }
+    }
+
+    // Finalize summary based on control results
+    if ($hasPositiveControl && !$hasInvalidControlOrTarget) {
+        if ($summary === 'Negative') {
+            $summary = 'Negative';
+        } elseif ($summary === 'Positive') {
+            $summary = 'Positive';
+        }
+    } else {
+        // If any controls or targets were "Invalid," summary is set to "Invalid"
+        $summary = 'Invalid';
+    }
+
+    return [
+        'result' => $formattedResults,
+        'summary' => $summary
+    ];
+}
+
+function resultStringify($result) {
+    $stringifiedResult = '';
+    $index = 1;
+
+    foreach ($result as $target => $isPositive) {
+        $targetName = str_replace(['-', ' '], '', ucwords(strtolower($target))); // Normalize the target name
+        if($isPositive === null) {
+            $status = 'Invalid';
+        } else {
+            $status = $isPositive ? 'Positive' : 'Negative';
+        }
+
+        // Append the formatted target and result status to the string
+        $stringifiedResult .= "{$targetName}: {$index}{$status}, ";
+        $index++;
+    }
+
+    // Remove trailing comma and space
+    $stringifiedResult = rtrim($stringifiedResult, ', ');
+
+    return $stringifiedResult;
 }
 
 /* Functions for logging */
@@ -1123,6 +1283,8 @@ function formatSize($size) {
 
 // Convert timestamps to their desired format
 function convertTimestamp($timestamp, $time = false) {
+    // Ensure that the timestamp is a UNIX timestamp
+    $timestamp = strtotime($timestamp);
     if($time) {
         return date("d/m/Y H:i", $timestamp);
     } else {

@@ -162,13 +162,19 @@ function runUpdates($version, $dbVersion) {
             $change[] = "ALTER TABLE results MODIFY flag int;";
             $change[] = "ALTER TABLE results MODIFY post_timestamp BIGINT;";
 
-            $lotsColumnExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'lotNumber';");
+            $lotsColumnExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'lot_number';");
             if (!empty($lotsColumnExists) && $lotsColumnExists['COUNT(*)'] == 0) {
                 // Ensure the column has the same data type as in the lots table
-                $change[] = "ALTER TABLE results ADD lotNumber varchar(100);";
+                $change[] = "ALTER TABLE results ADD lot_number varchar(100);";
 
                 // Add the foreign key
-                $change[] = "ALTER TABLE results ADD FOREIGN KEY (lotNumber) REFERENCES lots(lot_number);";
+                $change[] = "ALTER TABLE results ADD FOREIGN KEY (lot_number) REFERENCES lots(lot_number);";
+            }
+
+            $summaryColumnExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'summary';");
+            if (!empty($summaryColumnExists) && $summaryColumnExists['COUNT(*)'] == 0) {
+                // Ensure the column has the same data type as in the lots table
+                $change[] = "ALTER TABLE results ADD summary varchar(100);";
             }
         }
 
