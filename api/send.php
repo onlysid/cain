@@ -109,12 +109,12 @@ if(!$data) {
     exit;
 }
 
-// Log data to a text file
-$logFile = __DIR__ . '/../logs/send-log.txt'; // Specify the path to your log file
-$logData = print_r($data, true); // Format the data as a string
+// // Log data to a text file
+// $logFile = __DIR__ . '/../logs/send-log.txt'; // Specify the path to your log file
+// $logData = print_r($data, true); // Format the data as a string
 
-// Append data to the log file
-file_put_contents($logFile, $logData . "\n\n", FILE_APPEND);
+// // Append data to the log file
+// file_put_contents($logFile, $logData . "\n\n", FILE_APPEND);
 
 // We have data! Now we must clean it, add the result to the results table and make a CSV file. Separate what needs to go in the db and what needs to be a CSV.
 $errors = null;

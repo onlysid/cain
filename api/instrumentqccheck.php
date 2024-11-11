@@ -8,7 +8,7 @@ Codes:
 */
 
 // Get moduleSerialNumber from "sn" URL parameter (if we have no data, quit)
-if(!($sn = $_GET['sn'])) {
+if(!($sn = ($_GET['sn'] ?? null))) {
     // Throw error and stop processing things.
     echo(json_encode(["Error" => "No data available."]));
     exit;
