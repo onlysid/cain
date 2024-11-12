@@ -32,6 +32,7 @@ RewriteEngine On
 RewriteBase /
 
 # Skip rewriting for existing files and directories
+RewriteRule ^login\.php$ /login [R=301,L]
 RewriteCond %{REQUEST_FILENAME} -d [OR]
 RewriteCond %{REQUEST_FILENAME} -f
 RewriteRule ^ - [L]
