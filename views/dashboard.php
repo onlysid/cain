@@ -43,8 +43,7 @@ foreach ($filters as $key => $value) {
 $limsConnection = $settings['app_mode'] == 1 ? true : false;
 
 // We need to include age groups for our dropdown filter
-include_once BASE_DIR . "/utils/AgeGroup.php";
-?>
+include_once BASE_DIR . "/utils/AgeGroup.php";?>
 
 <script src="js/chartJs/dist/chart.umd.js"></script>
 <link href="/js/vanilla-calendar/build/vanilla-calendar.min.css" rel="stylesheet">

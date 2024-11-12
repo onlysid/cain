@@ -109,6 +109,66 @@ function runUpdates($version, $dbVersion) {
 
     // v3.0.0 - We jumped ahead a bit, believe it or not!
     if(compareVersions($dbVersion, "3.0.0")) {
+        // Firstly, we must go through and delete unused files
+        $filesToDelete = [
+            'CainMedical.gif',
+            'delete.php',
+            'error-log.php',
+            'error.php',
+            'list.php',
+            'login.php',
+            'lookup.php',
+            'operator.php',
+            'Patientresult.php',
+            'phpinfo.php',
+            'process.php',
+            'send.php',
+            'submit.php',
+            'update.php',
+            'verify.php'
+        ];
+
+        // Loop through the files and attempt to delete each one
+        foreach ($filesToDelete as $file) {
+            $filePath = BASE_DIR . DIRECTORY_SEPARATOR . $file;
+
+            // Check if the file exists
+            if (file_exists($filePath)) {
+                unlink($filePath);
+            }
+        }
+
+
+        // Function to recursively delete a directory and its contents
+        function deleteDirectory($dir) {
+            // Check if the directory exists
+            if (!is_dir($dir)) {
+                return;
+            }
+
+            // Get all files and directories within the directory
+            $files = array_diff(scandir($dir), array('.', '..')); // Exclude '.' and '..'
+
+            foreach ($files as $file) {
+                $filePath = $dir . DIRECTORY_SEPARATOR . $file;
+
+                // If it's a directory, recursively call deleteDirectory
+                if (is_dir($filePath)) {
+                    deleteDirectory($filePath); // Recursively delete subdirectory
+                } else {
+                    // If it's a file, delete it
+                    unlink($filePath);
+                }
+            }
+
+            // After deleting contents, remove the directory itself
+            rmdir($dir);
+        }
+
+        // Recursively delete the "include" directory and its contents
+        $includeDirectory = BASE_DIR . DIRECTORY_SEPARATOR . 'include';
+        deleteDirectory($includeDirectory);
+
         // We are going to get all the tables as we have many alterations to perform
         $result = $cainDB->conn->query("SHOW TABLES");
         foreach($result as $table) {

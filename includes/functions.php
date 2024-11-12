@@ -490,62 +490,64 @@ function getResults($params, $itemsPerPage) {
         }
     }
 
-    // Construct the WHERE clause for searching across all columns
+    // Initialize the base SQL queries
+    $query = "SELECT *, r.id AS result_id FROM results r LEFT JOIN lots i ON i.lot_number = r.lot_number ";
+    $countQuery = "SELECT COUNT(*) FROM results r LEFT JOIN lots i ON i.lot_number = r.lot_number ";
+
     $searchConditions = '';
     $queryParams = [];
+
     if ($searchFilter !== null) {
         $searchTerms = explode(" ", $searchFilter);
         $columns = ['firstName', 'lastName', 'hospitalId', 'nhsNumber', 'clinicId', 'operatorId', 'patientId', 'sampleId', 'trackingCode', 'patientLocation', 'result', 'product'];
 
-        $i = 0;
-        foreach($searchTerms as $filterString) {
-            $searchConditions .= "(";
-            $j = 0;
+        $termConditions = []; // Array to store each search term's condition group
+
+        foreach ($searchTerms as $index => $filterString) {
+            $columnConditions = []; // Array to store conditions for each column for this term
             foreach ($columns as $column) {
-                $searchConditions .= ($j != 0 ? "OR " : "") . "$column LIKE :filterString$i ";
-                $queryParams[':filterString' . $i] = '%' . str_replace(' ', '%', $filterString) . '%';
-                $j++;
+                $columnConditions[] = "$column LIKE :filterString{$index}_$column";
+                $queryParams[":filterString{$index}_$column"] = '%' . $filterString . '%';
             }
-            $searchConditions .= ") ";
-            $i++;
+            // Wrap each term's column conditions in parentheses and join them with OR
+            $termConditions[] = '(' . implode(' OR ', $columnConditions) . ')';
+        }
+
+        // Combine all term conditions with AND
+        $searchConditions .= implode(' AND ', $termConditions);
+    }
+
+    // Add any additional filter conditions from $filters
+    if (count($filters) > 0) {
+        foreach ($filters as $filter) {
+            if (!empty($searchConditions)) {
+                $searchConditions .= " AND ";
+            }
+            $searchConditions .= $filter;
         }
     }
 
-    // Add to the search conditions
-    if(count($filters) > 0) {
-        $i = 0;
-        foreach($filters as $filter) {
-            if($i != 0 || $searchFilter !== null) {
-                $searchConditions .= "AND ";
-            }
-            $searchConditions .= $filter . " ";
-            $i++;
-        }
-    }
-
-
-    // Build the SQL query
-    $query = "SELECT *, r.id AS result_id FROM results r LEFT JOIN lots i ON i.lot_number = r.lot_number ";
-    $countQuery = "SELECT COUNT(*) FROM results ";
+    // Append the WHERE clause to the queries if conditions exist
     if (!empty($searchConditions)) {
         $query .= "WHERE $searchConditions ";
         $countQuery .= "WHERE $searchConditions ";
     }
+
+    // Add the ORDER BY clause
     $query .= "ORDER BY $sortParam $sortDirection ";
 
     // Apply pagination
-    if($itemsPerPage) {
+    if ($itemsPerPage) {
         $query .= " LIMIT $itemsPerPage OFFSET $offset";
     }
 
-    // Get the results
+    // Execute the queries
     $results = $cainDB->selectAll($query, $queryParams);
-
-    // Get the count of all results
     $count = $cainDB->select($countQuery, $queryParams);
 
-    // Get the relevant results
+    // Return the results and count
     return ["results" => $results, "count" => $count['COUNT(*)']];
+
 }
 
 function getLots($params, $itemsPerPage) {
@@ -553,8 +555,6 @@ function getLots($params, $itemsPerPage) {
 
     // Get any query params
     $searchFilter = isset($params['s']) ? $params['s'] : null;
-    $sortDirection = isset($params['sd']) && ($params['sd'] != "" || $params['sd'] == "asc") ? "ASC" : "DESC";
-    $sortParam = isset($params['sp']) && $params['sp'] != "" ? $params['sp'] : "id";
     $pageNumber = isset($params['p']) ? $params['p'] : 1;
     $offset = ($pageNumber - 1) * $itemsPerPage;
 
@@ -563,43 +563,70 @@ function getLots($params, $itemsPerPage) {
     $queryParams = [];
     if ($searchFilter !== null) {
         $searchTerms = explode(" ", $searchFilter);
-        $columns = ['lot_number', 'production_year', 'expiration_year', 'expiration_month', 'assay_type', 'production_run', 'sub_lot', 'assay_sub_type', 'check_digit'];
+        $columns = ['lot_number'];
 
         $i = 0;
-        foreach($searchTerms as $filterString) {
+        foreach ($searchTerms as $filterString) {
             $searchConditions .= "AND (";
             $j = 0;
             foreach ($columns as $column) {
-                $searchConditions .= ($j != 0 ? "OR " : "") . "$column LIKE :filterString$i ";
+                $searchConditions .= ($j != 0 ? "OR " : "") . "lots.$column LIKE :filterString$i ";
                 $queryParams[':filterString' . $i] = '%' . str_replace(' ', '%', $filterString) . '%';
                 $j++;
             }
             $searchConditions .= ") ";
             $i++;
         }
-        // Remove the leading 'OR' from the first condition
         $searchConditions = ltrim($searchConditions, 'AND');
     }
 
-    // Build the SQL query
-    $query = "SELECT * FROM lots ";
+    // Build the SQL query with GROUP_CONCAT to aggregate results for each lot
+    $query = "
+        SELECT lots.*,
+               GROUP_CONCAT(results.result SEPARATOR '|||') AS results
+        FROM lots
+        LEFT JOIN lots_qc_results ON lots.id = lots_qc_results.lot AND lots_qc_results.qc_result = 1
+        LEFT JOIN results ON lots_qc_results.test_result = results.id
+    ";
     $countQuery = "SELECT COUNT(*) FROM lots ";
+
     if (!empty($searchConditions)) {
         $query .= "WHERE $searchConditions ";
         $countQuery .= "WHERE $searchConditions ";
     }
-    $query .= "ORDER BY $sortParam $sortDirection ";
 
-    // Apply pagination
-    $query .= " LIMIT $itemsPerPage OFFSET $offset";
+    $query .= "GROUP BY lots.id ";
+    $query .= "ORDER BY lots.last_updated DESC ";
+    $query .= "LIMIT $itemsPerPage OFFSET $offset";
 
-    // Get the lots
+    // Fetch lots with results
     $lots = $cainDB->selectAll($query, $queryParams);
+
+    // Apply parseResult function and count positives and negatives
+    foreach ($lots as &$lot) {
+        $positiveCount = 0;
+        $negativeCount = 0;
+
+        // Check if results are set and not empty
+        $results = isset($lot['results']) ? explode('|||', $lot['results']) : [];
+
+        foreach ($results as $result) {
+            $parsedResult = parseResult($result);
+            if ($parsedResult['result'] === true) {
+                $positiveCount++;
+            } elseif ($parsedResult['result'] === false) {
+                $negativeCount++;
+            }
+        }
+
+        // Add counts to each lot
+        $lot['positive_count'] = $positiveCount;
+        $lot['negative_count'] = $negativeCount;
+    }
 
     // Get the count of all lots
     $count = $cainDB->select($countQuery, $queryParams);
 
-    // Get the relevant results
     return ["lots" => $lots, "count" => $count['COUNT(*)']];
 }
 
@@ -880,15 +907,15 @@ function lotQCCheck($lot) {
         return true;
     }
 
-    // Check the lot for its QC pass flag
-    if($qcPass = $cainDB->select("SELECT qc_pass FROM lots WHERE id = ?;", [$lot])['qc_pass'] == 1) {
-        return true;
-    }
-
     // If the QC Policy is 1 (on), we must run an automatic QC check
     if($qcPolicy == 1 && lotAutoQCCheck($lot)) {
         // We should update the value of qc_pass to 1 and return that QC was passed
         $cainDB->query("UPDATE lots SET qc_pass = 1 WHERE id = ?;", [$lot]);
+        return true;
+    }
+
+    // Check the lot for its QC pass flag
+    if($qcPolicy == 2 && ($qcPass = $cainDB->select("SELECT qc_pass FROM lots WHERE id = ?;", [$lot])['qc_pass'] == 1)) {
         return true;
     }
 
@@ -935,6 +962,11 @@ function newLotQC($lotID, $resultID, $timestamp) {
         $timestamp = time();
     }
 
+    // If we don't have a resultID, we cannot add the QC result
+    if(!$resultID) {
+        return false;
+    }
+
     // Convert timestamp strictly to int
     $timestamp = strtotime($timestamp);
 
@@ -948,20 +980,47 @@ function newLotQC($lotID, $resultID, $timestamp) {
 }
 
 // Get lot QC results
-function getLotQCResults($priority = false) {
+function getLotQCResults($priority = false, $page = 1, $itemsPerPage = 10) {
     global $cainDB;
 
-    $sql = "SELECT * FROM lots_qc_results as qc_results JOIN results ON qc_results.test_result = results.id JOIN lots on qc_results.lot = lots.id";
+    // Calculate the offset for pagination
+    $offset = ($page - 1) * $itemsPerPage;
 
-    if($priority) {
-        $sql .= " WHERE qc_result IS NULL";
-    } else {
-        $sql .= " WHERE qc_result IS NOT NULL";
-    }
+    // Initialize the SQL query base
+    $sql = "SELECT
+        qc_results.*,
+        results.*,
+        lots.*,
+        users.*,
+        qc_results.id AS id,
+        results.id AS result_id,
+        lots.id AS lot_id,
+        users.id AS user_id
+    FROM
+        lots_qc_results AS qc_results
+    JOIN
+        results ON qc_results.test_result = results.id
+    LEFT JOIN
+        users ON qc_results.operator_id = users.id
+    JOIN
+        lots ON qc_results.lot = lots.id";
 
-    $sql .= " ORDER BY qc_results.timestamp DESC;";
+    // Add condition to ensure priority rows come first based on the value of qc_result
+    $sql .= " ORDER BY qc_results.qc_result IS NULL DESC, qc_results.timestamp DESC";
 
-    return $cainDB->selectAll($sql);
+    // Add LIMIT and OFFSET with string concatenation to ensure they are properly handled
+    $sql .= " LIMIT " . (int)$itemsPerPage . " OFFSET " . (int)$offset . ";";
+
+    // Execute the query and fetch the results
+    $results = $cainDB->selectAll($sql);
+
+    // Get the total count of all results for pagination purposes
+    $count = $cainDB->select("SELECT COUNT(*) as count FROM lots_qc_results")['count'];
+
+    return [
+        'results' => $results,
+        'count' => $count
+    ];
 }
 
 // Turn a test result into an array of useful information about the test
@@ -1020,10 +1079,11 @@ function sanitiseResult($result) {
         $ret = processJSONResults($decodedResult);
     } else {
         // Handle non-JSON format by parsing the result
-        $parsedResult = parseResult($result);
+        $parsedResult = parseResult($result) ?? null;
+
 
         // If any part of the parsed result is invalid, set the summary to "Invalid" and return immediately
-        if ($parsedResult['result'] === null) {
+        if (($parsedResult['result'] ?? null) === null) {
             $ret['summary'] = 'Invalid';
             return $ret;
         }
@@ -1285,12 +1345,19 @@ function formatSize($size) {
 function convertTimestamp($timestamp, $time = false) {
     // Ensure that the timestamp is a UNIX timestamp
     $timestamp = strtotime($timestamp);
-    if($time) {
+
+    // Check for invalid timestamps (false or 0)
+    if (!$timestamp) {
+        return "Unknown";
+    }
+
+    if ($time) {
         return date("d/m/Y H:i", $timestamp);
     } else {
         return date("d/m/Y", $timestamp);
     }
 }
+
 
 // Get the total size of the expired log files
 function getExpiredLogSize() {

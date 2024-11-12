@@ -71,6 +71,12 @@ class Process {
                 case('edit-instrument-qc'):
                     $this->editInstrumentQC();
                     break;
+                case('edit-lot-result'):
+                    $this->editLotQC();
+                    break;
+                case('edit-lot'):
+                    $this->editLot();
+                    break;
                 default:
                     // Silence. This post has not been accounted for.
                     break;
@@ -1171,6 +1177,52 @@ class Process {
         } catch (Exception $e) {
             Session::setNotice("Error: Something went wrong. Please contact an administrator.");
         }
+    }
+
+    function editLotQC() {
+        global $cainDB, $session;
+
+        // Get all the input values
+        $qcID = $_POST['id'];
+        $qcResult = $_POST['qcResult'];
+        $qcNotes = $_POST['qcNotes'] ?? null;
+        $currentUser = userInfo()['id'];
+
+        // Run all QC related queries
+        try {
+            // Update the QC Result record
+            $sql = "UPDATE lots_qc_results SET `qc_result` = ?, `reference` = ?, `operator_id` = ? WHERE `id` = ?;";
+
+            $cainDB->query($sql, [$qcResult, $qcNotes, $currentUser, $qcID]);
+
+            // Get the lot ID
+            $lot = $cainDB->select("SELECT lot FROM lots_qc_results WHERE id = ?;", [$qcID])['lot'];
+
+            // Now run QC check
+            $return = lotQCCheck($lot);
+
+            // Set notices
+            Session::setNotice("Successfully updated lot QC", 0);
+
+            if($return) {
+                Session::setNotice("Lot #$lot has now passed QC.", 0);
+            }
+        } catch (Exception $e) {
+            Session::setNotice("Error: Something went wrong. Please contact an administrator.");
+        }
+    }
+
+    function editLot() {
+        global $cainDB, $session;
+
+        // Get all the input values
+        $lot = $_POST['id'];
+        $qcResult = $_POST['qcResult'];
+        $deliveryDate = $_POST['deliveryDate'] ?? null;
+        $expirationDate = $_POST['expirationDate'] ?? null;
+        $currentUser = userInfo()['id'];
+
+        // TODO: Implement
     }
 }
 

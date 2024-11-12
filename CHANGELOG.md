@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.1.0] - 12/11/2024
+
+Large changes to results, QC tests, logging and general structure of application.
+
+### Changed
+
+-   Changelog specification coming in next release.
+
+&nbsp;
+
 ## [v3.0.1] - 12/09/2024
 
 Bug fixes, tests and API changes
@@ -14,6 +24,8 @@ Bug fixes, tests and API changes
 
 -   APIs are now case insensitive for backwards compatibility.
 -   /operator has been tested
+
+&nbsp;
 
 ## [v3.0.0] - 15/03/2024
 

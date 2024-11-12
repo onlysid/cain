@@ -884,15 +884,15 @@ body.show-menu #contentWrapper:not(.settings-wrapper) {
     @apply opacity-100;
 }
 
-.result-modal .result-info, .lot-modal .lot-info {
+.result-info, .lot-modal .lot-info {
     @apply basis-[10rem] grow flex flex-col p-4 rounded-md bg-white shadow-xl shadow-dark/30;
 }
 
-.result-modal .result-info.pos, .lot-modal .lot-info.neg {
+.result-info.pos, .lot-modal .lot-info.neg {
     @apply bg-gradient-to-r from-red-800 to-red-500;
 }
 
-.result-modal .result-info.invalid {
+.result-info.invalid {
     @apply bg-gradient-to-r from-gray-800 to-gray-500;
 }
 
@@ -900,8 +900,40 @@ body.show-menu #contentWrapper:not(.settings-wrapper) {
     @apply bg-gradient-to-r from-green-800 to-green-500;
 }
 
-.result-modal .result-info.pos h4, .result-modal .result-info.pos p, .result-modal .result-info.invalid h4, .result-modal .result-info.invalid p, .lot-modal .lot-info.pos h4, .lot-modal .lot-info.pos p, .lot-modal .lot-info.neg h4, .lot-modal .lot-info.neg p {
+.result-info.pos h4, .result-info.pos p, .result-info.invalid h4, .result-info.invalid p, .lot-modal .lot-info.pos h4, .lot-modal .lot-info.pos p, .lot-modal .lot-info.neg h4, .lot-modal .lot-info.neg p {
     @apply text-white;
+}
+
+.pass .qc-result {
+    @apply text-green-500;
+}
+
+.fail .qc-result {
+    @apply text-red-500;
+}
+
+.unverified .qc-result {
+    @apply text-amber-500;
+}
+
+.qc-result {
+    @apply font-black;
+}
+
+.pass .qc-result-wrapper {
+    @apply to-green-200;
+}
+
+.fail .qc-result-wrapper {
+    @apply to-red-200;
+}
+
+.unverified .qc-result-wrapper {
+    @apply to-gray-200;
+}
+
+.qc-result-wrapper {
+    @apply w-full p-4 rounded-lg bg-gradient-to-r from-white shadow-sm;
 }
 
 section {
@@ -1216,7 +1248,7 @@ a.log-link.active {
 }
 
 .qc-result {
-    @apply font-black !uppercase;
+    @apply font-black;
 }
 
 .qc-result.passed {

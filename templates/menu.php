@@ -25,7 +25,7 @@ $menuItems = [
 
 // Only add the lots-qc-results menu item if qc_policy is not 0
 if ($qcPolicy !== "0") {
-    $menuItems[] = new MenuItem($routes['/lots-qc-results']);
+    $menuItems[] = new MenuItem($routes['/qc-results']);
 }
 
 // Add the remaining menu items
@@ -46,14 +46,14 @@ $menuItems[] = new MenuItem($routes['/settings'], "Settings");
         $linkMatch = false;
 
         // Now, check various scenarios
-        if($targetRoute !== "/") {
-            if(str_contains($currentPage, $targetRoute)) {
+        if ($targetRoute !== "/") {
+            if (strpos($currentPage, $targetRoute) !== false) {
                 $linkMatch = true;
             } else {
                 $linkMatch = false;
             }
         } else {
-            if($currentPage === $targetRoute && $currentPage === "/") {
+            if ($currentPage === $targetRoute && $currentPage === "/") {
                 $linkMatch = true;
             }
         }
