@@ -558,6 +558,9 @@ function getLots($params, $itemsPerPage) {
     $pageNumber = isset($params['p']) ? $params['p'] : 1;
     $offset = ($pageNumber - 1) * $itemsPerPage;
 
+    // Also get the priority toggle
+    $priority = isset($params['priority']) && $params['priority'] === 'on';
+
     // Construct the WHERE clause for searching across all columns
     $searchConditions = '';
     $queryParams = [];
@@ -578,6 +581,11 @@ function getLots($params, $itemsPerPage) {
             $i++;
         }
         $searchConditions = ltrim($searchConditions, 'AND');
+    }
+
+    // Add priority condition if necessary
+    if ($priority) {
+        $searchConditions .= ($searchConditions ? " AND " : "") . "lots.qc_pass = 0 ";
     }
 
     // Build the SQL query with GROUP_CONCAT to aggregate results for each lot
@@ -908,14 +916,23 @@ function lotQCCheck($lot) {
     }
 
     // If the QC Policy is 1 (on), we must run an automatic QC check
-    if($qcPolicy == 1 && lotAutoQCCheck($lot)) {
-        // We should update the value of qc_pass to 1 and return that QC was passed
-        $cainDB->query("UPDATE lots SET qc_pass = 1 WHERE id = ?;", [$lot]);
-        return true;
+    if($qcPolicy == 1) {
+        // Firstly, if we have a lot and it has an expiration date, check if it's expired.
+        if($expirationDate = $cainDB->select("SELECT * FROM lots WHERE id = ?;", [$lot])['expiration_date']) {
+            if(checkExpiration($expirationDate)) {
+                return false;
+            }
+        }
+
+        if(lotAutoQCCheck($lot)) {
+            // We should update the value of qc_pass to 1 and return that QC was passed
+            $cainDB->query("UPDATE lots SET qc_pass = 1 WHERE id = ?;", [$lot]);
+            return true;
+        }
     }
 
     // Check the lot for its QC pass flag
-    if($qcPolicy == 2 && ($qcPass = $cainDB->select("SELECT qc_pass FROM lots WHERE id = ?;", [$lot])['qc_pass'] == 1)) {
+    if(($qcPolicy == 2 || $qcPolicy == 1) && ($qcPass = $cainDB->select("SELECT qc_pass FROM lots WHERE id = ?;", [$lot])['qc_pass'] == 1)) {
         return true;
     }
 
@@ -1390,4 +1407,20 @@ function getExpiredLogSize() {
     }
 
     return $totalGzSize;
+}
+
+// Function to check expiration of cartridge
+function checkExpiration($timestamp) {
+    // Convert the given timestamp to a date (without time)
+    $expirationDate = date('Y-m-d', strtotime($timestamp));
+
+    // Get today's date
+    $currentDate = date('Y-m-d');
+
+    // Compare dates
+    if ($currentDate > $expirationDate) {
+        return true; // Expired
+    } else {
+        return false; // Not expired
+    }
 }

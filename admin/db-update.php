@@ -454,6 +454,8 @@ function runUpdates($version, $dbVersion) {
         }
         $change = [];
 
+        // TODO: Add some default instrument QC test types
+
         // Add Instrument QC Results
         $instrumentQCResultsTableExists = $cainDB->select("SHOW TABLES LIKE 'instrument_qc_results';");
         if (!$instrumentQCResultsTableExists) {
@@ -494,23 +496,25 @@ function runUpdates($version, $dbVersion) {
             $change[] = "ALTER TABLE results DROP COLUMN sender;";
         }
 
+        // Whilst we no longer need many of the columns in the results table, we are keeping them for reasons of spec fluctuations and indecisiveness.
+
         // No longer need sequenceNumber
-        $sequenceNumberFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'sequenceNumber';");
-        if($sequenceNumberFieldExists['COUNT(*)']) {
-            $change[] = "ALTER TABLE results DROP COLUMN sequenceNumber;";
-        }
+        // $sequenceNumberFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'sequenceNumber';");
+        // if($sequenceNumberFieldExists['COUNT(*)']) {
+        //     $change[] = "ALTER TABLE results DROP COLUMN sequenceNumber;";
+        // }
 
         // No longer need assayStepNumber
-        $assayStepNumberFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'assayStepNumber';");
-        if($assayStepNumberFieldExists['COUNT(*)']) {
-            $change[] = "ALTER TABLE results DROP COLUMN assayStepNumber;";
-        }
+        // $assayStepNumberFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'assayStepNumber';");
+        // if($assayStepNumberFieldExists['COUNT(*)']) {
+        //     $change[] = "ALTER TABLE results DROP COLUMN assayStepNumber;";
+        // }
 
         // No longer need cameraReadings
-        $cameraReadingsFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'cameraReadings';");
-        if($cameraReadingsFieldExists['COUNT(*)']) {
-            $change[] = "ALTER TABLE results DROP COLUMN cameraReadings;";
-        }
+        // $cameraReadingsFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'cameraReadings';");
+        // if($cameraReadingsFieldExists['COUNT(*)']) {
+        //     $change[] = "ALTER TABLE results DROP COLUMN cameraReadings;";
+        // }
 
         // Add assayType column
         $assayTypeColumnExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'assayType';");

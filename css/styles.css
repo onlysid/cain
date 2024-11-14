@@ -1284,6 +1284,23 @@ a.log-link.active {
     @apply !bg-blue-200 !text-dark;
 }
 
+/* Lots-specific styling */
+tr.expired {
+    @apply bg-red-200/75;
+}
+
+.lot-modal.expired {
+    @apply border-red-500 border-2;
+}
+
+tr.expired .expiration {
+    @apply text-red-500;
+}
+
+.lot-modal.expired .expiration {
+    @apply border-red-500 bg-red-100;
+}
+
 /* Loader */
 .loadingspinner {
     --square: 26px;

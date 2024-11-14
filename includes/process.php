@@ -1217,12 +1217,23 @@ class Process {
 
         // Get all the input values
         $lot = $_POST['id'];
-        $qcResult = $_POST['qcResult'];
-        $deliveryDate = $_POST['deliveryDate'] ?? null;
-        $expirationDate = $_POST['expirationDate'] ?? null;
+        $qcResult = $_POST['qcResult'] ?? 0;
+        $deliveryDate = $_POST['delivery'] ?? null;
+        $expirationDate = $_POST['expiration'] ?? null;
         $currentUser = userInfo()['id'];
 
-        // TODO: Implement
+        // Update the lot
+        $time = Date('Y-m-y H:i:s');
+
+        $sql = "UPDATE lots SET delivery_date = ?, expiration_date = ?, qc_pass = ?, last_updated = ? WHERE id = ?;";
+
+        try {
+            $cainDB->query($sql, [$deliveryDate, $expirationDate, $qcResult, $time, $lot]);
+
+            Session::setNotice("Successfully updated lot #$lot", 0);
+        } catch(Exception $e) {
+            Session::setNotice("Error: Something went wrong. Please contact an administrator.");
+        }
     }
 }
 

@@ -10,9 +10,33 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 Large changes to results, QC tests, logging and general structure of application.
 
+### Added
+
+-   Lots page
+-   Lots QC page
+-   Assay module individual pages
+-   Assay module QC type creation
+-   Logging system framework (actual logging yet to come)
+
 ### Changed
 
--   Changelog specification coming in next release.
+-   Results can now be invalid based on controls
+-   Results API now accepts JSON format
+-   Results now support more complex multiplex tests
+-   Results now accept QC tests
+-   Instruments now have individual pages
+-   Instruments can now be locked
+-   Instruments now have loggable QC tests
+-   Instrument QC tests can now be added from the settings page
+-   Lots can now be viewed based on QC status
+-   Lots can now expire
+-   Lots can have their expiration and delivery dates altered
+-   Lots QC results can now be viewed and verified IF the QC policy allows for this
+-   API has been updated to support Revision 6
+
+### Fixed
+
+-   APIs which depend on LIMS no longer take time to process if the system knows LIMS is unavailable.
 
 &nbsp;
 

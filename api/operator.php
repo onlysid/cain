@@ -61,11 +61,6 @@ try {
         // If the operator does not exist, check LIMS and create the operator locally if need be
         if(!$operatorExists) {
             $failureMessage = json_encode(["status" => 42, "auth" => false, "res" => 1, "message" => "This operator does not exist."]);
-            // Firstly, check if we're connected to lims
-            if(!limsConnectivity()) {
-                echo $failureMessage;
-                return;
-            }
             // If we have a successful result in the auth value, then LIMS has found the operator. Otherwise, no operator exists.
             $limsResponse = limsRequest(["operatorId" => $operatorId], 40, 42);
             if(isset($limsResponse['operatorResult']) ? $limsResponse['operatorResult'] == 'true' : false) {

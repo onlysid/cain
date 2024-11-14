@@ -429,3 +429,12 @@ if(userTimeoutCheckbox && userTimeoutInput && userTimeoutAmount) {
         }
     });
 }
+
+// Within the lots page, if the priority box is checked, submit the parent form
+let priorityBox = document.getElementById('priority');
+if(priority) {
+    priority.addEventListener('change', () => {
+        // Submit the parent form
+        document.getElementById('lotsFilterForm').submit();
+    })
+}

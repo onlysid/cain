@@ -42,43 +42,43 @@ function limsRequest($data, $statusCode, $confirmationCode) {
         try {
             // Start a transaction to ensure data consistency across tables
             $cainDB->beginTransaction();
-    
+
             // Insert the process into the process queue
             $cainDB->query("INSERT INTO process_queue (status) VALUES (:statusCode)", [":statusCode" => $statusCode]);
-    
+
             // Get the last inserted process ID
             $processId = $cainDB->conn->lastInsertId();
-    
+
             // Prepare the SQL query template
             $query = "INSERT INTO process_data (process_id, `key`, value) VALUES ";
-    
+
             // Initialize an array to hold the query placeholders and parameter values
             $params = [];
             $values = [];
-    
+
             // Iterate over each key-value pair in the data object
             foreach ($data as $key => $value) {
                 // Add the placeholders for the current key-value pair to the query
                 $query .= "(?, ?, ?), ";
-                
+
                 // Add the parameters for the current key-value pair to the array
                 $params[] = $processId; // process_id
                 $params[] = $key; // key
                 $params[] = $value; // value
             }
-    
+
             // Remove the trailing comma and space from the query
             $query = rtrim($query, ', ');
-    
+
             // Execute the query
             $cainDB->query($query, $params);
-    
+
             // Commit the transaction
             $cainDB->commit();
-    
+
             // Call a separate function to handle polling and status check
             return pollProcessStatus($processId, $confirmationCode);
-    
+
         } catch(PDOException $e) {
             // Rollback the transaction on error
             $cainDB->rollBack();
@@ -92,7 +92,13 @@ function limsRequest($data, $statusCode, $confirmationCode) {
 // Function to poll process status and handle deletion
 function pollProcessStatus($processId, $confirmationCode) {
     global $cainDB;
-    
+
+    // Firstly, check if we're connected to lims
+    if(!limsConnectivity()) {
+        echo $failureMessage;
+        return false;
+    }
+
     // Poll the database for the status change (timeout according to the LIMS Timeout settings)
     $startTime = time();
     $response = [];
@@ -103,7 +109,7 @@ function pollProcessStatus($processId, $confirmationCode) {
 
         // If status is 'pass' or 'fail', return the status
         if ($status && ($status['status'] === strval($confirmationCode))) {
-            // Check if operator ID is accepted
+            // Return the value for the process
             $query = $cainDB->selectAll("SELECT `key`, `value` FROM process_data WHERE process_id = ?", [$processId]);
 
             foreach($query as $item) {

@@ -3,6 +3,8 @@
 // Do we have any filters?
 $filters = $_GET;
 $page = $filters['p'] ?? 1;
+$priority = $filters['priority'] ?? 'off';
+
 $itemsPerPage = $filters['ipp'] ?? 10;
 
 // Get all the data
@@ -61,7 +63,7 @@ foreach($hospitalInfo as $setting) {
     <p>View lots and their details and verify QC statuses. (TODO: Adjustment of these values still isn't implemented.)</p>
 </section>
 
-<form class="w-full sm:w-auto">
+<form class="w-full sm:w-auto" id="lotsFilterForm">
     <div class="form-fields !gap-0">
         <div class="field">
             <div class="input-wrapper !py-1 !pr-1">
@@ -73,6 +75,15 @@ foreach($hospitalInfo as $setting) {
                 </button>
             </div>
         </div>
+        <label for="priority" class="tooltip !flex field ml-2 gap-2 border border-light !flex-row toggle-field pr-2 pl-4 py-2 rounded-full bg-white h-full" title="View lots with unverified QC only.">
+            <div class="flex flex-col w-full">
+                <div class="shrink">Unverified</div>
+            </div>
+            <div class="checkbox-wrapper">
+                <input class="tgl" name="priority" id="priority" type="checkbox" <?= ($priority == 'on') ? "checked" : "";?>>
+                <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="priority"><span></span></label>
+            </div>
+        </label>
         <?php if($filters) : ?>
             <a href="<?= strtok($currentURL, '?');?>" id="removeFilter" class="p-2 transition-all duration-500 hover:scale-110 hover:opacity-75 tooltip" title="Clear Filters">
                 <svg class="h-7 fill-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
@@ -84,7 +95,6 @@ foreach($hospitalInfo as $setting) {
 </form>
 
 <?php if($totalLotCount) : ?>
-    <!-- First we show all priority QC results -->
     <table id="priorityList">
         <thead>
             <th>Lot</th>
@@ -105,11 +115,18 @@ foreach($hospitalInfo as $setting) {
                     $qcResult = 'Pass';
                 } elseif($lot['qc_pass'] === '2') {
                     $qcResult = 'Fail';
+                }
+
+                // Check expiration date
+                if($lot['expiration_date']) {
+                    $expired = checkExpiration($lot['expiration_date']);
+                } else {
+                    $expired = false;
                 }?>
-                <tr class="lot <?= $qcResult;?>" data-modal-open="<?= $lot['id'];?>Modal">
+                <tr class="lot <?= $qcResult;?><?= $expired ? ' expired' : '';?>" data-modal-open="<?= $lot['id'];?>Modal">
                     <td><?= $lot['lot_number'];?></td>
                     <td><?= convertTimestamp($lot['last_updated'], true);?></td>
-                    <td class="font-black"><?= convertTimestamp($lot['expiration_date']);?></td>
+                    <td class="font-black expiration"><?= convertTimestamp($lot['expiration_date']);?></td>
                     <?php if($qcPolicy) : ?>
                         <td class="font-black <?= $qcResult == 'Fail' ? 'text-red-500' : '';?><?= $qcResult == 'Unverified' ? 'text-amber-500' : '';?><?= $qcResult == 'Pass' ? 'text-green-500' : '';?>">
                             <?= $qcResult;?>
@@ -177,14 +194,20 @@ foreach($hospitalInfo as $setting) {
                 $qcResult = 'Pass';
             } elseif($lot['qc_pass'] === '2') {
                 $qcResult = 'Fail';
+            }
+            // Check expiration date
+            if($lot['expiration_date']) {
+                $expired = checkExpiration($lot['expiration_date']);
+            } else {
+                $expired = false;
             }?>
-            <div id="<?= $lot['id'];?>Modal" class="generic-modal lot-modal <?= $qcResult;?>">
+            <div id="<?= $lot['id'];?>Modal" class="generic-modal lot-modal <?= $expired ? 'expired' : '';?> <?= $qcResult;?>">
                 <div class="close-modal" data-modal-close>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                         <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/>
                     </svg>
                 </div>
-                <h2>QC Result #<?= $lot['id'];?></h2>
+                <h2>Lot #<?= $lot['id'];?><?= $expired ? " (Expired)" : "";?></h2>
                 <hr>
                 <div class="flex flex-wrap items-center gap-x-5">
                     <p>Last Updated: <span class="font-black"><?= convertTimestamp($lot['last_updated'], true);?></span></p>
@@ -199,10 +222,12 @@ foreach($hospitalInfo as $setting) {
                         <p>Assay Sub Type: <span class="font-black"><?= $lot['assay_sub_type'];?></span></p>
                     <?php endif;?>
                 </div>
-                <hr>
-                <div class="qc-result-wrapper">
-                    <p>Result: <span class="qc-result"><?= strtoupper($qcResult);?></span></p>
-                </div>
+                <?php if($qcPolicy) : ?>
+                    <hr>
+                    <div class="qc-result-wrapper">
+                        <p>Result: <span class="qc-result"><?= strtoupper($qcResult);?></span></p>
+                    </div>
+                <?php endif;?>
                 <hr>
                 <form action="/process" method="POST">
                     <input type="hidden" name="action" value="edit-lot">
@@ -212,9 +237,9 @@ foreach($hospitalInfo as $setting) {
                     <?php if($qcPolicy === '2') : ?>
                         <div class="form-fields">
                             <div class="field">
-                                <label>QC Result</label>
+                                <label for="qcResult<?= $lot['id'];?>">QC Result</label>
                                 <div class="input-wrapper select-wrapper">
-                                    <select required name="qcResult">
+                                    <select id="qcResult<?= $lot['id'];?>" required name="qcResult">
                                         <option <?= $lot['qc_pass'] === '0' ? 'selected' : '';?> disabled value="">Please select</option>
                                         <option <?= $lot['qc_pass'] === '2' ? 'selected' : '';?> value="2">Fail</option>
                                         <option <?= $lot['qc_pass'] === '1' ? 'selected' : '';?> value="1">Pass</option>
@@ -225,21 +250,21 @@ foreach($hospitalInfo as $setting) {
                     <?php endif;?>
                     <div class="form-fields">
                         <div class="field">
-                            <label for="deliveryDate">Select date/time of test</label>
+                            <label for="deliveryDate<?= $lot['id'];?>">Delivery Date</label>
                             <div class="input-wrapper">
                                 <svg class="cursor-pointer" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
                                     <path d="M128 0c17.7 0 32 14.3 32 32V64H288V32c0-17.7 14.3-32 32-32s32 14.3 32 32V64h48c26.5 0 48 21.5 48 48v48H0V112C0 85.5 21.5 64 48 64H96V32c0-17.7 14.3-32 32-32zM0 192H448V464c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V192zm64 80v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H80c-8.8 0-16 7.2-16 16zm128 0v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H208c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H336zM64 400v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H80c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H208zm112 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H336c-8.8 0-16 7.2-16 16z"/>
                                 </svg>
-                                <input id="deliveryDate" name="delivery" class="date-picker" placeholder="Date of Lot Delivery" type="text" readonly/>
+                                <input id="deliveryDate<?= $lot['id'];?>" name="delivery" class="date-picker" placeholder="Date of Lot Delivery" type="text" value="<?= $lot['delivery_date'] ? Date('Y-m-d', strtotime($lot['delivery_date'])) : '';?>" readonly/>
                             </div>
                         </div>
                         <div class="field">
-                            <label for="expirationDate">Select date/time of test</label>
-                            <div class="input-wrapper">
+                            <label for="expirationDate<?= $lot['id'];?>">Expiration Date</label>
+                            <div class="input-wrapper expiration">
                                 <svg class="cursor-pointer" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
                                     <path d="M128 0c17.7 0 32 14.3 32 32V64H288V32c0-17.7 14.3-32 32-32s32 14.3 32 32V64h48c26.5 0 48 21.5 48 48v48H0V112C0 85.5 21.5 64 48 64H96V32c0-17.7 14.3-32 32-32zM0 192H448V464c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V192zm64 80v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H80c-8.8 0-16 7.2-16 16zm128 0v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H208c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H336zM64 400v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H80c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H208zm112 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H336c-8.8 0-16 7.2-16 16z"/>
                                 </svg>
-                                <input id="expirationDate" name="expiration" class="date-picker" placeholder="Expiration Date" type="text" readonly/>
+                                <input id="expirationDate<?= $lot['id'];?>" name="expiration" class="date-picker" placeholder="Expiration Date" type="text" value="<?= $lot['expiration_date'] ? Date('Y-m-d', strtotime($lot['expiration_date'])) : '';?>" readonly/>
                             </div>
                         </div>
                     </div>
