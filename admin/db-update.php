@@ -225,7 +225,7 @@ function runUpdates($version, $dbVersion) {
             $lotsColumnExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'lot_number';");
             if (!empty($lotsColumnExists) && $lotsColumnExists['COUNT(*)'] == 0) {
                 // Ensure the column has the same data type as in the lots table
-                $change[] = "ALTER TABLE results ADD lot_number varchar(100);";
+                $cainDB->query("ALTER TABLE results ADD lot_number varchar(100);");
 
                 // Add the foreign key
                 $change[] = "ALTER TABLE results ADD FOREIGN KEY (lot_number) REFERENCES lots(lot_number);";
