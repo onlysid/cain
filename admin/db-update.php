@@ -219,6 +219,9 @@ function runUpdates($version, $dbVersion) {
 
         $resultsTableExists = $cainDB->select("SHOW TABLES LIKE 'results';");
         if($resultsTableExists) {
+            // Change the collation of the table
+            $change[] = "ALTER TABLE results CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;";
+
             $change[] = "ALTER TABLE results MODIFY flag int;";
             $change[] = "ALTER TABLE results MODIFY post_timestamp BIGINT;";
 
@@ -236,9 +239,6 @@ function runUpdates($version, $dbVersion) {
                 // Ensure the column has the same data type as in the lots table
                 $change[] = "ALTER TABLE results ADD summary varchar(100);";
             }
-
-            // Change the collation of the table
-            $change[] = "ALTER TABLE results CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;";
         }
 
         // Adjustments to the users table
