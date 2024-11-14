@@ -496,13 +496,13 @@ function runUpdates($version, $dbVersion) {
             );";
         }
 
-        // Large changes to the results table. Firstly, we no longer need "sender" if it exists
-        $senderFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'sender';");
-        if($senderFieldExists['COUNT(*)']) {
-            $change[] = "ALTER TABLE results DROP COLUMN sender;";
-        }
-
         // Whilst we no longer need many of the columns in the results table, we are keeping them for reasons of spec fluctuations and indecisiveness.
+
+        // Large changes to the results table. Firstly, we no longer need "sender" if it exists
+        // $senderFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'sender';");
+        // if($senderFieldExists['COUNT(*)']) {
+        //     $change[] = "ALTER TABLE results DROP COLUMN sender;";
+        // }
 
         // No longer need sequenceNumber
         // $sequenceNumberFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'sequenceNumber';");
