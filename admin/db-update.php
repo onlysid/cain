@@ -172,8 +172,8 @@ function runUpdates($version, $dbVersion) {
         // We are going to get all the tables as we have many alterations to perform
         $result = $cainDB->conn->query("SHOW TABLES");
         foreach($result as $table) {
-            // Set whole DB to InnoDB utf8mb4_general_ci
-            $change[] = "ALTER TABLE `$table[0]` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci";
+            // Set whole DB to InnoDB utf8mb4_unicode_ci
+            $change[] = "ALTER TABLE `$table[0]` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
             $change[] = "ALTER TABLE `$table[0]` ENGINE=InnoDB";
         }
 
@@ -220,7 +220,7 @@ function runUpdates($version, $dbVersion) {
         $resultsTableExists = $cainDB->select("SHOW TABLES LIKE 'results';");
         if($resultsTableExists) {
             // Change the collation of the table
-            $change[] = "ALTER TABLE results CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;";
+            $change[] = "ALTER TABLE results CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;";
 
             $change[] = "ALTER TABLE results MODIFY flag int;";
             $change[] = "ALTER TABLE results MODIFY post_timestamp BIGINT;";
@@ -245,7 +245,7 @@ function runUpdates($version, $dbVersion) {
         $usersTableExists = $cainDB->select("SHOW TABLES LIKE 'users';");
         if($usersTableExists) {
             // Alter collation
-            $change[] = "ALTER TABLE users CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;";
+            $change[] = "ALTER TABLE users CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;";
 
             $emailFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'users' AND column_name = 'email';");
             if($emailFieldExists["COUNT(*)"]) {
