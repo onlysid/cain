@@ -238,14 +238,14 @@ function runUpdates($version, $dbVersion) {
             }
 
             // Change the collation of the table
-            $change[] = "ALTER TABLE results CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;";
+            $change[] = "ALTER TABLE results CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;";
         }
 
         // Adjustments to the users table
         $usersTableExists = $cainDB->select("SHOW TABLES LIKE 'users';");
         if($usersTableExists) {
             // Alter collation
-            $change[] = "ALTER TABLE users CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;";
+            $change[] = "ALTER TABLE users CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;";
 
             $emailFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'users' AND column_name = 'email';");
             if($emailFieldExists["COUNT(*)"]) {
