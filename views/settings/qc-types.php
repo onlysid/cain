@@ -53,7 +53,7 @@ $qcTestTypes = getInstrumentQCTypes(true);
      <div class="flex flex-col items-center w-full gap-4">
          <button id="addTestBtn" class="flex justify-center gap-2 items-center rounded-xl px-4 py-1.5 text-dark transition-all duration-500 hover:scale-105">
              <span class="text-nowrap">Add new QC test type</span>
-             <svg class="h-full fill-dark bg-white rounded-full aspect-square p-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+             <svg class="h-full max-h-[30px] fill-dark bg-white rounded-full aspect-square p-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
                  <path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32l0 144L48 224c-17.7 0-32 14.3-32 32s14.3 32 32 32l144 0 0 144c0 17.7 14.3 32 32 32s32-14.3 32-32l0-144 144 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l-144 0 0-144z"/>
              </svg>
          </button>
@@ -262,6 +262,7 @@ $qcTestTypes = getInstrumentQCTypes(true);
 
             // Display modal with "active" class
             genericModalWrapper.querySelector('.generic-modal').classList.add("active");
+            genericModalWrapper.classList.add("active");
         }
 
         // Remove row from UI and array
@@ -297,11 +298,13 @@ $qcTestTypes = getInstrumentQCTypes(true);
                 rowIdToDelete = null;
             }
             genericModalWrapper.querySelector('.generic-modal').classList.remove("active");
+            genericModalWrapper.classList.remove("active");
         });
 
         cancelRemoveButton.addEventListener("click", (e) => {
             e.preventDefault();
             genericModalWrapper.querySelector('.generic-modal').classList.remove("active");
+            genericModalWrapper.classList.remove("active");
             rowIdToDelete = null;
         });
 

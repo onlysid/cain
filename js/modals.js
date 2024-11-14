@@ -31,6 +31,10 @@ document.addEventListener('click', (e) => {
                 // Firstly, if there is a modal open, close it!
                 closeModal();
                 modal.classList.add('active');
+                const modalWrapper = modal.closest('.modal-wrapper'); // Get parent wrapper
+                if (modalWrapper) {
+                    modalWrapper.classList.add('active'); // Add active to parent modal-wrapper
+                }
                 document.body.classList.add('no-scroll'); // Prevent background scrolling
             }
         }
@@ -48,7 +52,7 @@ document.addEventListener('click', (e) => {
     }
 
     // Close all modals if we have selected a backdrop
-    if(e.target.classList.contains('modal-wrapper') && !e.target.classList.contains('.generic-modal.active')) {
+    if(e.target.classList.contains('modal-wrapper') && !e.target.classList.contains('generic-modal.active')) {
         closeModal();
     }
 });
@@ -58,6 +62,10 @@ function closeModal() {
     const modal = document.querySelector('.generic-modal.active');
     if (modal) {
         modal.classList.remove('active');
+        const modalWrapper = modal.closest('.modal-wrapper'); // Get parent wrapper
+        if (modalWrapper) {
+            modalWrapper.classList.remove('active'); // Remove active from parent modal-wrapper
+        }
         document.body.classList.remove('no-scroll'); // Re-enable background scrolling
     }
 }

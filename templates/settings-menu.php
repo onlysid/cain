@@ -13,9 +13,8 @@ require_once 'utils/MenuItem.php';
             <a class="menu-item whitespace-nowrap <?= $targetRoute === $currentPage ? 'active' : '';?>" href="<?= $targetRoute;?>"><?= $settingsPage->title;?></a>
         <?php endif;
     endforeach;?>
-    <form action="process" method="POST" class="w-full" id="logout">
+    <form action="/process" method="POST" class="w-full" id="logout">
         <input type="hidden" name="action" value="logout">
-        <input type="hidden" name="return-path" value="<?= $currentURL;?>">
         <button class="a-tag menu-item whitespace-nowrap w-full" type="submit">Log out</button>
     </form>
     <a href="/" class="menu-item whitespace-nowrap flex justify-start items-center gap-2.5 group">
