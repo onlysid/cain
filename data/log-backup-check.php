@@ -6,9 +6,21 @@ include_once BASE_DIR . "/includes/functions.php";
 // We don't want PHP memory limits to hinder the ability to download a ZIP file
 ini_set('memory_limit', '2048M');
 
-// Define the folder you want to zip
-$folderPath = rtrim(BASE_DIR . '/logs', '/'); // Ensure no trailing slashes
+// Define the primary and fallback folders
+$primaryPath = rtrim(BASE_DIR . '/logs', '/'); // Primary log folder
+$fallbackPath = sys_get_temp_dir() . '/app_logs'; // Fallback log folder
 
+// Determine which folder to use
+$folderPath = is_dir($primaryPath) ? $primaryPath : $fallbackPath;
+
+if (!is_dir($folderPath)) {
+    // If no valid log directory exists, return an error
+    http_response_code(404);
+    echo 'No logs available for export.';
+    exit;
+}
+
+// Generate a unique name for the ZIP file
 $zipFileName = 'log_' . date('Ymd_His') . '.zip';
 
 // Initialise a new ZipArchive instance
@@ -52,6 +64,7 @@ if ($zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRU
     // Delete the temporary zip file after download
     unlink($zipFilePath);
 
+    // Log the export action
     $currentUser = userInfo();
     addLogEntry('system', "Log backup generated.");
 } else {

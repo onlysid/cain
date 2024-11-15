@@ -27,6 +27,7 @@ Added logging, cleaned up db-update and some bug fixing.
 ### Fixed
 
 -   db-update is now more careful about collation and foreign key issues.
+-   If we do not have write permissions for some reason, we now make sure log files are stored elsewhere.
 
 &nbsp;
 

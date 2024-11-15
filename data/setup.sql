@@ -118,6 +118,8 @@ CREATE TABLE `process_queue` (
 
 CREATE TABLE `results` (
   `id` int(11) NOT NULL,
+  `sender` varchar(256) NOT NULL DEFAULT '""',
+  `sequenceNumber` varchar(256) NOT NULL DEFAULT '""',
   `version` varchar(256) NOT NULL DEFAULT '""',
   `assayType` varchar(256) NOT NULL DEFAULT '',
   `assaySubType` varchar(256) NOT NULL DEFAULT '',
@@ -148,6 +150,8 @@ CREATE TABLE `results` (
   `sampleReceived` varchar(255) NOT NULL,
   `flag` int(11) DEFAULT NULL,
   `post_timestamp` bigint(20) DEFAULT NULL,
+  `assayStepNumber` varchar(256) NOT NULL DEFAULT '""',
+  `cameraReadings` varchar(256) NOT NULL DEFAULT '""',
   `bits` int(11) NOT NULL DEFAULT 0,
   `lot_number` varchar(100) DEFAULT NULL,
   `summary` varchar(100) DEFAULT NULL

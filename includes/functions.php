@@ -1220,36 +1220,41 @@ function resultStringify($result) {
 
 // Adding a log entry and handling log rotation and compression
 function addLogEntry($logType, $message) {
-    // Get the directory associated with the log files
+    // Get the primary log directory
     $logDir = __DIR__ . '/../logs/' . $logType;
     $folderName = basename($logDir);
 
-    // Check if the log directory exists, if not create it
-    if(!is_dir($logDir)) {
-        mkdir($logDir, 0777, true); // Create directory recursively
+    // Fallback directory if primary isn't writable
+    $fallbackDir = sys_get_temp_dir() . '/app_logs/' . $logType;
+
+    // Determine which directory to use
+    $activeLogDir = is_writable($logDir) || mkdir($logDir, 0777, true) ? $logDir : $fallbackDir;
+
+    // Create fallback directory if necessary
+    if ($activeLogDir === $fallbackDir && !is_dir($fallbackDir)) {
+        mkdir($fallbackDir, 0777, true);
     }
 
-    // Get the log file
-    $currentLogFile = $logDir . '/' . $folderName . '.log';
+    // Get the current log file
+    $currentLogFile = $activeLogDir . '/' . $folderName . '.log';
 
     // Get all log files (including those which are zipped)
-    $allFiles = glob($logDir . '/' . $folderName . '-*.log*');
+    $allFiles = glob($activeLogDir . '/' . $folderName . '-*.log*');
 
     // Natural sort to get the correct order
-    usort($allFiles, function($a, $b) {
+    usort($allFiles, function ($a, $b) {
         return filemtime($a) <=> filemtime($b);
     });
 
     // Use the most recent files (or create a new one if none exist)
     $latestFile = end($allFiles);
 
-    // Initialise a logNumber
+    // Initialize a log number
     $logNumber = 1;
 
     // Get the latest log number
     if (preg_match('/-(\d+)\.log(?:\.gz)?$/', $latestFile, $matches)) {
-        // If we don't have any zipped files, the logNumber will rightly remain 1
-        $logNumber = (int)$matches[1] + 1; // Capture and cast to integer
+        $logNumber = (int)$matches[1] + 1;
 
         // Reset log number if it reaches 999
         $logNumber = ($logNumber === 999) ? 1 : $logNumber;
@@ -1258,21 +1263,14 @@ function addLogEntry($logType, $message) {
     // Define a maximum file size for log rotation (2MB in this example)
     $maxFileSize = 1024 * 1024 * 2; // 2MB
 
-    // Initialise that a file has not been created
-    $fileCreated = false;
-
     // Check if the latest file exists and is too large
-    if(file_exists($currentLogFile) && filesize($currentLogFile) >= $maxFileSize) {
-        // Compress the full log file before creating a new one
+    if (file_exists($currentLogFile) && filesize($currentLogFile) >= $maxFileSize) {
         compressLogFile($currentLogFile, $logNumber, $logType);
-
-        $fileCreated = true;
     }
 
-    if(!$latestFile || $fileCreated) {
-        // Create a new log file with the next index
-        $newFileIndex = $logNumber;
-        $latestFile = $logDir . '/' . $folderName . '-' . str_pad($newFileIndex, 3, '0', STR_PAD_LEFT) . '.log';
+    // If no latest file exists or the file was rotated, create a new one
+    if (!$latestFile) {
+        $latestFile = $activeLogDir . '/' . $folderName . '-' . str_pad($logNumber, 3, '0', STR_PAD_LEFT) . '.log';
     }
 
     // Append the new log entry
@@ -1284,18 +1282,17 @@ function addLogEntry($logType, $message) {
 
 // Function to compress log files when they hit the size limit
 function compressLogFile($logFilePath, $logNumber, $logType) {
-    $gzFilePath = dirname($logFilePath) . '/' . $logType . '-' . str_pad($logNumber, 3, '0', STR_PAD_LEFT) . '.log.gz'; // Set the compressed file name
+    $logDir = dirname($logFilePath);
+    $gzFilePath = $logDir . '/' . $logType . '-' . str_pad($logNumber, 3, '0', STR_PAD_LEFT) . '.log.gz';
 
     // Open the original log file and the new compressed file
     $logFile = fopen($logFilePath, 'rb');
     $gzFile = gzopen($gzFilePath, 'wb9'); // Max compression level 9
 
-    // Read the log file and write it into the compressed file
-    while(!feof($logFile)) {
-        gzwrite($gzFile, fread($logFile, 1024 * 512)); // Write in 512KB chunks
+    while (!feof($logFile)) {
+        gzwrite($gzFile, fread($logFile, 1024 * 512));
     }
 
-    // Close both files
     fclose($logFile);
     gzclose($gzFile);
 
@@ -1306,14 +1303,17 @@ function compressLogFile($logFilePath, $logNumber, $logType) {
 // Reading log data (including gzipped files) and loading in reverse order
 function readLogFile($logType, $limit = 1000, $offset = 0) {
     $logDir = __DIR__ . '/../logs/' . $logType;
-    $folderName = basename($logDir);
+    $fallbackDir = sys_get_temp_dir() . '/app_logs/' . $logType;
+
+    // Determine which directory to use
+    $activeLogDir = is_dir($logDir) ? $logDir : $fallbackDir;
 
     // Find all log files including gzipped ones and sort them naturally
     $logFiles = array_merge(
-        glob($logDir . '/' . $folderName . '.log'),
-        glob($logDir . '/' . $folderName . '-*.log.gz')
+        glob($activeLogDir . '/*.log'),
+        glob($activeLogDir . '/*.log.gz')
     );
-    natsort($logFiles); // Sort files naturally (logtype-000.log, logtype-001.log)
+    natsort($logFiles);
 
     $lines = [];
 
@@ -1398,23 +1398,30 @@ function convertTimestamp($timestamp, $time = false) {
 
 // Get the total size of the expired log files
 function getExpiredLogSize() {
-    // Define the path to the logs directory
-    $folderPath = BASE_DIR . '/logs'; // Adjust if your logs directory is elsewhere
+    // Define the path to the primary and fallback logs directory
+    $primaryPath = BASE_DIR . '/logs'; // Primary log directory
+    $fallbackPath = sys_get_temp_dir() . '/app_logs'; // Fallback log directory
+
+    // Determine which directory to use
+    $activePath = is_dir($primaryPath) ? $primaryPath : $fallbackPath;
 
     // Variable to hold the total size of `.gz` files
     $totalGzSize = 0;
 
-    // Loop through files in the logs directory
-    $files = new RecursiveIteratorIterator(
-        new RecursiveDirectoryIterator($folderPath),
-        RecursiveIteratorIterator::LEAVES_ONLY
-    );
+    // Ensure the active path exists
+    if (is_dir($activePath)) {
+        // Loop through files in the logs directory
+        $files = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator($activePath),
+            RecursiveIteratorIterator::LEAVES_ONLY
+        );
 
-    foreach ($files as $file) {
-        // Check if file is a `.gz` file
-        if (!$file->isDir()) {
-            // Add the file size to the total
-            $totalGzSize += $file->getSize();
+        foreach ($files as $file) {
+            // Check if the file is not a directory and is a `.gz` file
+            if (!$file->isDir()) {
+                // Add the file size to the total
+                $totalGzSize += $file->getSize();
+            }
         }
     }
 
