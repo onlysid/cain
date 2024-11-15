@@ -61,10 +61,21 @@ function checkForUpdates($version) {
 // Get current user info
 function userInfo($operatorId = null) {
     global $cainDB, $session;
-    if(!$session->isLoggedIn()) {
+
+    // Ensure $session is valid before using it
+    if (is_null($session)) {
         return 0;
     }
+
+    // Check if the user is logged in
+    if (!$session->isLoggedIn()) {
+        return 0;
+    }
+
+    // Get the user ID from session or passed parameter
     $userId = Session::get('user-id') ?? $operatorId;
+
+    // Fetch user info from the database
     $user = $cainDB->userInfo($userId);
 
     return $user;
