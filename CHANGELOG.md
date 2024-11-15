@@ -6,6 +6,30 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.1.1] - 14/11/2024
+
+Added logging, cleaned up db-update and some bug fixing.
+
+### Added
+
+-   Logs for login/authentication.
+-   Logs for QC testing.
+-   Logs for object deletion.
+-   Logs for errors.
+-   Redacted details for service engineers.
+-   Bundled in PhPMyAdmin for ease of installation.
+-   Setup script created.
+
+### Changed
+
+-   db-update now checks for useless files and removes them.
+
+### Fixed
+
+-   db-update is now more careful about collation and foreign key issues.
+
+&nbsp;
+
 ## [v3.1.0] - 12/11/2024
 
 Large changes to results, QC tests, logging and general structure of application.

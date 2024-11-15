@@ -53,6 +53,7 @@ try {
     // If we have no operator ID, throw an error.
     if(!$operatorId) {
         echo json_encode(["status" => 42, "auth" => false, "res" => 0, "message" => "No Operator ID Provided."]);
+        addLogEntry('API', "ERROR: /operator no operator ID provided.");
         return;
     } else {
         // Check if the operator exists
@@ -60,7 +61,6 @@ try {
 
         // If the operator does not exist, check LIMS and create the operator locally if need be
         if(!$operatorExists) {
-            $failureMessage = json_encode(["status" => 42, "auth" => false, "res" => 1, "message" => "This operator does not exist."]);
             // If we have a successful result in the auth value, then LIMS has found the operator. Otherwise, no operator exists.
             $limsResponse = limsRequest(["operatorId" => $operatorId], 40, 42);
             if(isset($limsResponse['operatorResult']) ? $limsResponse['operatorResult'] == 'true' : false) {
@@ -68,7 +68,8 @@ try {
                 $cainDB->query("INSERT INTO `users` (`operator_id`, `user_type`) VALUES (:operatorId, 1);", [':operatorId' => $operatorId]);
             } else {
                 // There is no operator by that name, throw an error.
-                echo $failureMessage;
+                echo json_encode(["status" => 42, "auth" => false, "res" => 1, "message" => "This operator does not exist."]);
+                addLogEntry('access', "Somebody tried logging in as $operatorId, but they do not exist.");
                 return;
             }
         }
@@ -99,12 +100,14 @@ try {
         // If the password is not required at all, authentication is complete.
         if(($passwordRequired < 2 && $operator['user_type'] == CLINICIAN) || (($passwordRequired == 0 || $passwordRequired == 2) && $operator['user_type'] == ADMINISTRATIVE_CLINICIAN)) {
             echo json_encode(["status" => 42, "auth" => true, "res" => 2, "operator" => $filteredOperator, "message" => "No password required. Successfully authenticated."]);
+            addLogEntry('access', "{$filteredOperator['operatorId']} successfully logged into the tablet app.");
             return;
         }
 
         // At this point, we need a password. Start by checking that the user actually has a password.
         if(!$operator['password']) {
             echo json_encode(["status" => 42, "auth" => false, "res" => 3, "operator" => $filteredOperator, "message" => "This operator has not been set up properly. Please create an account by logging into the DMS first."]);
+            addLogEntry('access', "{$filteredOperator['operatorId']} tried to log into the tablet app with an account that is not fully set up.");
             return;
         }
 
@@ -118,15 +121,22 @@ try {
         if(Session::authenticate($operatorId, $password)) {
             // Password has been accepted
             echo json_encode(["status" => 42, "auth" => true, "res" => 5, "operator" => $filteredOperator, "message" => "Password accepted. Successfully authenticated."]);
+            addLogEntry('access', "{$filteredOperator['operatorId']} successfully logged into the tablet app.");
             return;
         } else {
             // Password has been rejected
             echo json_encode(["status" => 42, "auth" => false, "res" => 6, "operator" => $filteredOperator, "message" => "Password rejected. Authentication failed."]);
+            addLogEntry('access', "{$filteredOperator['operatorId']} entered an incorrect password on the tablet app.");
             return;
         }
     }
 } catch(PDOException $e) {
-    // Handle database error
-    http_response_code(500); // Internal Server Error
-    echo json_encode(array('error' => 'Database error: ' . $e->getMessage()));
+    // Log detailed information securely
+    $errorDetails = [
+        'error_message' => $e->getMessage(),
+        'stack_trace' => $e->getTraceAsString(),
+        'user_id' => $currentUser['operator_id'] ?? 'unknown',
+        'context' => 'Updating general settings'
+    ];
+    addLogEntry('API', "ERROR: /operator - " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 }

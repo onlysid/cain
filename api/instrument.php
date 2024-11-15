@@ -30,17 +30,11 @@ Codes:
     - 60: Success
 */
 
-// // Log data to a text file
-// $logFile = __DIR__ . '/../logs/instrument-log.txt'; // Specify the path to your log file
-// $logData = print_r($data, true); // Format the data as a string
-
-// // Append data to the log file
-// file_put_contents($logFile, $logData . "\n\n", FILE_APPEND);
-
 // Firstly, if we have no data, quit.
 if(!$data) {
     // Throw error and stop processing things.
     echo(json_encode(["status" => 400]));
+    addLogEntry('API', "ERROR: /instrument unable to find parameters.");
     exit;
 }
 

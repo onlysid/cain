@@ -2,14 +2,18 @@
 include_once __DIR__ . "/../includes/config.php";
 include_once __DIR__ . "/../includes/db.php";
 include BASE_DIR . "/includes/version.php";
+include BASE_DIR . "/includes/functions.php";
 
 function autoUpdate($version) {
     global $cainDB;
+    addLogEntry('system', "Running automatic updates.");
 
     // Get a list of all versions tables
     $versionsTable = $cainDB->select("SHOW TABLES LIKE 'versions';");
 
     if(!$versionsTable) {
+        addLogEntry('system', "No version control found.");
+
         // If the versions table does not exist, create it!
         $cainDB->query(
                 "CREATE TABLE `versions` (
@@ -24,12 +28,14 @@ function autoUpdate($version) {
             "INSERT INTO versions (info, value)
             VALUES ('web-app', '0.0.0');"
         );
+        addLogEntry('system', "Created version control system for SAMBA III.");
 
         // Reccur the function
         autoUpdate($version);
     } else {
         // We know the table exists, so get the version of the database.
         $dbVersionInfo = $cainDB->select("SELECT value FROM versions WHERE info = 'web-app'");
+        addLogEntry('system', "Getting database version.");
 
         // Just in case, check if the dbVersionInfo exists. If not, create it.
         if(!$dbVersionInfo) {
@@ -38,11 +44,15 @@ function autoUpdate($version) {
                 VALUES ('web-app', '0.0.0');"
             );
 
+            addLogEntry('system', "Created version control system for SAMBA III.");
+
             // Recur the function
             autoUpdate($version);
         } elseif($dbVersionInfo['value'] != $version && $dbVersionInfo['value'] !== 'updating' && $dbVersionInfo !== 'error') {
             // Set a flag to indicate updates are in progress (if we are not already in progress)
             $cainDB->query("UPDATE versions SET `value` = 'updating' WHERE info = 'web-app';");
+
+            addLogEntry('system', "Updating DMS. Upgrading from v{$dbVersionInfo['value']} to v$version.");
 
             // Run updates
             runUpdates($version, $dbVersionInfo['value']);
@@ -109,6 +119,7 @@ function runUpdates($version, $dbVersion) {
 
     // v3.0.0 - We jumped ahead a bit, believe it or not!
     if(compareVersions($dbVersion, "3.0.0")) {
+
         // Firstly, we must go through and delete unused files
         $filesToDelete = [
             'CainMedical.gif',
@@ -134,7 +145,11 @@ function runUpdates($version, $dbVersion) {
 
             // Check if the file exists
             if (file_exists($filePath)) {
-                unlink($filePath);
+                if(unlink($filePath)) {
+                    addLogEntry('system', "$file successfully deleted.");
+                } else {
+                    addLogEntry('system', "ERROR: Unable to delete $file. Please check permissions.");
+                }
             }
         }
 
@@ -143,6 +158,7 @@ function runUpdates($version, $dbVersion) {
         function deleteDirectory($dir) {
             // Check if the directory exists
             if (!is_dir($dir)) {
+                addLogEntry('system', "ERROR: Unable to delete $dir. It is not a directory.");
                 return;
             }
 
@@ -157,17 +173,27 @@ function runUpdates($version, $dbVersion) {
                     deleteDirectory($filePath); // Recursively delete subdirectory
                 } else {
                     // If it's a file, delete it
-                    unlink($filePath);
+                    if(unlink($filePath)) {
+                        addLogEntry('system', "$filePath successfully deleted.");
+                    } else {
+                        addLogEntry('system', "ERROR: Unable to delete $filePath. Please check permissions.");
+                    }
                 }
             }
 
             // After deleting contents, remove the directory itself
-            rmdir($dir);
+            if(rmdir($dir)) {
+                addLotEntry('system', "$dir successfully deleted.");
+            } else {
+                addLogEntry('system', "ERROR: Unable to delete $dir. Please check permissions.");
+            }
         }
 
         // Recursively delete the "include" directory and its contents
         $includeDirectory = BASE_DIR . DIRECTORY_SEPARATOR . 'include';
-        deleteDirectory($includeDirectory);
+        if (is_dir($includeDirectory)) {
+            deleteDirectory($includeDirectory);
+        }
 
         // We are going to get all the tables as we have many alterations to perform
         $result = $cainDB->conn->query("SHOW TABLES");
@@ -185,8 +211,8 @@ function runUpdates($version, $dbVersion) {
         foreach($change as $dbQuery) {
             try {
                 $cainDB->query($dbQuery);
-            } catch(PDOException $exception) {
-                $caught[] = $exception;
+            } catch(PDOException $e) {
+                $caught[] = $e;
             }
         }
         $change = [];
@@ -211,7 +237,6 @@ function runUpdates($version, $dbVersion) {
             try {
                 $cainDB->query($dbQuery);
             } catch(PDOException $e) {
-                echo($e);
                 $caught[] = $e;
             }
         }
@@ -219,8 +244,21 @@ function runUpdates($version, $dbVersion) {
 
         $resultsTableExists = $cainDB->select("SHOW TABLES LIKE 'results';");
         if($resultsTableExists) {
+
+            // Drop any foreign keys related to lot_number
+            $foreignKey = $cainDB->select("SELECT CONSTRAINT_NAME
+                FROM information_schema.KEY_COLUMN_USAGE
+                WHERE TABLE_SCHEMA = '" . DB_NAME . "'
+                AND TABLE_NAME = 'results'
+                AND COLUMN_NAME = 'lot_number';");
+
+            if (!empty($foreignKey)) {
+                $foreignKeyName = $foreignKey['CONSTRAINT_NAME'];
+                $cainDB->query("ALTER TABLE results DROP FOREIGN KEY `$foreignKeyName`;");
+            }
+
             // Change the collation of the table
-            $change[] = "ALTER TABLE results CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;";
+            $cainDB->query("ALTER TABLE results CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
 
             $change[] = "ALTER TABLE results MODIFY flag int;";
             $change[] = "ALTER TABLE results MODIFY post_timestamp BIGINT;";
@@ -229,10 +267,10 @@ function runUpdates($version, $dbVersion) {
             if (!empty($lotsColumnExists) && $lotsColumnExists['COUNT(*)'] == 0) {
                 // Ensure the column has the same data type as in the lots table
                 $cainDB->query("ALTER TABLE results ADD lot_number varchar(100);");
-
-                // Add the foreign key
-                $change[] = "ALTER TABLE results ADD FOREIGN KEY (lot_number) REFERENCES lots(lot_number);";
             }
+
+            // Add the foreign key (we know by this point that it does not exist)
+            $change[] = "ALTER TABLE results ADD FOREIGN KEY (lot_number) REFERENCES lots(lot_number);";
 
             $summaryColumnExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'summary';");
             if (!empty($summaryColumnExists) && $summaryColumnExists['COUNT(*)'] == 0) {
@@ -289,7 +327,6 @@ function runUpdates($version, $dbVersion) {
             try {
                 $cainDB->query($dbQuery);
             } catch(PDOException $e) {
-                echo($e);
                 $caught[] = $e;
             }
         }
@@ -327,7 +364,6 @@ function runUpdates($version, $dbVersion) {
             try {
                 $cainDB->query($dbQuery);
             } catch(PDOException $e) {
-                echo($e);
                 $caught[] = $e;
             }
         }
@@ -355,7 +391,6 @@ function runUpdates($version, $dbVersion) {
             try {
                 $cainDB->query($dbQuery);
             } catch(PDOException $e) {
-                echo($e);
                 $caught[] = $e;
             }
         }
@@ -402,7 +437,6 @@ function runUpdates($version, $dbVersion) {
             try {
                 $cainDB->query($dbQuery);
             } catch(PDOException $e) {
-                echo($e);
                 $caught[] = $e;
             }
         }
@@ -454,7 +488,6 @@ function runUpdates($version, $dbVersion) {
             try {
                 $cainDB->query($dbQuery);
             } catch(PDOException $e) {
-                echo($e);
                 $caught[] = $e;
             }
         }
@@ -554,7 +587,6 @@ function runUpdates($version, $dbVersion) {
             try {
                 $cainDB->query($dbQuery);
             } catch(PDOException $e) {
-                echo($e);
                 $caught[] = $e;
             }
         }
@@ -569,9 +601,19 @@ function runUpdates($version, $dbVersion) {
     // Finally, update the DB version to match the app version
     if($caught) {
         $cainDB->query("UPDATE versions SET value = 'error' WHERE info = 'web-app';");
+        echo('<br>');
         echo("Something has gone wrong. Please speak with an admin about database integrity.");
         echo("<br>");
         echo("Error: $caught[0]");
+
+        // Log detailed information securely
+        $errorDetails = [
+            'error_message' => $caught[0]->getMessage(),
+            'stack_trace' => $caught[0]->getTraceAsString(),
+            'user_id' => $currentUser['operator_id'] ?? 'unknown',
+            'context' => 'Updating DMS'
+        ];
+        addLogEntry('system', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
         return;
     }
 
@@ -580,6 +622,7 @@ function runUpdates($version, $dbVersion) {
 
     // Set the flag to indicate updates are complete
     $cainDB->query("UPDATE versions SET `value` = '$version' WHERE info = 'web-app';");
+    addLogEntry('system', "DMS successfully updated. Now running version $version.");
 }
 
 // Set the session to determine if any of this is necessary!

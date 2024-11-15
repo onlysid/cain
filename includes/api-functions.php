@@ -27,6 +27,16 @@ function deleteProcessData($processId) {
         $cainDB->rollBack();
         // Throw the exception for handling at a higher level
         throw $e;
+
+        // Log detailed information securely
+        $errorDetails = [
+            'error_message' => $e->getMessage(),
+            'stack_trace' => $e->getTraceAsString(),
+            'context' => 'Deleting LIMS process data'
+        ];
+
+        // Log error
+        addLogEntry('system', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
     }
 }
 
@@ -83,6 +93,16 @@ function limsRequest($data, $statusCode, $confirmationCode) {
             // Rollback the transaction on error
             $cainDB->rollBack();
             throw $e;
+
+            // Log detailed information securely
+            $errorDetails = [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+                'context' => 'LIMS Request'
+            ];
+
+            // Log error
+            addLogEntry('system', "ERROR: Error forming LIMS request: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
         }
     }
 
@@ -95,7 +115,6 @@ function pollProcessStatus($processId, $confirmationCode) {
 
     // Firstly, check if we're connected to lims
     if(!limsConnectivity()) {
-        echo $failureMessage;
         return false;
     }
 

@@ -12,8 +12,9 @@ class LogTypes {
 }
 
 $logTypes = [
-    new LogTypes('system'),
-    new LogTypes('access'),
     new LogTypes('events'),
-    new LogTypes('qc'),
+    new LogTypes('access'),
+    new LogTypes('system'),
+    new LogTypes('QC'),
+    new LogTypes('API')
 ];

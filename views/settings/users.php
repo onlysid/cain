@@ -15,7 +15,7 @@ $userSettings = array_intersect_key($settings, array_flip($userSettingsInfo));
 <form action="/process" method="POST">
     <input type="hidden" name="action" value="user-general-settings">
     <input type="hidden" name="return-path" value="<?= $currentURL;?>">
-    
+
     <div class="form-fields">
         <label for="userTimeout" class="field !flex-row toggle-field !px-6 py-2 rounded-full bg-white shadow-md">
             <div class="flex flex-col w-full">
@@ -60,3 +60,63 @@ $userSettings = array_intersect_key($settings, array_flip($userSettingsInfo));
     </div>
     <button class="btn smaller-btn trigger-loading" type="submit">Save Settings</button>
 </form>
+<div class="divider"></div>
+<div class="p-4 bg-white rounded-lg shadow-md">
+    <h2>User Type Permissions</h2>
+    <table>
+        <thead>
+            <th>Type</th>
+            <th>Permissions</th>
+        </thead>
+
+        <tbody>
+            <tr class="bg-blue-100/50">
+                <td>Clinician</td>
+                <td>
+                    <ul>
+                        <li>View results</li>
+                        <li>Print results</li>
+                        <li>Filter results</li>
+                        <li>View instruments</li>
+                        <li>Alter instrument QC tests</li>
+                        <li>Add instrument QC tests</li>
+                        <li>View lots</li>
+                        <li>Alter lots information</li>
+                        <li>View lots QC results</li>
+                        <li>Verify lots QC results</li>
+                        <li>Alter their own user settings</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr class="bg-blue-100/50">
+                <td>Admin Clinician</td>
+                <td>
+                    <ul>
+                        <li>All the above and:</li>
+                        <li>View settings areas</li>
+                        <li>Configure hospital settings</li>
+                        <li>Configure QC policy</li>
+                        <li>Configure network settings</li>
+                        <li>Configure user settings</li>
+                        <li>Add QC types</li>
+                        <li>Configure QC settings</li>
+                        <li>View users</li>
+                        <li>Add new users and delete users</li>
+                        <li>Configure field visibility settings</li>
+                        <li>Backup/Delete logs</li>
+                        <li>Backup/Delete results</li>
+                    </ul>
+                </td>
+            </tr>
+            <tr class="bg-blue-100/50">
+                <td>Service Engineer</td>
+                <td>
+                    <ul>
+                        <li>All the above and:</li>
+                        <li>Anonymised patient results</li>
+                    </ul>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+</div>

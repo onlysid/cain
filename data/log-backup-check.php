@@ -51,6 +51,9 @@ if ($zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRU
 
     // Delete the temporary zip file after download
     unlink($zipFilePath);
+
+    $currentUser = userInfo();
+    addLogEntry('system', "Log backup generated.");
 } else {
     // Zip file creation failed
     http_response_code(500);

@@ -1,9 +1,14 @@
 <?php // Handle all general POST requests
 
 class Process {
+    // Get current user
+    protected $currentUser;
+
     function __construct() {
         // ! Auto-redirect override (for debugging only, to remain on process page)
         $redirectOverride = false;
+
+        $this->currentUser = userInfo();
 
         if(isset($_POST['action'])) {
             switch($_POST['action']) {
@@ -104,6 +109,8 @@ class Process {
     // Reset the database version in the event of an error
     function resetDbVersion() {
         global $cainDB;
+
+        addLogEntry('system', "Running prompted database update.");
         $cainDB->query("UPDATE versions SET `value` = 0 WHERE `info` = 'web-app';");
     }
 
@@ -118,18 +125,24 @@ class Process {
             // Authentication successful - log user in.
             try {
                 Session::login($operatorId);
+
+                // Log successful login
+                addLogEntry('access', "$operatorId successfully logged in.");
             } catch(Exception $e) {
                 // Throw error
                 $form->setError('general', 'Something went wrong. Please try again later.');
                 Session::setNotice("Something went wrong.", 2);
+                addLogEntry('access', "Something went wrong logging $operatorId in.");
             }
         } else {
             if($password) {
                 $form->setError('password', 'Incorrect password');
+                addLogEntry('access', "$operatorId entered an incorrect password.");
             } else {
                 // Check if there are any notices
                 if(!Session::get('password-required')) {
                     $form->setError('operatorId', 'Operator ID not recognised.');
+                    addLogEntry('access', "Somebody tried logging in as $operatorId, but they do not exist.");
                 }
             }
         }
@@ -139,16 +152,19 @@ class Process {
     function logout() {
         try {
             Session::logout();
+            if($operatorId = $this->currentUser['operator_id']) {
+                addLogEntry('access', "$operatorId successfully logged out.");
+            }
         } catch(Exception $e) {
             // Throw error
             $form->setError('general', 'Something went wrong. Please try again later.');
             Session::setNotice("Something went wrong.", 2);
+            addLogEntry('access', "Error was thrown trying to log user out.");
         }
     }
 
     // Create an account
     function createAccount() {
-        // TODO: Make first name and last name validation logic consistent and abstract the ruleset so as to DRY up the code.
         global $form, $cainDB;
 
         // Get and sanitize input values
@@ -222,6 +238,9 @@ class Process {
         try {
             $cainDB->query($query, $params);
 
+            // Log that user was created
+            addLogEntry('events', "User with the operator ID: $operatorId was successfully created by {$this->currentUser['operator_id']}.");
+
             // Destroy previous session as we're starting fresh now.
             Session::destroy();
 
@@ -238,14 +257,26 @@ class Process {
             // Error occurred while executing the query, handle appropriately
             $form->setError('general', 'An error occurred while creating the account. Please try again later.');
             Session::setNotice("Something went wrong.", 2);
+
+            // Log detailed information securely
+            $errorDetails = [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+                'user_id' => $this->currentUser['operator_id'] ?? 'unknown',
+                'context' => 'Creating account'
+            ];
+
+            // Log error
+            addLogEntry('events', "ERROR: something went wrong when creating a new user: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
         }
     }
 
     function updateGeneralSettings() {
         global $cainDB, $form, $session;
 
-        if($session->getUserType() < ADMINISTRATIVE_CLINICIAN) {
+        if($this->currentUser['user_type'] < ADMINISTRATIVE_CLINICIAN) {
             Session::setNotice("You do not have permission to do this.", 2);
+            addLogEntry('events', "{$this->currentUser['operator_id']} tried updating the general casino settings when they are not permitted.");
             return;
         }
 
@@ -300,14 +331,24 @@ class Process {
             // Check if the update was successful
             if ($rowCount > 0) {
                 Session::setNotice("Successfully updated settings.");
+                addLogEntry('events', "{$this->currentUser['operator_id']} updated the general settings.");
                 return;
             } else {
                 // Failed to update settings
                 Session::setNotice("No changes made.", 1);
             }
         } catch (Exception $e) {
+            // Log detailed information securely
+            $errorDetails = [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+                'user_id' => $this->currentUser['operator_id'] ?? 'unknown',
+                'context' => 'Updating general settings'
+            ];
+            addLogEntry('events', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+
             // Handle exceptions if any
-            echo "An error occurred: " . $e->getMessage();
+            echo "An error occurred: " . $err;
             Session::setNotice("Something went wrong.", 2);
         }
     }
@@ -317,6 +358,7 @@ class Process {
 
         if($session->getUserType() < ADMINISTRATIVE_CLINICIAN) {
             Session::setNotice("You do not have permission to do this.", 2);
+            addLogEntry('events', "{$this->currentUser['operator_id']} tried updating the field visibility settings when they are not permitted.");
             return;
         }
 
@@ -354,6 +396,7 @@ class Process {
         $cainDB->query("UPDATE settings SET `value` = :updatedVisibility WHERE `name` = 'field_visibility';", [":updatedVisibility" => $updatedVisibility]);
 
         Session::setNotice("Successfully updated settings.");
+        addLogEntry('events', "{$this->currentUser['operator_id']} updated the field visibility settings.");
     }
 
     function deleteOperator() {
@@ -361,16 +404,19 @@ class Process {
 
         if($session->getUserType() < ADMINISTRATIVE_CLINICIAN) {
             Session::setNotice("You do not have permission to do this.", 2);
+            addLogEntry('events', "{$this->currentUser['operator_id']} tried deleting an operator when they are not permitted.");
             return;
         }
 
         $operatorId = $_POST['id'] ?? null;
 
         if($operatorId) {
+            $operator = $cainDB->select("SELECT * FROM users WHERE id = :id;", [":id" => $operatorId]);
             $cainDB->query("DELETE FROM users WHERE id = :id", [":id" => $operatorId]);
         }
 
         Session::setNotice("Operator successfully deleted.");
+        addLogEntry('events', "{$this->currentUser['operator_id']} deleted the following operator: {$operator['operator_id']}.");
     }
 
     function deleteResult() {
@@ -378,6 +424,7 @@ class Process {
 
         if($session->getUserType() < ADMINISTRATIVE_CLINICIAN) {
             Session::setNotice("You do not have permission to do this.", 2);
+            addLogEntry('events', "{$this->currentUser['operator_id']} tried deleting a result when they are not permitted.");
             return;
         }
 
@@ -388,6 +435,7 @@ class Process {
         }
 
         Session::setNotice("Result successfully deleted.");
+        addLogEntry('events', "{$this->currentUser['operator_id']} deleted the following result: $resultId.");
     }
 
     function deleteResults() {
@@ -395,6 +443,7 @@ class Process {
 
         if($session->getUserType() < ADMINISTRATIVE_CLINICIAN) {
             Session::setNotice("You do not have permission to do this.", 2);
+            addLogEntry('events', "{$this->currentUser['operator_id']} tried deleting results when they are not permitted.");
             return;
         }
 
@@ -447,6 +496,7 @@ class Process {
 
         if($count > 0) {
             Session::setNotice($count . (($count > 1 || $count == 0) ? " results " : " result ") . "successfully deleted.");
+            addLogEntry('events', "{$this->currentUser['operator_id']} successfully deleted $count result(s).");
         } else {
             Session::setNotice("There are no results to delete for the selected time frame.");
         }
@@ -467,6 +517,7 @@ class Process {
         $currUser = $cainDB->select("SELECT user_id FROM users WHERE id = ?;", [$id])['user_id'];
         if($session->getUserType() < ADMINISTRATIVE_CLINICIAN && $session->get('user-id') != $currUser) {
             Session::setNotice("You do not have permission to do this.", 2);
+            addLogEntry('events', "{$this->currentUser['operator_id']} tried editing an operator when they are not permitted.");
             return;
         }
 
@@ -572,6 +623,7 @@ class Process {
             // Check if the update was successful
             if ($rowCount > 0) {
                 Session::setNotice("Successfully updated settings.");
+                addLogEntry('events', "{$this->currentUser['operator_id']} successfully edited the following operator: $id");
                 return;
             } else {
                 // Failed to update settings
@@ -580,6 +632,14 @@ class Process {
         } catch (Exception $e) {
             // Error occurred while executing the query, handle appropriately
             $form->setError('general', 'An error occurred while creating the account. Please try again later.');
+            // Log detailed information securely
+            $errorDetails = [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+                'user_id' => $this->currentUser['operator_id'] ?? 'unknown',
+                'context' => "Edit operator $id"
+            ];
+            addLogEntry('events', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
             Session::setNotice("Something went wrong.", 2);
         }
     }
@@ -589,6 +649,7 @@ class Process {
 
         if($session->getUserType() < ADMINISTRATIVE_CLINICIAN) {
             Session::setNotice("You do not have permission to do this.", 2);
+            addLogEntry('events', "{$this->currentUser['operator_id']} tried adding an operator when they are not permitted.");
             return;
         }
 
@@ -692,9 +753,19 @@ class Process {
         // Execute the query
         try {
             $cainDB->query($query, $params);
+            Session::setNotice("Successfully added new operator: $operatorId.");
+            addLogEntry('events', "{$this->currentUser['operator_id']} successfully added the following operator: $operatorId");
         } catch (Exception $e) {
             // Error occurred while executing the query, handle appropriately
             $form->setError('general', 'An error occurred while creating the account. Please try again later.');
+            // Log detailed information securely
+            $errorDetails = [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+                'user_id' => $this->currentUser['operator_id'] ?? 'unknown',
+                'context' => "Adding operator"
+            ];
+            addLogEntry('events', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
             Session::setNotice("Something went wrong.", 2);
         }
     }
@@ -721,8 +792,9 @@ class Process {
 
             $cainDB->query("UPDATE users SET status = :toggle WHERE id = :id;", [":toggle" => $toggle, ":id" => $operatorId]);
         }
-
-        Session::setNotice("$operator succsessfully " . ($status == 0 ? "activated." : "deactivated."));
+        $action = $status == 0 ? "activated" : "deactivated";
+        Session::setNotice("$operator succsessfully $action.");
+        addLogEntry('events', "{$this->currentUser['operator_id']} $action the following operator: $operator");
     }
 
     function updateQCSettings() {
@@ -730,6 +802,7 @@ class Process {
 
         if(intval($session->getUserType()) < ADMINISTRATIVE_CLINICIAN) {
             Session::setNotice("You do not have permission to do this.", 2);
+            addLogEntry('events', "{$this->currentUser['operator_id']} tried updating QC settings when they are not permitted.");
             return;
         }
 
@@ -764,6 +837,7 @@ class Process {
             // Check if the update was successful
             if ($rowCount > 0) {
                 Session::setNotice("Successfully updated settings.");
+                addLogEntry('events', "{$this->currentUser['operator_id']} updated QC settings.");
                 return;
             } else {
                 // Failed to update settings
@@ -773,6 +847,14 @@ class Process {
             // Handle exceptions if any
             echo "An error occurred: " . $e->getMessage();
             Session::setNotice("Something went wrong.", 2);
+            // Log detailed information securely
+            $errorDetails = [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+                'user_id' => $this->currentUser['operator_id'] ?? 'unknown',
+                'context' => "Updating QC Settings"
+            ];
+            addLogEntry('events', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
         }
 
     }
@@ -782,6 +864,7 @@ class Process {
 
         if($session->getUserType() < ADMINISTRATIVE_CLINICIAN) {
             Session::setNotice("You do not have permission to do this.", 2);
+            addLogEntry('events', "{$this->currentUser['operator_id']} tried updating general user settings when they are not permitted.");
             return;
         }
 
@@ -811,6 +894,7 @@ class Process {
             // Check if the update was successful
             if ($rowCount > 0) {
                 Session::setNotice("Successfully updated settings.");
+                addLogEntry('events', "{$this->currentUser['operator_id']} updated general user settings.");
                 return;
             } else {
                 // Failed to update settings
@@ -820,6 +904,15 @@ class Process {
             // Handle exceptions if any
             echo "An error occurred: " . $e->getMessage();
             Session::setNotice("Something went wrong.", 2);
+
+            // Log detailed information securely
+            $errorDetails = [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+                'user_id' => $this->currentUser['operator_id'] ?? 'unknown',
+                'context' => "Updating general user settings Settings"
+            ];
+            addLogEntry('events', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
         }
     }
 
@@ -828,6 +921,7 @@ class Process {
 
         if($session->getUserType() < ADMINISTRATIVE_CLINICIAN) {
             Session::setNotice("You do not have permission to do this.", 2);
+            addLogEntry('events', "{$this->currentUser['operator_id']} tried updating network settings when they are not permitted.");
             return;
         }
 
@@ -877,6 +971,7 @@ class Process {
             // Check if the update was successful
             if ($rowCount > 0) {
                 Session::setNotice("Successfully updated settings.");
+                addLogEntry('events', "{$this->currentUser['operator_id']} updated network settings.");
                 return;
             } else {
                 // Failed to update settings
@@ -886,6 +981,14 @@ class Process {
             // Handle exceptions if any
             echo "An error occurred: " . $e->getMessage();
             Session::setNotice("Something went wrong.", 2);
+            // Log detailed information securely
+            $errorDetails = [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+                'user_id' => $this->currentUser['operator_id'] ?? 'unknown',
+                'context' => "Updating Network Settings"
+            ];
+            addLogEntry('events', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
         }
     }
 
@@ -974,7 +1077,7 @@ class Process {
 
             foreach($files as $file) {
                 // Check if it's a .gz file
-                if(!$file->isDir() && $file->getExtension() === 'gz') {
+                if(!$file->isDir()) {
                     // Add to the filesize
                     $totalFileSize += $file->getSize();
 
@@ -983,6 +1086,7 @@ class Process {
                         $deletedFilesCount++;
                     } else {
                         throw new Exception('Could not delete file.');
+                        addLogEntry('system', "Could not delete the following log file: $file.");
                     }
                 }
             }
@@ -990,8 +1094,17 @@ class Process {
             $formattedFileSize = formatSize($totalFileSize);
 
             Session::setNotice("Successfully deleted old logs. $formattedFileSize of space has been cleared and $deletedFilesCount file(s) have been deleted.", 1);
+            addLogEntry("system", "{$this->currentUser['operator_id']} deleted old logs.");
         } catch (Exception $e) {
             Session::setNotice("Could not delete expired logs. Please contact a service engineer.", 2);
+            // Log detailed information securely
+            $errorDetails = [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+                'user_id' => $this->currentUser['operator_id'] ?? 'unknown',
+                'context' => "Cleaning Logs"
+            ];
+            addLogEntry('events', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
         }
     }
 
@@ -1038,6 +1151,7 @@ class Process {
         $cainDB->commit();
 
         Session::setNotice("Successfully updated test types. You may now use these in your instrument QC.", 1);
+        addLogEntry("events", "{$this->currentUser['operator_id']} updated the QC types settings.");
     }
 
     function toggleInstrumentLock() {
@@ -1053,9 +1167,11 @@ class Process {
             if($locked['locked']) {
                 $cainDB->query("UPDATE instruments SET locked = 0 WHERE id = ?;", [$instrument]);
                 Session::setNotice("Unlocked instrument #$instrument.");
+                addLogEntry("events", "{$this->currentUser['operator_id']} unlocked instrument $instrument.");
             } else {
                 $cainDB->query("UPDATE instruments SET locked = 1 WHERE id = ?;", [$instrument]);
                 Session::setNotice("Locked instrument #$instrument.");
+                addLogEntry("events", "{$this->currentUser['operator_id']} locked instrument $instrument.");
             }
         }
     }
@@ -1113,10 +1229,20 @@ class Process {
 
         try {
             $cainDB->query("INSERT INTO instrument_qc_results (`timestamp`, result, instrument, user, `type`, `notes`) VALUES (:dateTime, :result, :instrument, :user, :qcType, :notes);", $params);
+            $id = $cainDB->conn->lastInsertId();
             Session::setNotice('QC Test Result successfully logged.');
+            addLogEntry("QC", "{$this->currentUser['operator_id']} recorded instrument QC #$id");
         } catch (Exception $e) {
             Session::setNotice("Error: Something went wrong. Please contact an administrator.");
             header("Location: " . $_POST['return-path-err']);
+            // Log detailed information securely
+            $errorDetails = [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+                'user_id' => $this->currentUser['operator_id'] ?? 'unknown',
+                'context' => "New instrument QC"
+            ];
+            addLogEntry('QC', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
             exit(); // Exit early if there are errors
         }
     }
@@ -1174,8 +1300,17 @@ class Process {
         try {
             $cainDB->query("UPDATE instrument_qc_results SET `timestamp` = :dateTime, result = :result, `type` = :qcType, `notes` = :notes WHERE id = :id;", $params);
             Session::setNotice('QC Test Result successfully updated.');
+            addLogEntry("QC", "{$this->currentUser['operator_id']} edited instrument QC #$qcID");
         } catch (Exception $e) {
             Session::setNotice("Error: Something went wrong. Please contact an administrator.");
+            // Log detailed information securely
+            $errorDetails = [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+                'user_id' => $this->currentUser['operator_id'] ?? 'unknown',
+                'context' => "Edit instrument QC"
+            ];
+            addLogEntry('QC', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
         }
     }
 
@@ -1206,9 +1341,18 @@ class Process {
 
             if($return) {
                 Session::setNotice("Lot #$lot has now passed QC.", 0);
+                addLogEntry("QC", "{$this->currentUser['operator_id']} edited lot QC #$qcID");
             }
         } catch (Exception $e) {
             Session::setNotice("Error: Something went wrong. Please contact an administrator.");
+            // Log detailed information securely
+            $errorDetails = [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+                'user_id' => $this->currentUser['operator_id'] ?? 'unknown',
+                'context' => "Edit Lot QC"
+            ];
+            addLogEntry('QC', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
         }
     }
 
@@ -1231,8 +1375,17 @@ class Process {
             $cainDB->query($sql, [$deliveryDate, $expirationDate, $qcResult, $time, $lot]);
 
             Session::setNotice("Successfully updated lot #$lot", 0);
+            addLogEntry("events", "{$this->currentUser['operator_id']} edited lot #$lot");
         } catch(Exception $e) {
             Session::setNotice("Error: Something went wrong. Please contact an administrator.");
+            // Log detailed information securely
+            $errorDetails = [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+                'user_id' => $this->currentUser['operator_id'] ?? 'unknown',
+                'context' => "Edit Lot"
+            ];
+            addLogEntry('events', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
         }
     }
 }

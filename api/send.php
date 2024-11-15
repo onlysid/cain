@@ -106,15 +106,9 @@ Curve data will be as follows:
 if(!$data) {
     // Throw error and stop processing things.
     echo(json_encode(["status" => 10]));
+    addLogEntry('API', "ERROR: /send unable to find parameters.");
     exit;
 }
-
-// // Log data to a text file
-// $logFile = __DIR__ . '/../logs/send-log.txt'; // Specify the path to your log file
-// $logData = print_r($data, true); // Format the data as a string
-
-// // Append data to the log file
-// file_put_contents($logFile, $logData . "\n\n", FILE_APPEND);
 
 // We have data! Now we must clean it, add the result to the results table and make a CSV file. Separate what needs to go in the db and what needs to be a CSV.
 $errors = null;
@@ -278,7 +272,15 @@ try {
 } catch(PDOException $e) {
     // Rollback the transaction on error
     $cainDB->rollBack();
-    $errors = $e;
+
+    // Log detailed information securely
+    $errorDetails = [
+        'error_message' => $e->getMessage(),
+        'stack_trace' => $e->getTraceAsString(),
+        'user_id' => $currentUser['operator_id'] ?? 'unknown',
+        'context' => 'Updating general settings'
+    ];
+    addLogEntry('API', "ERROR: /send - " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 }
 
 // If the test purpose was QC, we now need to add QC information to the DMS
@@ -288,6 +290,7 @@ if($purpose == 2) {
 
     if(!$success) {
         $errors = "Something went wrong putting the QC test in the DMS. Please contact an admin.";
+        addLogEntry('API', "ERROR: /send unable to store QC test in the DMS for result $resultID.");
     }
 }
 

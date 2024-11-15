@@ -8,7 +8,7 @@ $getAllowedAPIs = [
     'instrumentqccheck',
 ];
 
-// If we aren't posting to this page, we aren't allowed to see it.
+// If we aren't posting to this page, we aren't allowed to see it (except if it's listed above).
 if ($_SERVER["REQUEST_METHOD"] != "POST" && !in_array(pathinfo($route['view'], PATHINFO_FILENAME), $getAllowedAPIs)) {
     // Redirect to the 403 error page
     header("HTTP/1.1 403 Forbidden");

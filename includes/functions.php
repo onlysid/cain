@@ -22,6 +22,7 @@ function checkForUpdates($version) {
 
     // If we don't have an info table, make one
     if(!$cainVersionsTable) {
+        addLogEntry('system', "No version control found.");
         $cainDB->query(
             "CREATE TABLE `versions` (
                 `id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -39,6 +40,7 @@ function checkForUpdates($version) {
             VALUES ('web-app', '0.0.0');"
         );
         $dbVersionInfo = $cainDB->select("SELECT value FROM versions WHERE info = 'web-app'");
+        addLogEntry('system', "Created version control system for SAMBA III.");
     }
 
     // Process the response
@@ -218,6 +220,16 @@ function updateInstruments($tabletData) {
             $cainDB->rollBack();
             // Throw the exception for handling at a higher level
             throw $e;
+
+            // Log detailed information securely
+            $errorDetails = [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+                'context' => 'Updating instruments'
+            ];
+
+            // Log error
+            addLogEntry('system', "Error updating instrument: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
         }
     }
 
@@ -1400,7 +1412,7 @@ function getExpiredLogSize() {
 
     foreach ($files as $file) {
         // Check if file is a `.gz` file
-        if (!$file->isDir() && $file->getExtension() === 'gz') {
+        if (!$file->isDir()) {
             // Add the file size to the total
             $totalGzSize += $file->getSize();
         }

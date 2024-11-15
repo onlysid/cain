@@ -11,6 +11,7 @@ Codes:
 if(!($lotNumber = $_GET['lot'])) {
     // Throw an error and stop processing things, as this is the bare minimum we require.
     echo(json_encode(["Error" => "No data available."]));
+    addLogEntry('API', "ERROR: /cartridgeqccheck unable to find 'lot' parameter");
     exit;
 }
 $subLotNumber = $_GET['sublot'] ?? null;
@@ -29,6 +30,7 @@ $lot = updateLot($lotNumber, $params);
 // If the lot was not updated, something went wrong.
 if(!$lot) {
     echo(json_encode(["Error" => "Something went wrong."]));
+    addLogEntry('API', "ERROR: /cartridgeqccheck - something went wrong.");
     exit;
 }
 

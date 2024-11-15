@@ -2,7 +2,7 @@
 include_once BASE_DIR . "/utils/LogTypes.php";
 
 // Get the current log from the URL parameter, default to 'system'
-$logParam = $_GET['q'] ?? 'system';
+$logParam = $_GET['q'] ?? 'events';
 $logsPerPage = 40;
 
 // Get the log data
@@ -11,6 +11,10 @@ $logData = readLogFile($logParam, $logsPerPage);
 // Split the log data into lines
 $logLines = explode("\n", $logData);
 
+// Add this log entry if user is here AND referrer is not /logs
+if(isset($currentUser['operator_id']) && (!isset($_SERVER['HTTP_REFERER']) || strpos($_SERVER['HTTP_REFERER'], '/logs') === false)) {
+    addLogEntry('system', $currentUser['operator_id'] . " accessed the logs.");
+}
 ?>
 
 <section class="notice">

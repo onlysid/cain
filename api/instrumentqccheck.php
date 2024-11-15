@@ -11,6 +11,7 @@ Codes:
 if(!($sn = ($_GET['sn'] ?? null))) {
     // Throw error and stop processing things.
     echo(json_encode(["Error" => "No data available."]));
+    addLogEntry('API', "ERROR: /instrument unable to find parameters.");
     exit;
 }
 
@@ -45,6 +46,7 @@ if($instrument) {
     $response = [
         'error' => 'Something went wrong adding the instrument to the database.',
     ];
+    addLogEntry('API', "ERROR: /instrument - instrument not found in the DMS and could not be added for some reason.");
 }
 
 // Provide the response

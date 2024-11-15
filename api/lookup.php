@@ -28,13 +28,6 @@ Returns:
 "patientSet"
 */
 
-// // Log data to a text file
-// $logFile = __DIR__ . '/../logs/lookup-log.txt'; // Specify the path to your log file
-// $logData = print_r($data, true); // Format the data as a string
-
-// // Append data to the log file
-// file_put_contents($logFile, $logData . "\n\n", FILE_APPEND);
-
 // Main logic
 try {
     // Get posted items
@@ -77,12 +70,18 @@ try {
         // We need at least one of these parameters to proceed with the lookup. Throw an error.
         $response["status"] = 0;
         $response["message"] = "Please provide either a patientId, hospitalId or nhsNumber";
+        addLogEntry('API', "ERROR: /lookup unable to find parameters.");
     }
 
 
     echo json_encode($response);
 } catch(PDOException $e) {
-    // Handle database error
-    http_response_code(500); // Internal Server Error
-    echo json_encode(array('error' => 'Database error: ' . $e->getMessage()));
+    // Log detailed information securely
+    $errorDetails = [
+        'error_message' => $e->getMessage(),
+        'stack_trace' => $e->getTraceAsString(),
+        'user_id' => $currentUser['operator_id'] ?? 'unknown',
+        'context' => 'Updating general settings'
+    ];
+    addLogEntry('API', "ERROR: /lookup - " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 }

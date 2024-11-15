@@ -11,8 +11,6 @@ class DB {
             // Set PDO to throw exceptions on errors
             $this->conn->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
         } catch (PDOException $exception) {
-            // Handle database connection error
-            // header("Location: " . BASE_DIR . "/views/db-error");
             die;
         }
 

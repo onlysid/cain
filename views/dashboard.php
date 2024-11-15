@@ -2,6 +2,9 @@
 $hospitalInfo = systemInfo();
 $hospitalInfoArray = array_column($hospitalInfo, 'value', 'name');
 
+// See what kind of user we are
+$serviceEngineer = $currentUser['user_type'] == '3';
+
 // Do we have any filters?
 $filters = $_GET ?? $session->get('result-filters');
 $page = $filters['p'] ?? 1;
@@ -141,23 +144,31 @@ include_once BASE_DIR . "/utils/AgeGroup.php";?>
                     <tr id="result<?= $result['result_id'];?>" class="result">
                         <td><?= (new DateTime($result['testcompletetimestamp']))->format($hospitalInfoArray['date_format']);?></td>
                         <td>
-                            <?php if($result['firstName'] || $result['lastName']) : ?>
-                                <?= $result['firstName'];?> <?= $result['lastName'];?>
+                            <?php if($serviceEngineer) : ?>
+                                -REDACTED-
                             <?php else : ?>
-                                Unknown
+                                <?php if($result['firstName'] || $result['lastName']) : ?>
+                                    <?= $result['firstName'];?> <?= $result['lastName'];?>
+                                <?php else : ?>
+                                    Unknown
+                                <?php endif;?>
                             <?php endif;?>
                         </td>
                         <td class="hidden xs:table-cell"><?= $result['product'];?></td>
-                        <td class="text-elipses hidden sm:table-cell <?= $resultInfo["summary"] == 'Positive' ? "active" : (!$resultInfol['summary'] || $resultInfo['summary'] == 'Invalid' ? 'invalid' : "");?>"><?= $resultInfo['summary'] ?? "Invalid";?></td>
+                        <?php if($serviceEngineer) : ?>
+                            <td>-REDACTED-</td>
+                        <?php else : ?>
+                            <td class="text-elipses hidden sm:table-cell <?= $resultInfo["summary"] == 'Positive' ? "active" : (!$resultInfol['summary'] || $resultInfo['summary'] == 'Invalid' ? 'invalid' : "");?>"><?= $resultInfo['summary'] ?? "Invalid";?></td>
+                        <?php endif;?>
                         <td>
                             <div class="h-full flex items-center gap-1.5 justify-end">
                                 <!-- Statuses and chevron -->
                                 <?php if($resultInfo && $resultInfo["summary"] == 'Positive') : ?>
-                                <button class="flex items-center tooltip" title="Positive Result">
-                                    <svg class="h-5 fill-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
-                                        <path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"/>
-                                    </svg>
-                                </button>
+                                    <button class="flex items-center tooltip" title="Positive Result">
+                                        <svg class="h-5 fill-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                                            <path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"/>
+                                        </svg>
+                                    </button>
                                 <?php endif;?>
                                 <button id="sendResult<?= $result['id'];?>" class="flex items-center">
                                 <?php
@@ -254,7 +265,7 @@ foreach($resultItems as $result) : ?>
                     </svg>
                 </button>
                 <h2 class="flex text-center items-center gap-2.5 sm:text-start mx-12 sm:mx-0 sm:mr-12 mb-2.5 sm:mb-1">
-                    <?= convertTimestamp($result['testcompletetimestamp'], true);?>: <?= $result['firstName'];?> <?= $result['lastName'];?>
+                    <?= convertTimestamp($result['testcompletetimestamp'], true);?>: <?= $serviceEngineer ? '-REDACTED-' : $result['firstName'];?> <?= !$serviceEngineer ? $result['lastName'] : '';?>
                     <?php // Determine the symbol (if any) to display
                     $limsStatus = false;
                     $limsStatusMessage = "Not sent to LIMS";
@@ -308,7 +319,7 @@ foreach($resultItems as $result) : ?>
                                 <td><?= $value;?></td>
                                 <td>
                                     <?php foreach($keys as $key) : ?>
-                                        <?= $result[$key];?>
+                                        <?= $serviceEngineer ? '-REDACTED-' : $result[$key];?>
                                     <?php endforeach;?>
                                 </td>
                             </tr>
