@@ -1060,51 +1060,62 @@ class Process {
     }
 
     function cleanLogs() {
-        // Try deleting logs
-        try {
-            // Get the logs folder
-            $folderPath = rtrim(BASE_DIR . '/logs', '/');
+        // Define potential log directories
+        $logDirectories = [
+            BASE_DIR . '/logs',
+            sys_get_temp_dir() . '/app_logs', // Fallback to temp directory
+            '/var/log/app_logs' // Another fallback
+        ];
 
-            // Counter for counting deleted files
-            $deletedFilesCount = 0;
-            $totalFileSize = 0;
+        // Counter for counting deleted files
+        $deletedFilesCount = 0;
+        $totalFileSize = 0;
 
-            // Loop through files in logs dir
-            $files = new RecursiveIteratorIterator(
-                new RecursiveDirectoryIterator($folderPath),
-                RecursiveIteratorIterator::LEAVES_ONLY
-            );
+        // Iterate through the defined directories
+        foreach ($logDirectories as $folderPath) {
+            $folderPath = rtrim($folderPath, '/'); // Ensure no trailing slash
 
-            foreach($files as $file) {
-                // Check if it's a .gz file
-                if(!$file->isDir()) {
-                    // Add to the filesize
-                    $totalFileSize += $file->getSize();
-
-                    // Delete the file and increment counter if successful
-                    if(unlink($file->getRealPath())) {
-                        $deletedFilesCount++;
-                    } else {
-                        throw new Exception('Could not delete file.');
-                        addLogEntry('system', "Could not delete the following log file: $file.");
-                    }
-                }
+            // Skip if the folder is inaccessible
+            if (!is_dir($folderPath) || !is_readable($folderPath)) {
+                continue;
             }
 
-            $formattedFileSize = formatSize($totalFileSize);
+            // Process files in the accessible directory
+            try {
+                $files = new RecursiveIteratorIterator(
+                    new RecursiveDirectoryIterator($folderPath, FilesystemIterator::SKIP_DOTS),
+                    RecursiveIteratorIterator::LEAVES_ONLY
+                );
 
+                foreach ($files as $file) {
+                    if ($file->isFile()) {
+                        $totalFileSize += $file->getSize();
+
+                        // Attempt to delete the file
+                        if (@unlink($file->getRealPath())) {
+                            $deletedFilesCount++;
+                        } else {
+                            addLogEntry('system', "Failed to delete log file: {$file->getRealPath()}");
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                // Log any exceptions but don't stop execution
+                addLogEntry('system', "Error while cleaning logs in $folderPath: {$e->getMessage()}");
+            }
+
+            // If we successfully process one directory, stop looking at others
+            break;
+        }
+
+        // Format file size and add a notice
+        $formattedFileSize = formatSize($totalFileSize);
+
+        if ($deletedFilesCount > 0) {
             Session::setNotice("Successfully deleted old logs. $formattedFileSize of space has been cleared and $deletedFilesCount file(s) have been deleted.", 1);
             addLogEntry("system", "{$this->currentUser['operator_id']} deleted old logs.");
-        } catch (Exception $e) {
-            Session::setNotice("Could not delete expired logs. Please contact a service engineer.", 2);
-            // Log detailed information securely
-            $errorDetails = [
-                'error_message' => $e->getMessage(),
-                'stack_trace' => $e->getTraceAsString(),
-                'user_id' => $this->currentUser['operator_id'] ?? 'unknown',
-                'context' => "Cleaning Logs"
-            ];
-            addLogEntry('events', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+        } else {
+            Session::setNotice("No expired logs were deleted. Please check log configuration.", 2);
         }
     }
 

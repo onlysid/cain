@@ -60,8 +60,8 @@ function checkForUpdates($version) {
 
 // Get current user info
 function userInfo($operatorId = null) {
-    global $cainDB;
-    if(!Session::isLoggedIn()) {
+    global $cainDB, $session;
+    if(!$session->isLoggedIn()) {
         return 0;
     }
     $userId = Session::get('user-id') ?? $operatorId;
@@ -1228,7 +1228,7 @@ function addLogEntry($logType, $message) {
     $fallbackDir = sys_get_temp_dir() . '/app_logs/' . $logType;
 
     // Determine which directory to use
-    $activeLogDir = is_writable($logDir) || mkdir($logDir, 0777, true) ? $logDir : $fallbackDir;
+    $activeLogDir = is_writable($logDir) || @mkdir($logDir, 0777, true) ? $logDir : $fallbackDir;
 
     // Create fallback directory if necessary
     if ($activeLogDir === $fallbackDir && !is_dir($fallbackDir)) {

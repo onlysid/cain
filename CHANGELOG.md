@@ -28,6 +28,7 @@ Added logging, cleaned up db-update and some bug fixing.
 
 -   db-update is now more careful about collation and foreign key issues.
 -   If we do not have write permissions for some reason, we now make sure log files are stored elsewhere.
+-   Sessions sometimes aren't accessible for similar permission-based reasons.
 
 &nbsp;
 
