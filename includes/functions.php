@@ -63,12 +63,12 @@ function userInfo($operatorId = null) {
     global $cainDB, $session;
 
     // Ensure $session is valid before using it
-    if (is_null($session)) {
+    if(is_null($session)) {
         return 0;
     }
 
     // Check if the user is logged in
-    if (!$session->isLoggedIn()) {
+    if(!$session->isLoggedIn()) {
         return 0;
     }
 

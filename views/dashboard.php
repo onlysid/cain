@@ -142,7 +142,7 @@ include_once BASE_DIR . "/utils/AgeGroup.php";?>
                         $resultInfo = sanitiseResult($result["result"]);
                     ;?>
                     <tr id="result<?= $result['result_id'];?>" class="result">
-                        <td><?= (new DateTime($result['testcompletetimestamp']))->format($hospitalInfoArray['date_format']);?></td>
+                        <td><?= (new DateTime($result['testcompletetimestamp'] ?? $result['testCompleteTimestamp']))->format($hospitalInfoArray['date_format']);?></td>
                         <td>
                             <?php if($serviceEngineer) : ?>
                                 -REDACTED-
@@ -265,7 +265,7 @@ foreach($resultItems as $result) : ?>
                     </svg>
                 </button>
                 <h2 class="flex text-center items-center gap-2.5 sm:text-start mx-12 sm:mx-0 sm:mr-12 mb-2.5 sm:mb-1">
-                    <?= convertTimestamp($result['testcompletetimestamp'], true);?>: <?= $serviceEngineer ? '-REDACTED-' : $result['firstName'];?> <?= !$serviceEngineer ? $result['lastName'] : '';?>
+                    <?= convertTimestamp($result['testcompletetimestamp'] ?? $result['testCompleteTimestamp'], true);?>: <?= $serviceEngineer ? '-REDACTED-' : $result['firstName'];?> <?= !$serviceEngineer ? $result['lastName'] : '';?>
                     <?php // Determine the symbol (if any) to display
                     $limsStatus = false;
                     $limsStatusMessage = "Not sent to LIMS";

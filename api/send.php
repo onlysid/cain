@@ -257,6 +257,8 @@ $query .= ")";
 // Fill array with values
 $params = array_values($dbData);
 
+$resultID = null;
+
 try {
     // Begin transaction to ensure safety
     $cainDB->beginTransaction();

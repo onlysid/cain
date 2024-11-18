@@ -277,6 +277,42 @@ function runUpdates($version, $dbVersion) {
                 // Ensure the column has the same data type as in the lots table
                 $change[] = "ALTER TABLE results ADD summary varchar(100);";
             }
+
+            $patientLocationExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'patientLocation';");
+            if (!empty($patientLocationExists) && $patientLocationExists['COUNT(*)'] == 0) {
+                // Ensure the column has the same data type as in the lots table
+                $change[] = "ALTER TABLE results ADD patientLocation varchar(256) DEFAULT '';";
+            }
+
+            $sampleCollectedExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'sampleCollected';");
+            if (!empty($sampleCollectedExists) && $sampleCollectedExists['COUNT(*)'] == 0) {
+                // Ensure the column has the same data type as in the lots table
+                $change[] = "ALTER TABLE results ADD sampleCollected varchar(256) DEFAULT '';";
+            }
+
+            $sampleReceivedExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'sampleReceived';");
+            if (!empty($sampleReceivedExists) && $sampleReceivedExists['COUNT(*)'] == 0) {
+                // Ensure the column has the same data type as in the lots table
+                $change[] = "ALTER TABLE results ADD sampleReceived varchar(256) DEFAULT '';";
+            }
+
+            $reserve1Exists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'reserve1';");
+            if (!empty($reserve1Exists) && $reserve1Exists['COUNT(*)'] == 0) {
+                // Ensure the column has the same data type as in the lots table
+                $change[] = "ALTER TABLE results ADD reserve1 varchar(256) DEFAULT '';";
+            }
+
+            $reserve2Exists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'reserve2';");
+            if (!empty($reserve2Exists) && $reserve2Exists['COUNT(*)'] == 0) {
+                // Ensure the column has the same data type as in the lots table
+                $change[] = "ALTER TABLE results ADD reserve2 varchar(256) DEFAULT '';";
+            }
+
+            $abortErrorCodeExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'abortErrorCode';");
+            if (!empty($abortErrorCodeExists) && $abortErrorCodeExists['COUNT(*)'] == 0) {
+                // Ensure the column has the same data type as in the lots table
+                $change[] = "ALTER TABLE results ADD abortErrorCode varchar(256) DEFAULT '';";
+            }
         }
 
         // Adjustments to the users table
