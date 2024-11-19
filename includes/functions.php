@@ -120,7 +120,14 @@ function timeDifferenceMessage($timestamp) {
 // Retrieve everything from the settings table in the db
 function systemInfo() {
     global $cainDB;
-    return $cainDB->selectAll("SELECT * FROM settings;");
+
+    try {
+        return $cainDB->selectAll("SELECT * FROM settings;");
+    } catch (Exception $e) {
+        // Suppress the error and return an empty array as a fallback
+        error_log("Failed to retrieve settings: " . $e->getMessage());
+        return [];
+    }
 }
 
 // Retrieve LIMS connectivity status from db

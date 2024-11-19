@@ -5,12 +5,17 @@ class Session {
 
     function __construct() {
         global $cainDB;
-        $expirySetting = $cainDB->select("SELECT value FROM settings WHERE name = 'session_expiration';");
-        if ($expirySetting) {
-            self::$sessionExpiry = (int) $expirySetting['value'];
-        } else {
-            $sessionExpiry = false;
+
+        try {
+            $expirySetting = $cainDB->select("SELECT value FROM settings WHERE name = 'session_expiration';");
+            if ($expirySetting) {
+                self::$sessionExpiry = (int) $expirySetting['value'];
+            }
+        } catch (Exception $e) {
+            // Suppress the error and use the default expiry time
+            error_log("Failed to fetch session expiration setting: " . $e->getMessage());
         }
+
         $this->start();
     }
 

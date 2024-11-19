@@ -472,7 +472,6 @@ foreach($resultItems as $result) : ?>
                     </div>
                 </div>
             </div>
-            <!-- TODO: We may need some other filters (test purpose, product etc) -->
             <div class="form-fields">
                 <div class="field">
                     <label for="filterDates">Select a date range to view results.</label>

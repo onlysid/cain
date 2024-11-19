@@ -529,8 +529,6 @@ function runUpdates($version, $dbVersion) {
         }
         $change = [];
 
-        // TODO: Add some default instrument QC test types
-
         // Add Instrument QC Results
         $instrumentQCResultsTableExists = $cainDB->select("SHOW TABLES LIKE 'instrument_qc_results';");
         if (!$instrumentQCResultsTableExists) {
@@ -665,6 +663,23 @@ function runUpdates($version, $dbVersion) {
         } else {
             // If not, create it.
             $change[] = "ALTER TABLE results ADD COLUMN sequenceNumber varchar(255) NOT NULL DEFAULT '';";
+        }
+
+        foreach($change as $dbQuery) {
+            try {
+                $cainDB->query($dbQuery);
+            } catch(PDOException $e) {
+                $caught[] = $e;
+            }
+        }
+        $change = [];
+    }
+
+    if(compareVersions($dbVersion, "3.1.3")) {
+        // Add some default instrument QC test types
+        $testCount = $cainDB->select("SELECT COUNT(*) FROM instrument_test_types;")['COUNT(*)'];
+        if(!$testCount) {
+            $change[] = "INSERT INTO instrument_test_types (`name`, `time_intervals`, `result_intervals`) VALUES ('Batch Acceptance', 90, 5000), ('Engineering Visit', 180, 10000), ('Environmental Test', 365, 50000), ('External Quality Assurance (EQA) Scheme', 365, 50000), ('Routine QC', 30, 1000);";
         }
 
         foreach($change as $dbQuery) {

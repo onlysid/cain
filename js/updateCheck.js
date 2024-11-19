@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Insert the update alert as the first child of the main element
     mainElement.insertAdjacentElement('afterbegin', updateAlert);
-    
+
     // Set the document title
     document.title = "Updating...";
 
@@ -57,7 +57,11 @@ document.addEventListener('DOMContentLoaded', function() {
                 var responseText = xhr.responseText;
 
                 // What we expect
-                var validResponse = responseText == "Successfully updated.";
+                var validResponse = responseText == "Successfully updated." || responseText == "";
+                if(responseText == "") {
+                    // We updated successfully!
+                    responseText = "N/A";
+                }
 
                 // Display different messages based on if the updated succeeded or not.
                 updateAlert.style.backgroundColor = validResponse ? "#217153" : "red";

@@ -67,5 +67,3 @@ $qcSettings = array_intersect_key($settings, array_flip($qcKeys));
         </form>
     </div>
 </div>
-
-<?php // TODO: Eventually, it may be worth having a log of backups/deletions.

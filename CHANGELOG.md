@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.1.3] - 19/11/2024
+
+DB update multi-window support and default instrument QC test types
+
+### Added
+
+-   Default instrument QC test types.
+
+### Fixed
+
+-   When loading the site in another window during update, errors prevented the update screen from rendering.
+
+&nbsp;
+
 ## [v3.1.2] - 19/11/2024
 
 Added legacy database considerations and debug info.
