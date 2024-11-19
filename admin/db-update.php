@@ -629,6 +629,54 @@ function runUpdates($version, $dbVersion) {
         $change = [];
     }
 
+    if(compareVersions($dbVersion, "3.1.2")) {
+        // We need to add some checks for legacy databases
+        $assayStepNumberFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'assayStepNumber';");
+        if($assayStepNumberFieldExists['COUNT(*)']) {
+            // If the field exists, update it.
+            $change[] = "ALTER TABLE results MODIFY COLUMN assayStepNumber varchar(255) NOT NULL DEFAULT '';";
+        } else {
+            // If not, create it.
+            $change[] = "ALTER TABLE results ADD COLUMN assayStepNumber varchar(255) NOT NULL DEFAULT '';";
+        }
+
+        $cameraReadingsFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'cameraReadings';");
+        if($cameraReadingsFieldExists['COUNT(*)']) {
+            // If the field exists, update it.
+            $change[] = "ALTER TABLE results MODIFY COLUMN cameraReadings varchar(255) NOT NULL DEFAULT '';";
+        } else {
+            // If not, create it.
+            $change[] = "ALTER TABLE results ADD COLUMN cameraReadings varchar(255) NOT NULL DEFAULT '';";
+        }
+
+        $senderFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'sender';");
+        if($senderFieldExists['COUNT(*)']) {
+            // If the field exists, update it.
+            $change[] = "ALTER TABLE results MODIFY COLUMN sender varchar(255) NOT NULL DEFAULT '';";
+        } else {
+            // If not, create it.
+            $change[] = "ALTER TABLE results ADD COLUMN sender varchar(255) NOT NULL DEFAULT '';";
+        }
+
+        $sequenceNumberFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'sequenceNumber';");
+        if($sequenceNumberFieldExists['COUNT(*)']) {
+            // If the field exists, update it.
+            $change[] = "ALTER TABLE results MODIFY COLUMN sequenceNumber varchar(255) NOT NULL DEFAULT '';";
+        } else {
+            // If not, create it.
+            $change[] = "ALTER TABLE results ADD COLUMN sequenceNumber varchar(255) NOT NULL DEFAULT '';";
+        }
+
+        foreach($change as $dbQuery) {
+            try {
+                $cainDB->query($dbQuery);
+            } catch(PDOException $e) {
+                $caught[] = $e;
+            }
+        }
+        $change = [];
+    }
+
     // Test long processes (and add a few seconds for psychological validation)
     if(compareVersions($dbVersion, "100.0.0")) {
         sleep(2);

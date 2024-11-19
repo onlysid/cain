@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.1.2] - 19/11/2024
+
+Added legacy database considerations and debug info.
+
+### Added
+
+-   Added PhP and MariaDB version to the versions page
+
+### Fixed
+
+-   db-update now adds default values to fields previously provided by the tablet but are no longer, despite being required by LIMS middleware.
+
+&nbsp;
+
 ## [v3.1.1] - 14/11/2024
 
 Added logging, cleaned up db-update and some bug fixing.
