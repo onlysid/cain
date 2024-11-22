@@ -103,7 +103,7 @@ include_once BASE_DIR . "/utils/AgeGroup.php";?>
                     <th>
                         <a href="<?= updateQueryString(["sp" => "", "sd" => ((($filters['sd'] ?? "desc") == "desc" && ($filters['sp'] ?? null) == "") || ($filters['sd'] ?? "empty") == "" ? "asc" : "")], true);?>" class="ignore-default flex gap-1.5 items-center">
                             <span>Date</span>
-                            <svg class="h-4 fill-dark <?= (!isset($filters['sp']) || $filters['sp'] == "") ? "" : "opacity-50 !rotate-180";?> <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                            <svg class="h-4 fill-dark shrink-0 <?= (!isset($filters['sp']) || $filters['sp'] == "") ? "" : "opacity-50 !rotate-180";?> <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                                 <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM385 231c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-71-71V376c0 13.3-10.7 24-24 24s-24-10.7-24-24V193.9l-71 71c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L239 119c9.4-9.4 24.6-9.4 33.9 0L385 231z"/>
                             </svg>
                         </a>
@@ -111,7 +111,15 @@ include_once BASE_DIR . "/utils/AgeGroup.php";?>
                     <th>
                         <a href="<?= updateQueryString(["sp" => "firstName", "sd" => ((($filters['sd'] ?? "desc") == "desc" && ($filters['sp'] ?? null) == "firstName") || ($filters['sd'] ?? "desc") == "" ? "asc" : "")], true);?>" class="ignore-default flex gap-1.5 items-center">
                             <span>Name</span>
-                            <svg class="h-4 fill-dark <?= (isset($filters['sp']) && $filters['sp'] == "firstName") ? "" : "opacity-50 !rotate-180";?> <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                            <svg class="h-4 fill-dark shrink-0 <?= (isset($filters['sp']) && $filters['sp'] == "firstName") ? "" : "opacity-50 !rotate-180";?> <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                                <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM385 231c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-71-71V376c0 13.3-10.7 24-24 24s-24-10.7-24-24V193.9l-71 71c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L239 119c9.4-9.4 24.6-9.4 33.9 0L385 231z"/>
+                            </svg>
+                        </a>
+                    </th>
+                    <th>
+                        <a href="<?= updateQueryString(["sp" => "patientId", "sd" => ((($filters['sd'] ?? "desc") == "desc" && ($filters['sp'] ?? null) == "patientId") || ($filters['sd'] ?? "desc") == "" ? "asc" : "")], true);?>" class="ignore-default flex gap-1.5 items-center">
+                            <span>Patient ID</span>
+                            <svg class="h-4 fill-dark shrink-0 <?= (isset($filters['sp']) && $filters['sp'] == "patientId") ? "" : "opacity-50 !rotate-180";?> <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                                 <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM385 231c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-71-71V376c0 13.3-10.7 24-24 24s-24-10.7-24-24V193.9l-71 71c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L239 119c9.4-9.4 24.6-9.4 33.9 0L385 231z"/>
                             </svg>
                         </a>
@@ -119,7 +127,7 @@ include_once BASE_DIR . "/utils/AgeGroup.php";?>
                     <th class="hidden xs:table-cell">
                         <a href="<?= updateQueryString(["sp" => "product", "sd" => ((($filters['sd'] ?? "desc") == "desc" && ($filters['sp'] ?? null) == "product") || ($filters['sd'] ?? "desc") == "" ? "asc" : "")], true);?>" class="ignore-default flex gap-1.5 items-center">
                             <span>Test</span>
-                            <svg class="h-4 fill-dark <?= (isset($filters['sp']) && $filters['sp'] == "product") ? "" : "opacity-50 !rotate-180";?> <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                            <svg class="h-4 fill-dark shrink-0 <?= (isset($filters['sp']) && $filters['sp'] == "product") ? "" : "opacity-50 !rotate-180";?> <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                                 <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM385 231c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-71-71V376c0 13.3-10.7 24-24 24s-24-10.7-24-24V193.9l-71 71c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L239 119c9.4-9.4 24.6-9.4 33.9 0L385 231z"/>
                             </svg>
                         </a>
@@ -127,7 +135,7 @@ include_once BASE_DIR . "/utils/AgeGroup.php";?>
                     <th class="hidden sm:table-cell">
                         <a href="<?= updateQueryString(["sp" => "result", "sd" => ((($filters['sd'] ?? "desc") == "desc" && ($filters['sp'] ?? null) == "result") || ($filters['sd'] ?? "desc") == "" ? "asc" : "")], true);?>" class="ignore-default flex gap-1.5 items-center">
                             <span>Result</span>
-                            <svg class="h-4 fill-dark <?= (isset($filters['sp']) && $filters['sp'] == "result") ? "" : "opacity-50 !rotate-180";?> <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                            <svg class="h-4 fill-dark shrink-0 <?= (isset($filters['sp']) && $filters['sp'] == "result") ? "" : "opacity-50 !rotate-180";?> <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                                 <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM385 231c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-71-71V376c0 13.3-10.7 24-24 24s-24-10.7-24-24V193.9l-71 71c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L239 119c9.4-9.4 24.6-9.4 33.9 0L385 231z"/>
                             </svg>
                         </a>
@@ -154,12 +162,23 @@ include_once BASE_DIR . "/utils/AgeGroup.php";?>
                                 <?php endif;?>
                             <?php endif;?>
                         </td>
+                        <td>
+                            <?php if($serviceEngineer) : ?>
+                                -REDACTED-
+                            <?php else : ?>
+                                <?php if($result['patientId']) : ?>
+                                    <?= $result['patientId'];?>
+                                <?php else : ?>
+                                    Unknown
+                                <?php endif;?>
+                            <?php endif;?>
+                        </td>
                         <td class="hidden xs:table-cell"><?= $result['product'];?></td>
-                        <?php if($serviceEngineer) : ?>
-                            <td>-REDACTED-</td>
-                        <?php else : ?>
-                            <td class="text-elipses hidden sm:table-cell <?= $resultInfo["summary"] == 'Positive' ? "active" : (!$resultInfol['summary'] || $resultInfo['summary'] == 'Invalid' ? 'invalid' : "");?>"><?= $resultInfo['summary'] ?? "Invalid";?></td>
-                        <?php endif;?>
+                            <?php if($serviceEngineer) : ?>
+                                <td>-REDACTED-</td>
+                            <?php else : ?>
+                                <td class="text-elipses hidden sm:table-cell <?= $resultInfo["summary"] == 'Positive' ? "active" : (!$resultInfol['summary'] || $resultInfo['summary'] == 'Invalid' ? 'invalid' : "");?>"><?= $resultInfo['summary'] ?? "Invalid";?></td>
+                            <?php endif;?>
                         <td>
                             <div class="h-full flex items-center gap-1.5 justify-end">
                                 <!-- Statuses and chevron -->

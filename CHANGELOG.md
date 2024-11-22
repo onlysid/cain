@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.1.4] - 22/11/2024
+
+Added patient ID to the results table and minified CSS.
+
+&nbsp;
+
 ## [v3.1.3] - 19/11/2024
 
 DB update multi-window support and default instrument QC test types
