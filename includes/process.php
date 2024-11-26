@@ -1373,8 +1373,9 @@ class Process {
         // Get all the input values
         $lot = $_POST['id'];
         $qcResult = $_POST['qcResult'] ?? 0;
-        $deliveryDate = $_POST['delivery'] ?? null;
-        $expirationDate = $_POST['expiration'] ?? null;
+
+        $deliveryDate = $_POST['delivery'] == "" ? null : ($_POST['delivery'] ?? null);
+        $expirationDate = $_POST['expiration'] == "" ? null : ($_POST['expiration'] ?? null);
         $currentUser = userInfo()['id'];
 
         // Update the lot

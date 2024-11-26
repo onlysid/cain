@@ -51,12 +51,12 @@ foreach($hospitalInfo as $setting) {
 }
 
 if($qcPolicy == 1) {
-    $qcPolicy = "Automatic";
+    $qcPolicyName = "Automatic";
     $qcDesc = "QC will automatically pass once the number of successful positive and negative tests reach those defined below.";
 }
 
 if($qcPolicy == 2) {
-    $qcPolicy = "Manual";
+    $qcPolicyName = "Manual";
     $qcDesc = "QC must be set as 'passed' or 'failed' below manually.";
 }
 
@@ -149,9 +149,9 @@ if($qcPolicy == 2) {
         <tbody>
             <?php foreach($lotItems as $lot) :
                 $qcResult = 'Unverified';
-                if($lot['qc_pass'] === '1') {
+                if($lot['qc_pass'] == 1) {
                     $qcResult = 'Pass';
-                } elseif($lot['qc_pass'] === '2') {
+                } elseif($lot['qc_pass'] == 2) {
                     $qcResult = 'Fail';
                 }
 
@@ -228,9 +228,9 @@ if($qcPolicy == 2) {
     <div class="modal-wrapper">
         <?php foreach($lotItems as $lot) :
             $qcResult = 'Unverified';
-            if($lot['qc_pass'] === '1') {
+            if($lot['qc_pass'] == 1) {
                 $qcResult = 'Pass';
-            } elseif($lot['qc_pass'] === '2') {
+            } elseif($lot['qc_pass'] == 2) {
                 $qcResult = 'Fail';
             }
             // Check expiration date
@@ -239,7 +239,7 @@ if($qcPolicy == 2) {
             } else {
                 $expired = false;
             }?>
-            <div id="<?= $lot['id'];?>Modal" class="generic-modal lot-modal <?= $expired ? 'expired' : '';?> <?= $qcResult;?>">
+            <div id="<?= $lot['id'];?>Modal" class="generic-modal lot-modal <?= $expired ? 'expired' : '';?> <?= strtolower($qcResult);?>">
                 <div class="close-modal" data-modal-close>
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                         <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/>
@@ -278,9 +278,9 @@ if($qcPolicy == 2) {
                                 <label for="qcResult<?= $lot['id'];?>">QC Result</label>
                                 <div class="input-wrapper select-wrapper">
                                     <select id="qcResult<?= $lot['id'];?>" required name="qcResult">
-                                        <option <?= $lot['qc_pass'] === '0' ? 'selected' : '';?> disabled value="">Please select</option>
-                                        <option <?= $lot['qc_pass'] === '2' ? 'selected' : '';?> value="2">Fail</option>
-                                        <option <?= $lot['qc_pass'] === '1' ? 'selected' : '';?> value="1">Pass</option>
+                                        <option <?= $lot['qc_pass'] == 0 ? 'selected' : '';?> disabled value="">Please select</option>
+                                        <option <?= $lot['qc_pass'] == 2 ? 'selected' : '';?> value="2">Fail</option>
+                                        <option <?= $lot['qc_pass'] == 1 ? 'selected' : '';?> value="1">Pass</option>
                                     </select>
                                 </div>
                             </div>

@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [v3.1.5] - 26/11/2024
 
-Menu and UI ease of use adjustments.
+Menu and UI ease of use adjustments. Small QC Policy fixes.
 
 ### Changed
 
@@ -18,6 +18,12 @@ Menu and UI ease of use adjustments.
 -   Removed QC Policy page.
 -   Added QC Policy information to the Lots page.
 -   Added showFooter flag for general pages.
+-   Changed the name of QC Settings to Lot QC Policy
+
+### Fixed
+
+-   Changing QC Policy doesn't change QC Policy on Lots tab.
+-   Adjusting QC Pass on QC Results, lot is still unverified.
 
 &nbsp;
 
