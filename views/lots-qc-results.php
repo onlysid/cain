@@ -42,9 +42,9 @@ $resultNumberText = (($qcCount > $itemsPerPage) ? ($firstItemIndex . "-" . $last
             <?php foreach($qcResults as $result) :
                 $testResult = sanitiseResult($result['result']);
                 $qcResult = 'Unverified';
-                if($result['qc_result'] === '1') {
+                if($result['qc_result'] === 1) {
                     $qcResult = 'Pass';
-                } elseif($result['qc_result'] === '0') {
+                } elseif($result['qc_result'] === 0) {
                     $qcResult = 'Fail';
                 }?>
                 <tr data-modal-open="<?= $result['id'];?>Modal">
@@ -185,8 +185,8 @@ else : ?>
                         <div class="input-wrapper select-wrapper">
                             <select required name="qcResult">
                                 <option <?= $result['qc_result'] === null ? 'selected' : '';?> disabled value="">Please select</option>
-                                <option <?= $result['qc_result'] === '0' ? 'selected' : '';?> value="0">Fail</option>
-                                <option <?= $result['qc_result'] === '1' ? 'selected' : '';?> value="1">Pass</option>
+                                <option <?= $result['qc_result'] === 0 ? 'selected' : '';?> value="0">Fail</option>
+                                <option <?= $result['qc_result'] === 1 ? 'selected' : '';?> value="1">Pass</option>
                             </select>
                         </div>
                     </div>

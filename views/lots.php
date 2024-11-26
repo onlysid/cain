@@ -168,9 +168,11 @@ if($qcPolicy == 2) {
                     <?php if($qcPolicy) : ?>
                         <td class="font-black <?= $qcResult == 'Fail' ? 'text-red-500' : '';?><?= $qcResult == 'Unverified' ? 'text-amber-500' : '';?><?= $qcResult == 'Pass' ? 'text-green-500' : '';?>">
                             <?= $qcResult;?>
-                            <?php if($qcPolicy == 1 && $qcResult !== 'Pass') : ?>
-                                <p class="text-xs"><?= $lot['positive_count'];?>/<?= $qcPositives;?> Positive Tests</p>
-                                <p class="text-xs"><?= $lot['negative_count'];?>/<?= $qcNegatives;?> Negative Tests</p>
+                            <?php if($qcPolicy != 0 && $lot['failure_count'] == 0) : ?>
+                                <p class="text-xs <?= $lot['positive_count'] >= $qcPositives ? 'text-green-500' : '';?>"><?= $lot['positive_count'];?> Positive Test<?= $lot['positive_count'] > 1 || $lot['positive_count'] == 0 ? 's' : '';?></p>
+                                <p class="text-xs <?= $lot['negative_count'] >= $qcNegatives ? 'text-green-500' : '';?>"><?= $lot['negative_count'];?> Negative Test<?= $lot['negative_count'] > 1 || $lot['negative_count'] == 0 ? 's' : '';?></p>
+                            <?php elseif($lot['failure_count'] != 0) :?>
+                                <p class="text-xs text-red-500"><?= $lot['failure_count'];?> Failed Test<?= $lot['failure_count'] > 1 || $lot['failure_count'] == 0 ? 's' : '';?>!</p>
                             <?php endif;?>
                         </td>
                     <?php else : ?>
@@ -272,7 +274,7 @@ if($qcPolicy == 2) {
                     <input type="hidden" name="return-path" value="<?= $currentURL;?>">
                     <input type="hidden" name="id" class="lot-id" value="<?= $lot['id'];?>">
 
-                    <?php if($qcPolicy === '2') : ?>
+                    <?php if($qcPolicy == 2) : ?>
                         <div class="form-fields">
                             <div class="field">
                                 <label for="qcResult<?= $lot['id'];?>">QC Result</label>

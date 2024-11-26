@@ -618,12 +618,13 @@ function getLots($params, $itemsPerPage) {
         $searchConditions .= ($searchConditions ? " AND " : "") . "lots.qc_pass = 0 ";
     }
 
-    // Build the SQL query with GROUP_CONCAT to aggregate results for each lot
+    // Build the SQL query
     $query = "
         SELECT lots.*,
-               GROUP_CONCAT(results.result SEPARATOR '|||') AS results
+               GROUP_CONCAT(CASE WHEN lots_qc_results.qc_result = 1 THEN results.result END SEPARATOR '|||') AS positive_results,
+               GROUP_CONCAT(CASE WHEN lots_qc_results.qc_result = 0 THEN results.result END SEPARATOR '|||') AS failure_results
         FROM lots
-        LEFT JOIN lots_qc_results ON lots.id = lots_qc_results.lot AND lots_qc_results.qc_result = 1
+        LEFT JOIN lots_qc_results ON lots.id = lots_qc_results.lot
         LEFT JOIN results ON lots_qc_results.test_result = results.id
     ";
     $countQuery = "SELECT COUNT(*) FROM lots ";
@@ -644,11 +645,11 @@ function getLots($params, $itemsPerPage) {
     foreach ($lots as &$lot) {
         $positiveCount = 0;
         $negativeCount = 0;
+        $failureCount = 0;
 
-        // Check if results are set and not empty
-        $results = isset($lot['results']) ? explode('|||', $lot['results']) : [];
-
-        foreach ($results as $result) {
+        // Parse positive results
+        $positiveResults = isset($lot['positive_results']) ? explode('|||', $lot['positive_results']) : [];
+        foreach ($positiveResults as $result) {
             $parsedResult = parseResult($result);
             if ($parsedResult['result'] === true) {
                 $positiveCount++;
@@ -657,9 +658,16 @@ function getLots($params, $itemsPerPage) {
             }
         }
 
+        // Parse failure results
+        $failureResults = isset($lot['failure_results']) ? explode('|||', $lot['failure_results']) : [];
+        foreach ($failureResults as $result) {
+            $failureCount++;
+        }
+
         // Add counts to each lot
         $lot['positive_count'] = $positiveCount;
         $lot['negative_count'] = $negativeCount;
+        $lot['failure_count'] = $failureCount;
     }
 
     // Get the count of all lots
@@ -955,19 +963,15 @@ function lotQCCheck($lot) {
         }
 
         if(lotAutoQCCheck($lot)) {
-            // We should update the value of qc_pass to 1 and return that QC was passed
-            $cainDB->query("UPDATE lots SET qc_pass = 1 WHERE id = ?;", [$lot]);
             return true;
         }
     }
 
     // Check the lot for its QC pass flag
-    if(($qcPolicy == 2 || $qcPolicy == 1) && ($qcPass = $cainDB->select("SELECT qc_pass FROM lots WHERE id = ?;", [$lot])['qc_pass'] == 1)) {
+    if($qcPolicy == 2 && ($qcPass = $cainDB->select("SELECT qc_pass FROM lots WHERE id = ?;", [$lot])['qc_pass'] == 1)) {
         return true;
     }
 
-    // We have not passed QC! Set the flag to failure and return false.
-    $cainDB->query("UPDATE lots SET qc_pass = 2 WHERE id = ?;", [$lot]);
     return false;
 }
 
@@ -975,8 +979,17 @@ function lotQCCheck($lot) {
 function lotAutoQCCheck($lot) {
     global $cainDB;
 
-    // Firstly, check if we have QC set to on, otherwise we don't need this at all.
+    // Firstly, check if we have QC set to automatic, otherwise we don't need this at all.
     if($cainDB->select("SELECT value FROM settings WHERE `name` = 'qc_policy'")['value'] != 1) {
+        return false;
+    }
+
+    // Firstly, if any QC test has failed, then the QC has failed
+    $failures = $cainDB->select("SELECT COUNT(*) as count FROM lots_qc_results WHERE qc_result = 0;")['count'];
+
+    if($failures) {
+        // QC has failed. Fail the lot and move on.
+        $cainDB->query("UPDATE lots SET qc_pass = 2 WHERE id = ?;", [$lot]);
         return false;
     }
 
@@ -990,10 +1003,13 @@ function lotAutoQCCheck($lot) {
 
     // If we have the right counts, we have passed QC!
     if($positiveTests >= $positiveTestsRequired && $negativeTests >= $negativeTestsRequired) {
+        // We should update the value of qc_pass to 1 and return that QC was passed
+        $cainDB->query("UPDATE lots SET qc_pass = 1 WHERE id = ?;", [$lot]);
         return true;
     }
 
     // Otherwise, we have not passed QC.
+    $cainDB->query("UPDATE lots SET qc_pass = 0 WHERE id = ?;", [$lot]);
     return false;
 }
 

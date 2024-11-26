@@ -19,11 +19,13 @@ Menu and UI ease of use adjustments. Small QC Policy fixes.
 -   Added QC Policy information to the Lots page.
 -   Added showFooter flag for general pages.
 -   Changed the name of QC Settings to Lot QC Policy
+-   Adjusted the way Automatic QC checking works (now it reverts to unverified and overrides a failure if new data is presented in the autoQCCheck)
 
 ### Fixed
 
 -   Changing QC Policy doesn't change QC Policy on Lots tab.
--   Adjusting QC Pass on QC Results, lot is still unverified.
+-   Adjusting QC Pass on Lots does not work.
+-   Similarly for the QC Results
 
 &nbsp;
 
