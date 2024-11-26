@@ -266,6 +266,12 @@ if($qcPolicy == 2) {
                     <hr>
                     <div class="qc-result-wrapper">
                         <p>Result: <span class="qc-result"><?= strtoupper($qcResult);?></span></p>
+                        <?php if($qcPolicy != 0 && $lot['failure_count'] == 0) : ?>
+                            <p class="text-sm <?= $lot['positive_count'] >= $qcPositives ? 'text-green-500' : '';?>"><?= $lot['positive_count'];?> Passed Positive Test<?= $lot['positive_count'] > 1 || $lot['positive_count'] == 0 ? 's' : '';?>. <?= $qcPositives;?> required.</p>
+                            <p class="text-sm <?= $lot['negative_count'] >= $qcNegatives ? 'text-green-500' : '';?>"><?= $lot['negative_count'];?> Passed Negative Test<?= $lot['negative_count'] > 1 || $lot['negative_count'] == 0 ? 's' : '';?>. <?= $qcPositives;?> required.</p>
+                        <?php elseif($lot['failure_count'] != 0) :?>
+                            <p class="text-sm text-red-500"><?= $lot['failure_count'];?> Failed Test<?= $lot['failure_count'] > 1 || $lot['failure_count'] == 0 ? 's' : '';?>! Lot QC should be considered failed.</p>
+                        <?php endif;?>
                     </div>
                 <?php endif;?>
                 <hr>

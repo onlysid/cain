@@ -20,6 +20,7 @@ Menu and UI ease of use adjustments. Small QC Policy fixes.
 -   Added showFooter flag for general pages.
 -   Changed the name of QC Settings to Lot QC Policy
 -   Adjusted the way Automatic QC checking works (now it reverts to unverified and overrides a failure if new data is presented in the autoQCCheck)
+-   Added QC Details to the modal result box.
 
 ### Fixed
 
