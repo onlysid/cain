@@ -19,7 +19,6 @@ foreach ($qcPolicySettings as $setting) {
 $menuItems = [
     new MenuItem($routes['/'], null, 'list-icon'),
     new MenuItem($routes['/assay-modules']),
-    new MenuItem($routes['/qc-policy']),
     new MenuItem($routes['/lots']),
 ];
 
@@ -29,7 +28,6 @@ if ($qcPolicy !== "0") {
 }
 
 // Add the remaining menu items
-$menuItems[] = new MenuItem($routes['/users'], 'User Login Control');
 $menuItems[] = new MenuItem($routes['/backup']);
 $menuItems[] = new MenuItem($routes['/about']);
 $menuItems[] = new MenuItem($routes['/settings'], "Settings");

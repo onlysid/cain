@@ -33,6 +33,8 @@ $hospitalInfo = systemInfo();
 $qcPolicy = null;
 $qcPositives = null;
 $qcNegatives = null;
+$qcPolicyName = "Off";
+$qcDesc = "No QC tests are required.";
 
 foreach($hospitalInfo as $setting) {
     if($setting['name'] === 'qc_policy') {
@@ -48,6 +50,16 @@ foreach($hospitalInfo as $setting) {
     }
 }
 
+if($qcPolicy == 1) {
+    $qcPolicy = "Automatic";
+    $qcDesc = "QC will automatically pass once the number of successful positive and negative tests reach those defined below.";
+}
+
+if($qcPolicy == 2) {
+    $qcPolicy = "Manual";
+    $qcDesc = "QC must be set as 'passed' or 'failed' below manually.";
+}
+
 // Page setup ?>
 
 <link href="/js/vanilla-calendar/build/vanilla-calendar.min.css" rel="stylesheet">
@@ -56,43 +68,69 @@ foreach($hospitalInfo as $setting) {
 
 <h1 class="mb-2">Lots</h1>
 
-<section class="notice">
+<section class="notice my-0">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
         <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/>
     </svg>
     <p>View lots and their details and verify QC statuses.</p>
 </section>
 
-<form class="w-full sm:w-auto" id="lotsFilterForm">
-    <div class="form-fields !gap-0">
-        <div class="field">
-            <div class="input-wrapper !py-1 !pr-1">
-                <input id="search" type="text" placeholder="Search..." name="s" value="<?= $filters['s'] ?? "";?>">
-                <button id="searchBtn" class="cursor-pointer aspect-square rounded-full p-2 bg-dark transition-all duration-500 hover:scale-110 hover:opacity-75">
-                    <svg class="h-4 w-auto fill-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                        <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/>
-                    </svg>
-                </button>
-            </div>
-        </div>
-        <label for="priority" class="tooltip !flex field ml-2 gap-2 border border-light !flex-row toggle-field pr-2 pl-4 py-2 rounded-full bg-white h-full" title="View lots with unverified QC only.">
-            <div class="flex flex-col w-full">
-                <div class="shrink">Unverified</div>
-            </div>
-            <div class="checkbox-wrapper">
-                <input class="tgl" name="priority" id="priority" type="checkbox" <?= ($priority == 'on') ? "checked" : "";?>>
-                <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="priority"><span></span></label>
-            </div>
-        </label>
-        <?php if($filters) : ?>
-            <a href="<?= strtok($currentURL, '?');?>" id="removeFilter" class="p-2 transition-all duration-500 hover:scale-110 hover:opacity-75 tooltip" title="Clear Filters">
-                <svg class="h-7 fill-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                    <path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c-9.4 9.4-9.4 24.6 0 33.9l47 47-47 47c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l47-47 47 47c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-47-47 47-47c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-47 47-47-47c-9.4-9.4-24.6-9.4-33.9 0z"/>
-                </svg>
-            </a>
+<section class="p-4 rounded-lg bg-blue-200 shadow-md">
+    <h4 class="underline mb-1">QC Policy Information:</h4>
+    <p class="text-base"><span class="font-black">QC Policy: </span><?= $qcPolicyName;?> (<?= $qcDesc;?>)</p>
+    <?php if($qcPolicy) : ?>
+        <p class="text-base"><span class="font-black">Number of Successful Positive Tests Required: </span><?= $qcPositives;?></p>
+        <p class="text-base"><span class="font-black">Number of Successful Negative Tests Required: </span><?= $qcNegatives;?></p>
+    <?php endif;?>
+
+    <!-- QC Links -->
+     <div class="flex gap-3 mt-2 items-center">
+        <?php if($currentUser['user_type'] >= ADMINISTRATIVE_CLINICIAN) : ?>
+            <a href="/settings/qc" class="btn btn-small w-max border-btn hover:!text-white">Change QC Policy</a>
+        <?php endif;
+        if($qcPolicy) : ?>
+            <a href="/qc-results" class="btn btn-small w-max border-btn hover:!text-white">View and Verify QC Results</a>
         <?php endif;?>
-    </div>
-</form>
+     </div>
+</section>
+
+<section class="my-0 w-full flex justify-between items-center">
+    <p class="results-number hidden sm:block"><?= $lotNumberText;?></p>
+
+    <form class="w-full sm:w-auto flex-row justify-between" id="lotsFilterForm">
+
+        <div class="form-fields !gap-0">
+            <div class="field">
+                <div class="input-wrapper !py-1 !pr-1">
+                    <input id="search" type="text" placeholder="Search..." name="s" value="<?= $filters['s'] ?? "";?>">
+                    <button id="searchBtn" class="cursor-pointer aspect-square rounded-full p-2 bg-dark transition-all duration-500 hover:scale-110 hover:opacity-75">
+                        <svg class="h-4 w-auto fill-white" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                            <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <?php if($qcPolicy) : ?>
+                <label for="priority" class="tooltip !flex field ml-2 gap-2 border border-light !flex-row toggle-field pr-2 pl-4 py-2 rounded-full bg-white h-full" title="View lots with unverified QC only.">
+                    <div class="flex flex-col w-full">
+                        <div class="shrink">Unverified</div>
+                    </div>
+                    <div class="checkbox-wrapper">
+                        <input class="tgl" name="priority" id="priority" type="checkbox" <?= ($priority == 'on') ? "checked" : "";?>>
+                        <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="priority"><span></span></label>
+                    </div>
+                </label>
+                <?php if($filters) : ?>
+                    <a href="<?= strtok($currentURL, '?');?>" id="removeFilter" class="p-2 transition-all duration-500 hover:scale-110 hover:opacity-75 tooltip" title="Clear Filters">
+                        <svg class="h-7 fill-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                            <path d="M256 48a208 208 0 1 1 0 416 208 208 0 1 1 0-416zm0 464A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c-9.4 9.4-9.4 24.6 0 33.9l47 47-47 47c-9.4 9.4-9.4 24.6 0 33.9s24.6 9.4 33.9 0l47-47 47 47c9.4 9.4 24.6 9.4 33.9 0s9.4-24.6 0-33.9l-47-47 47-47c9.4-9.4 9.4-24.6 0-33.9s-24.6-9.4-33.9 0l-47 47-47-47c-9.4-9.4-24.6-9.4-33.9 0z"/>
+                        </svg>
+                    </a>
+                <?php endif;
+            endif;?>
+        </div>
+    </form>
+</section>
 
 <?php if($totalLotCount) : ?>
     <table id="priorityList">

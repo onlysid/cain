@@ -4,87 +4,87 @@
 
 /* Define fonts */
 @font-face {
-    font-family: 'Roboto';
+    font-family: "Roboto";
     font-style: normal;
     font-weight: 400;
-    src: url('../assets/fonts/Roboto-Regular.ttf');
+    src: url("../assets/fonts/Roboto-Regular.ttf");
 }
 
 @font-face {
-    font-family: 'Roboto';
+    font-family: "Roboto";
     font-style: italic;
     font-weight: 400;
-    src: url('../assets/fonts/Roboto-Italic.ttf');
+    src: url("../assets/fonts/Roboto-Italic.ttf");
 }
 
 @font-face {
-    font-family: 'Roboto';
+    font-family: "Roboto";
     font-style: normal;
     font-weight: 900;
-    src: url('../assets/fonts/Roboto-Black.ttf');
+    src: url("../assets/fonts/Roboto-Black.ttf");
 }
 
 @font-face {
-    font-family: 'Roboto';
+    font-family: "Roboto";
     font-style: italic;
     font-weight: 900;
-    src: url('../assets/fonts/Roboto-BlackItalic.ttf');
+    src: url("../assets/fonts/Roboto-BlackItalic.ttf");
 }
 
 @font-face {
-    font-family: 'Roboto';
+    font-family: "Roboto";
     font-style: normal;
     font-weight: 700;
-    src: url('../assets/fonts/Roboto-Bold.ttf');
+    src: url("../assets/fonts/Roboto-Bold.ttf");
 }
 
 @font-face {
-    font-family: 'Roboto';
+    font-family: "Roboto";
     font-style: italic;
     font-weight: 700;
-    src: url('../assets/fonts/Roboto-BoldItalic.ttf');
+    src: url("../assets/fonts/Roboto-BoldItalic.ttf");
 }
 
 @font-face {
-    font-family: 'Roboto';
+    font-family: "Roboto";
     font-style: normal;
     font-weight: 300;
-    src: url('../assets/fonts/Roboto-Light.ttf');
+    src: url("../assets/fonts/Roboto-Light.ttf");
 }
 
 @font-face {
-    font-family: 'Roboto';
+    font-family: "Roboto";
     font-style: italic;
     font-weight: 300;
-    src: url('../assets/fonts/Roboto-LightItaclic.ttf');
+    src: url("../assets/fonts/Roboto-LightItaclic.ttf");
 }
 
 @font-face {
-    font-family: 'Roboto';
+    font-family: "Roboto";
     font-style: normal;
     font-weight: 500;
-    src: url('../assets/fonts/Roboto-Medium.ttf');
+    src: url("../assets/fonts/Roboto-Medium.ttf");
 }
 
 @font-face {
-    font-family: 'Roboto';
+    font-family: "Roboto";
     font-style: italic;
     font-weight: 500;
-    src: url('../assets/fonts/Roboto-MediumItalic.ttf');
+    src: url("../assets/fonts/Roboto-MediumItalic.ttf");
 }
 
 @font-face {
-    font-family: 'Roboto';
+    font-family: "Roboto";
     font-style: normal;
     font-weight: 100;
-    src: url('../assets/fonts/Roboto-Thin.ttf');
+    src: url("../assets/fonts/Roboto-Thin.ttf");
 }
 
 @font-face {
-    font-family: 'Roboto';
+    font-family: "Roboto";
     font-style: italic;
     font-weight: 100;
-    src: url('../assets/fonts/Roboto-ThinItalic.ttf');
+    src: url("../assets/fonts/Roboto-ThinItalic.ttf");
 }
 
 /* General Styles */
@@ -96,24 +96,31 @@
 
 /* Hide scrollbar for IE, Edge and Firefox */
 *:not(.result-details):not(.show-scrollbar) {
-    -ms-overflow-style: none;  /* IE and Edge */
-    scrollbar-width: none;  /* Firefox */
+    -ms-overflow-style: none; /* IE and Edge */
+    scrollbar-width: none; /* Firefox */
 }
 
 .result-details::-webkit-scrollbar-track {
     @apply rounded-r-xl;
-	background-color: #CCCCCC;
+    background-color: #cccccc;
 }
 
 .result-details::-webkit-scrollbar {
     @apply rounded-r-full;
-	width: 18px;
-	background-color: #F5F5F5;
+    width: 18px;
+    background-color: #f5f5f5;
 }
 
 .result-details::-webkit-scrollbar-thumb {
     @apply rounded-r-xl bg-white;
-	background-image: -webkit-gradient(linear, 40% 0%, 75% 84%, from(#4D9C41), to(#199181), color-stop(.6,#54DE5D))
+    background-image: -webkit-gradient(
+        linear,
+        40% 0%,
+        75% 84%,
+        from(#4d9c41),
+        to(#199181),
+        color-stop(0.6, #54de5d)
+    );
 }
 
 h1 {
@@ -128,11 +135,14 @@ h3 {
     @apply font-bold text-white xl:text-2xl sm:text-xl text-lg;
 }
 
-p, a, button.a-tag {
+p,
+a,
+button.a-tag {
     @apply text-grey xl:text-xl text-lg;
 }
 
-a:not(.btn), .a-tag {
+a:not(.btn),
+.a-tag {
     @apply text-secondary hover:text-tirtiary transition-all duration-500;
 }
 
@@ -141,14 +151,14 @@ a.ignore-default {
 }
 
 @property --bgCol1 {
-    syntax: '<color>';
+    syntax: "<color>";
     initial-value: #919090;
     inherits: false;
 }
 
 @property --bgCol2 {
-    syntax: '<color>';
-    initial-value: #4D4C4C;
+    syntax: "<color>";
+    initial-value: #4d4c4c;
     inherits: false;
 }
 
@@ -160,16 +170,20 @@ a.ignore-default {
     @apply px-6 py-4 xl:py-5 flex gap-2 justify-center min-w-max items-center text-white font-bold rounded-xl xl:text-xl text-base hover:text-tirtiary;
 
     --bgCol1: #919090;
-    --bgCol2: #4D4C4C;
-    box-shadow: 0px 0px 10px #0000007C;
-    background: rgb(2,0,36);
-    background: radial-gradient(ellipse at 50% -30px, var(--bgCol1) 0%, var(--bgCol2) 76%);
+    --bgCol2: #4d4c4c;
+    box-shadow: 0px 0px 10px #0000007c;
+    background: rgb(2, 0, 36);
+    background: radial-gradient(
+        ellipse at 50% -30px,
+        var(--bgCol1) 0%,
+        var(--bgCol2) 76%
+    );
     transition: --bgCol1 0.5s, --bgCol2 0.5s, color 0.5s, box-shadow 0.5s;
 }
 
 .btn:hover {
     box-shadow: 0px 0px 10px #7aa8acce;
-    --bgCol1: #4D4C4C;
+    --bgCol1: #4d4c4c;
     --bgCol2: #7c7c7c;
 }
 
@@ -206,9 +220,8 @@ a.ignore-default {
 }
 
 #menu .btn.active {
-    @apply md:w-[calc(100%_+50px)] ;
+    @apply md:w-[calc(100%_+50px)];
 }
-
 
 .border-btn {
     @apply px-4 py-2 border-white border-solid border-8 text-base;
@@ -221,7 +234,7 @@ a.ignore-default {
 
 .alt-border-btn {
     @apply px-8 py-3;
-    box-shadow: inset 0px 0px 3px 3px #00000071, inset 0px 0px 0px 4px #77DFFF;
+    box-shadow: inset 0px 0px 3px 3px #00000071, inset 0px 0px 0px 4px #77dfff;
 }
 
 .btn.has-icon:not(.border-btn) {
@@ -341,7 +354,7 @@ td .table-controls form {
     @apply flex flex-row items-center justify-end;
 }
 
-td .table-controls svg  {
+td .table-controls svg {
     @apply h-6;
 }
 
@@ -353,7 +366,8 @@ td.active {
     @apply min-h-[400px] overflow-scroll;
 }
 
-.result-details .canvas-wrapper, .result-details .error {
+.result-details .canvas-wrapper,
+.result-details .error {
     @apply p-2 md:p-4 bg-white rounded-xl shadow-xl;
 }
 
@@ -365,19 +379,23 @@ td.end form {
     @apply items-center w-auto gap-2.5;
 }
 
-table.result-explosion, table.lot-explosion {
+table.result-explosion,
+table.lot-explosion {
     @apply border-spacing-0.5 mb-4;
 }
 
-table.result-explosion tr, table.lot-explosion tr {
+table.result-explosion tr,
+table.lot-explosion tr {
     @apply bg-dark text-white;
 }
 
-table.result-explosion tr td:first-of-type, table.lot-explosion tr td:first-of-type {
+table.result-explosion tr td:first-of-type,
+table.lot-explosion tr td:first-of-type {
     @apply font-extrabold;
 }
 
-table.result-explosion td, table.lot-explosion td {
+table.result-explosion td,
+table.lot-explosion td {
     @apply py-2;
 }
 
@@ -389,7 +407,8 @@ td .details svg {
     @apply h-5 fill-dark;
 }
 
-.result-details.alert, .lot-details.alert {
+.result-details.alert,
+.lot-details.alert {
     @apply text-red-500;
 }
 
@@ -403,9 +422,10 @@ td .details svg {
 
 .modal-wrapper {
     @apply fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none;
+    z-index: 50;
 }
 
-.modal-wrapper .generic-modal .close-modal:not(.no-styles){
+.modal-wrapper .generic-modal .close-modal:not(.no-styles) {
     @apply w-8 h-8 cursor-pointer absolute top-4 right-4 transition-all duration-500 hover:scale-110;
 }
 
@@ -435,7 +455,6 @@ td .details svg {
         background-color: rgba(0, 0, 0, 0.7);
     }
 }
-
 
 .modal-wrapper:has(.active)::before {
     @apply opacity-100 pointer-events-auto;
@@ -483,14 +502,15 @@ tr.instrument.lost {
 }
 
 tr.instrument.lost td {
-    @apply text-light-grey
+    @apply text-light-grey;
 }
 
 tr.instrument.lost td .status-indicator {
     @apply bg-grey;
 }
 
-#genericModalWrapper, #qcModalWrapper {
+#genericModalWrapper,
+#qcModalWrapper {
     z-index: 9999;
 }
 
@@ -535,18 +555,21 @@ tr.instrument.lost td .status-indicator {
     @apply block;
 }
 
-body, main {
+body,
+main {
     @apply bg-primary flex grow flex-col font-roboto items-center fixed justify-center h-[100svh] w-full;
 }
 
 /* Fallback for older browsers that don't support 100svh */
 @supports not (height: 100svh) {
-    body, main {
+    body,
+    main {
         height: 100vh;
     }
 }
 
-body.show-menu, body.show-menu main {
+body.show-menu,
+body.show-menu main {
     @apply bg-primary-dark md:bg-primary;
 }
 
@@ -566,7 +589,9 @@ form {
     @apply grow flex flex-col w-full md:w-auto justify-center items-center;
 }
 
-label:not(.toggle):not(.vanilla-calendar-time__hours):not(.vanilla-calendar-time__minutes) {
+label:not(.toggle):not(.vanilla-calendar-time__hours):not(
+        .vanilla-calendar-time__minutes
+    ) {
     @apply text-base text-grey self-start pl-3;
 }
 
@@ -590,7 +615,9 @@ label:not(.toggle):not(.vanilla-calendar-time__hours):not(.vanilla-calendar-time
     @apply max-w-xs;
 }
 
-.form-fields .input-wrapper > input, select, textarea {
+.form-fields .input-wrapper > input,
+select,
+textarea {
     @apply bg-transparent border-transparent w-full focus:outline-none;
 }
 
@@ -751,7 +778,7 @@ label:not(.toggle):not(.vanilla-calendar-time__hours):not(.vanilla-calendar-time
 }
 
 .checkbox-wrapper .tgl:disabled + .toggle span {
-    background: #cb3f3f!important;
+    background: #cb3f3f !important;
 }
 
 .checkbox-wrapper .tgl:checked + .toggle span {
@@ -769,10 +796,15 @@ label:not(.toggle):not(.vanilla-calendar-time__hours):not(.vanilla-calendar-time
 
 .radial-gradient {
     --bgCol1: #919090;
-    --bgCol2: #4D4C4C;
-    box-shadow:  inset 0px 0px 0px 4px #777777, 0px 0px 20px #5F5F5F, inset 0px 0px 20px #000000;
-    background: rgb(2,0,36);
-    background: radial-gradient(ellipse at 50% -30px, var(--bgCol1) 0%, var(--bgCol2) 76%);
+    --bgCol2: #4d4c4c;
+    box-shadow: inset 0px 0px 0px 4px #777777, 0px 0px 20px #5f5f5f,
+        inset 0px 0px 20px #000000;
+    background: rgb(2, 0, 36);
+    background: radial-gradient(
+        ellipse at 50% -30px,
+        var(--bgCol1) 0%,
+        var(--bgCol2) 76%
+    );
 }
 
 #settingsBackLink {
@@ -903,38 +935,46 @@ body.show-menu #contentWrapper:not(.settings-wrapper) {
     @apply rounded-none md:rounded-xl shadow-none md:shadow-[0px_0px_10px_#5F5F5F];
 }
 
-#contentOuterWrapper.settings-wrapper, #contentWrapper.settings-wrapper {
+#contentOuterWrapper.settings-wrapper,
+#contentWrapper.settings-wrapper {
     @apply w-full h-full;
 }
 
-.result-modal, .lot-modal {
+.result-modal,
+.lot-modal {
     @apply fixed transition-all duration-500 top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-50 bg-black/50;
 }
 
-.result-modal-backdrop, .lot-modal-backdrop {
+.result-modal-backdrop,
+.lot-modal-backdrop {
     @apply fixed opacity-0 backdrop-blur-xl w-[100vw] h-[100svh] top-0 left-0 bg-black/30 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 flex flex-col justify-center items-center;
 }
 
 /* Fallback for older browsers that don't support 100svh */
 @supports not (height: 100svh) {
-    .result-modal-backdrop, .lot-modal-backdrop {
+    .result-modal-backdrop,
+    .lot-modal-backdrop {
         height: 100vh;
     }
 }
 
-.result-modal.active, .lot-modal.active {
+.result-modal.active,
+.lot-modal.active {
     @apply pointer-events-auto;
 }
 
-.result-modal.active .result-modal-backdrop, .lot-modal.active .lot-modal-backdrop {
+.result-modal.active .result-modal-backdrop,
+.lot-modal.active .lot-modal-backdrop {
     @apply opacity-100;
 }
 
-.result-info, .lot-modal .lot-info {
+.result-info,
+.lot-modal .lot-info {
     @apply basis-[10rem] grow flex flex-col p-4 rounded-md bg-white shadow-xl shadow-dark/30;
 }
 
-.result-info.pos, .lot-modal .lot-info.neg {
+.result-info.pos,
+.lot-modal .lot-info.neg {
     @apply bg-gradient-to-r from-red-800 to-red-500;
 }
 
@@ -946,7 +986,14 @@ body.show-menu #contentWrapper:not(.settings-wrapper) {
     @apply bg-gradient-to-r from-green-800 to-green-500;
 }
 
-.result-info.pos h4, .result-info.pos p, .result-info.invalid h4, .result-info.invalid p, .lot-modal .lot-info.pos h4, .lot-modal .lot-info.pos p, .lot-modal .lot-info.neg h4, .lot-modal .lot-info.neg p {
+.result-info.pos h4,
+.result-info.pos p,
+.result-info.invalid h4,
+.result-info.invalid p,
+.lot-modal .lot-info.pos h4,
+.lot-modal .lot-info.pos p,
+.lot-modal .lot-info.neg h4,
+.lot-modal .lot-info.neg p {
     @apply text-white;
 }
 
@@ -995,7 +1042,8 @@ section.notice.error {
     @apply bg-red-200;
 }
 
-section.notice p, section.notice a {
+section.notice p,
+section.notice a {
     @apply text-base md:text-lg;
 }
 
@@ -1007,7 +1055,8 @@ section.notice svg {
     @apply w-8 h-auto shrink-0 py-1 fill-dark;
 }
 
-section p a, a.alt {
+section p a,
+a.alt {
     @apply !text-blue-800 hover:!text-green-800;
 }
 
@@ -1068,11 +1117,13 @@ section p a, a.alt {
     @apply bg-primary-dark rounded-2xl h-full shadow-2xl shadow-blue-200/50 flex relative justify-between overflow-hidden;
 }
 
-#hl7Options, #cainOptions {
+#hl7Options,
+#cainOptions {
     @apply max-h-0 opacity-0 transition-all duration-500 pointer-events-none;
 }
 
-#hl7Options.active, #cainOptions.active {
+#hl7Options.active,
+#cainOptions.active {
     @apply max-h-[30rem] opacity-100 pointer-events-auto;
 }
 
@@ -1133,7 +1184,8 @@ ul.form-errors li {
     @apply bg-orange-400;
 }
 
-#notices .notice.alert p, #notices .notice.warn p {
+#notices .notice.alert p,
+#notices .notice.warn p {
     @apply text-white;
 }
 
@@ -1185,7 +1237,7 @@ a.log-link.active {
 
 /* Generic Grid Table */
 .cain-grid {
-    @apply grid grid-cols-3 rounded-xl p-2 xl:p-3 w-full grow bg-grey shadow-white/30 shadow-xl mb-4 gap-1 lg:gap-2
+    @apply grid grid-cols-3 rounded-xl p-2 xl:p-3 w-full grow bg-grey shadow-white/30 shadow-xl mb-4 gap-1 lg:gap-2;
 }
 
 .cain-grid .cain-grid-item {
@@ -1208,7 +1260,8 @@ a.log-link.active {
     @apply bg-white shadow-white/30 shadow-lg rounded-r-lg p-4 text-center content-center font-extrabold;
 }
 
-.cain-grid-content.disabled, .cain-grid-item.disabled {
+.cain-grid-content.disabled,
+.cain-grid-item.disabled {
     @apply grayscale cursor-not-allowed;
 }
 
@@ -1237,11 +1290,14 @@ a.log-link.active {
     @apply grow border-b border-dark;
 }
 
-.status-0, .status-1, .status-99 {
+.status-0,
+.status-1,
+.status-99 {
     @apply text-dark/75;
 }
 
-.status-2, .status-8 {
+.status-2,
+.status-8 {
     @apply text-amber-500;
 }
 
@@ -1249,11 +1305,14 @@ a.log-link.active {
     @apply text-secondary;
 }
 
-.status-4, .status-6, .status-7 {
+.status-4,
+.status-6,
+.status-7 {
     @apply text-red-500;
 }
 
-.status-5, .status-9 {
+.status-5,
+.status-9 {
     @apply text-green-500;
 }
 
@@ -1365,7 +1424,7 @@ tr.expired .expiration {
 }
 .loadingspinner div {
     display: inline-block;
-    background: #E3FFEC;
+    background: #e3ffec;
     border: none;
     border-radius: 2px;
     width: var(--square);
@@ -1379,27 +1438,42 @@ tr.expired .expiration {
 .loadingspinner #square1 {
     left: calc(0 * var(--offset));
     top: calc(0 * var(--offset));
-    animation: square1 var(--duration) var(--delay) var(--timing-function) infinite, squarefadein var(--in-duration) calc(1 * var(--in-delay)) var(--in-timing-function) both;
+    animation: square1 var(--duration) var(--delay) var(--timing-function)
+            infinite,
+        squarefadein var(--in-duration) calc(1 * var(--in-delay))
+            var(--in-timing-function) both;
 }
 .loadingspinner #square2 {
     left: calc(0 * var(--offset));
     top: calc(1 * var(--offset));
-    animation: square2 var(--duration) var(--delay) var(--timing-function) infinite, squarefadein var(--in-duration) calc(1 * var(--in-delay)) var(--in-timing-function) both;
+    animation: square2 var(--duration) var(--delay) var(--timing-function)
+            infinite,
+        squarefadein var(--in-duration) calc(1 * var(--in-delay))
+            var(--in-timing-function) both;
 }
 .loadingspinner #square3 {
     left: calc(1 * var(--offset));
     top: calc(1 * var(--offset));
-    animation: square3 var(--duration) var(--delay) var(--timing-function) infinite, squarefadein var(--in-duration) calc(2 * var(--in-delay)) var(--in-timing-function) both;
+    animation: square3 var(--duration) var(--delay) var(--timing-function)
+            infinite,
+        squarefadein var(--in-duration) calc(2 * var(--in-delay))
+            var(--in-timing-function) both;
 }
 .loadingspinner #square4 {
     left: calc(2 * var(--offset));
     top: calc(1 * var(--offset));
-    animation: square4 var(--duration) var(--delay) var(--timing-function) infinite, squarefadein var(--in-duration) calc(3 * var(--in-delay)) var(--in-timing-function) both;
+    animation: square4 var(--duration) var(--delay) var(--timing-function)
+            infinite,
+        squarefadein var(--in-duration) calc(3 * var(--in-delay))
+            var(--in-timing-function) both;
 }
 .loadingspinner #square5 {
     left: calc(3 * var(--offset));
     top: calc(1 * var(--offset));
-    animation: square5 var(--duration) var(--delay) var(--timing-function) infinite, squarefadein var(--in-duration) calc(4 * var(--in-delay)) var(--in-timing-function) both;
+    animation: square5 var(--duration) var(--delay) var(--timing-function)
+            infinite,
+        squarefadein var(--in-duration) calc(4 * var(--in-delay))
+            var(--in-timing-function) both;
 }
 @keyframes square1 {
     0% {

@@ -27,78 +27,85 @@ $resultNumberText = (($qcCount > $itemsPerPage) ? ($firstItemIndex . "-" . $last
     <p>View and verify results for QC tests. To verify any QC results, click on the result and check if the result matches the intended outcome by comparing it with the operator's references.</p>
 </section>
 
-<!-- First we show all priority QC results -->
-<table id="priorityList">
-    <thead>
-        <th>Date/Time</th>
-        <th>Lot</th>
-        <th>Test Result</th>
-        <th>QC Result</th>
-        <th></th>
-    </thead>
+<?php if($qcCount) : ?>
+    <!-- First we show all priority QC results -->
+    <table id="priorityList">
+        <thead>
+            <th>Date/Time</th>
+            <th>Lot</th>
+            <th>Test Result</th>
+            <th>QC Result</th>
+            <th></th>
+        </thead>
 
-    <tbody>
-        <?php foreach($qcResults as $result) :
-            $testResult = sanitiseResult($result['result']);
-            $qcResult = 'Unverified';
-            if($result['qc_result'] === '1') {
-                $qcResult = 'Pass';
-            } elseif($result['qc_result'] === '0') {
-                $qcResult = 'Fail';
-            }?>
-            <tr data-modal-open="<?= $result['id'];?>Modal">
-                <td><?= convertTimestamp($result['timestamp'], true);?></td>
-                <td><?= $result['lot_number'];?></td>
-                <td class="font-black <?= $testResult['summary'] == 'Positive' ? "text-red-500" : "";?>"><?= $testResult['summary'];?></td>
-                <td class="font-black <?= $qcResult == 'Fail' ? 'text-red-500' : '';?><?= $qcResult == 'Unverified' ? 'text-amber-500' : '';?><?= $qcResult == 'Pass' ? 'text-green-500' : '';?>"><?= $qcResult;?></td>
-                <td class="end">
-                    <div class="table-controls">
-                        <?php if($qcResult == 'Unverified') : ?>
-                            <button class="flex items-center w-6 h-auto tooltip" title="Unverified">
-                                <svg class="w-full fill-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                                    <path d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480L40 480c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24l0 112c0 13.3 10.7 24 24 24s24-10.7 24-24l0-112c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/>
+        <tbody>
+            <?php foreach($qcResults as $result) :
+                $testResult = sanitiseResult($result['result']);
+                $qcResult = 'Unverified';
+                if($result['qc_result'] === '1') {
+                    $qcResult = 'Pass';
+                } elseif($result['qc_result'] === '0') {
+                    $qcResult = 'Fail';
+                }?>
+                <tr data-modal-open="<?= $result['id'];?>Modal">
+                    <td><?= convertTimestamp($result['timestamp'], true);?></td>
+                    <td><?= $result['lot_number'];?></td>
+                    <td class="font-black <?= $testResult['summary'] == 'Positive' ? "text-red-500" : "";?>"><?= $testResult['summary'];?></td>
+                    <td class="font-black <?= $qcResult == 'Fail' ? 'text-red-500' : '';?><?= $qcResult == 'Unverified' ? 'text-amber-500' : '';?><?= $qcResult == 'Pass' ? 'text-green-500' : '';?>"><?= $qcResult;?></td>
+                    <td class="end">
+                        <div class="table-controls">
+                            <?php if($qcResult == 'Unverified') : ?>
+                                <button class="flex items-center w-6 h-auto tooltip" title="Unverified">
+                                    <svg class="w-full fill-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                                        <path d="M256 32c14.2 0 27.3 7.5 34.5 19.8l216 368c7.3 12.4 7.3 27.7 .2 40.1S486.3 480 472 480L40 480c-14.3 0-27.6-7.7-34.7-20.1s-7-27.8 .2-40.1l216-368C228.7 39.5 241.8 32 256 32zm0 128c-13.3 0-24 10.7-24 24l0 112c0 13.3 10.7 24 24 24s24-10.7 24-24l0-112c0-13.3-10.7-24-24-24zm32 224a32 32 0 1 0 -64 0 32 32 0 1 0 64 0z"/>
+                                    </svg>
+                                </button>
+                            <?php endif;?>
+                            <button class="details tooltip" title="View/Edit">
+                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                                    <path d="M441 58.9L453.1 71c9.4 9.4 9.4 24.6 0 33.9L424 134.1 377.9 88 407 58.9c9.4-9.4 24.6-9.4 33.9 0zM209.8 256.2L344 121.9 390.1 168 255.8 302.2c-2.9 2.9-6.5 5-10.4 6.1l-58.5 16.7 16.7-58.5c1.1-3.9 3.2-7.5 6.1-10.4zM373.1 25L175.8 222.2c-8.7 8.7-15 19.4-18.3 31.1l-28.6 100c-2.4 8.4-.1 17.4 6.1 23.6s15.2 8.5 23.6 6.1l100-28.6c11.8-3.4 22.5-9.7 31.1-18.3L487 138.9c28.1-28.1 28.1-73.7 0-101.8L474.9 25C446.8-3.1 401.2-3.1 373.1 25zM88 64C39.4 64 0 103.4 0 152V424c0 48.6 39.4 88 88 88H360c48.6 0 88-39.4 88-88V312c0-13.3-10.7-24-24-24s-24 10.7-24 24V424c0 22.1-17.9 40-40 40H88c-22.1 0-40-17.9-40-40V152c0-22.1 17.9-40 40-40H200c13.3 0 24-10.7 24-24s-10.7-24-24-24H88z"/>
                                 </svg>
                             </button>
-                        <?php endif;?>
-                        <button class="details tooltip" title="View/Edit">
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-                                <path d="M441 58.9L453.1 71c9.4 9.4 9.4 24.6 0 33.9L424 134.1 377.9 88 407 58.9c9.4-9.4 24.6-9.4 33.9 0zM209.8 256.2L344 121.9 390.1 168 255.8 302.2c-2.9 2.9-6.5 5-10.4 6.1l-58.5 16.7 16.7-58.5c1.1-3.9 3.2-7.5 6.1-10.4zM373.1 25L175.8 222.2c-8.7 8.7-15 19.4-18.3 31.1l-28.6 100c-2.4 8.4-.1 17.4 6.1 23.6s15.2 8.5 23.6 6.1l100-28.6c11.8-3.4 22.5-9.7 31.1-18.3L487 138.9c28.1-28.1 28.1-73.7 0-101.8L474.9 25C446.8-3.1 401.2-3.1 373.1 25zM88 64C39.4 64 0 103.4 0 152V424c0 48.6 39.4 88 88 88H360c48.6 0 88-39.4 88-88V312c0-13.3-10.7-24-24-24s-24 10.7-24 24V424c0 22.1-17.9 40-40 40H88c-22.1 0-40-17.9-40-40V152c0-22.1 17.9-40 40-40H200c13.3 0 24-10.7 24-24s-10.7-24-24-24H88z"/>
-                            </svg>
-                        </button>
-                    </div>
-                </td>
-            </tr>
-        <?php endforeach;?>
-    </tbody>
-</table>
+                        </div>
+                    </td>
+                </tr>
+            <?php endforeach;?>
+        </tbody>
+    </table>
 
-<?php // Pagination
-if($totalPageCount > 1) : ?>
+    <?php // Pagination
+    if($totalPageCount > 1) : ?>
 
-    <div id="pagination">
-        <a href="<?= $page == 1 ? "#" : updateQueryString(["p" => 1]);?>" class="<?= $page == 1 ? "disabled" : "";?> !px-2 xs:!hidden"><<</a>
-        <a href="<?= $page == 1 ? "#" : updateQueryString(["p" => $page - 1]);?>" class="<?= $page == 1 ? "disabled" : "";?>"><</a>
-        <?php if($page - 1 > 1) : ?>
-            <a class="inner-pagination" href="<?= updateQueryString(["p" => 1]);?>">1</a>
-            <svg class="fill-dark inner-pagination h-3.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
-                <path d="M8 256a56 56 0 1 1 112 0A56 56 0 1 1 8 256zm160 0a56 56 0 1 1 112 0 56 56 0 1 1 -112 0zm216-56a56 56 0 1 1 0 112 56 56 0 1 1 0-112z"/>
-            </svg>
-        <?php endif;
-        for($i = (max($page - 1, 1)); $i <= min($totalPageCount, $page + 1); $i++) : ?>
-            <a class="inner-pagination <?= $page == $i ? "active" : "";?>" href="<?= updateQueryString(["p" => $i]);?>"><?= $i;?></a>
-        <?php endfor;
-        if($page + 1 < $totalPageCount) : ?>
-            <svg class="fill-dark inner-pagination h-3.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
-                <path d="M8 256a56 56 0 1 1 112 0A56 56 0 1 1 8 256zm160 0a56 56 0 1 1 112 0 56 56 0 1 1 -112 0zm216-56a56 56 0 1 1 0 112 56 56 0 1 1 0-112z"/>
-            </svg>
-            <a class="inner-pagination" href="<?= updateQueryString(["p" => $totalPageCount]);?>"><?= $totalPageCount;?></a>
-        <?php endif;?>
-        <a href="<?= $page == $totalPageCount ? "#" : updateQueryString(["p" => $page + 1]);?>" class="<?= $page == $totalPageCount ? "disabled" : "";?>">></a>
-        <a href="<?= $page == $totalPageCount ? "#" : updateQueryString(["p" => $totalPageCount]);?>" class="<?= $page == $totalPageCount ? "disabled" : "";?> !px-2 xs:!hidden">>></a>
+        <div id="pagination">
+            <a href="<?= $page == 1 ? "#" : updateQueryString(["p" => 1]);?>" class="<?= $page == 1 ? "disabled" : "";?> !px-2 xs:!hidden"><<</a>
+            <a href="<?= $page == 1 ? "#" : updateQueryString(["p" => $page - 1]);?>" class="<?= $page == 1 ? "disabled" : "";?>"><</a>
+            <?php if($page - 1 > 1) : ?>
+                <a class="inner-pagination" href="<?= updateQueryString(["p" => 1]);?>">1</a>
+                <svg class="fill-dark inner-pagination h-3.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                    <path d="M8 256a56 56 0 1 1 112 0A56 56 0 1 1 8 256zm160 0a56 56 0 1 1 112 0 56 56 0 1 1 -112 0zm216-56a56 56 0 1 1 0 112 56 56 0 1 1 0-112z"/>
+                </svg>
+            <?php endif;
+            for($i = (max($page - 1, 1)); $i <= min($totalPageCount, $page + 1); $i++) : ?>
+                <a class="inner-pagination <?= $page == $i ? "active" : "";?>" href="<?= updateQueryString(["p" => $i]);?>"><?= $i;?></a>
+            <?php endfor;
+            if($page + 1 < $totalPageCount) : ?>
+                <svg class="fill-dark inner-pagination h-3.5 shrink-0" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
+                    <path d="M8 256a56 56 0 1 1 112 0A56 56 0 1 1 8 256zm160 0a56 56 0 1 1 112 0 56 56 0 1 1 -112 0zm216-56a56 56 0 1 1 0 112 56 56 0 1 1 0-112z"/>
+                </svg>
+                <a class="inner-pagination" href="<?= updateQueryString(["p" => $totalPageCount]);?>"><?= $totalPageCount;?></a>
+            <?php endif;?>
+            <a href="<?= $page == $totalPageCount ? "#" : updateQueryString(["p" => $page + 1]);?>" class="<?= $page == $totalPageCount ? "disabled" : "";?>">></a>
+            <a href="<?= $page == $totalPageCount ? "#" : updateQueryString(["p" => $totalPageCount]);?>" class="<?= $page == $totalPageCount ? "disabled" : "";?> !px-2 xs:!hidden">>></a>
+        </div>
+
+    <?php endif;
+else : ?>
+    <div class="grow w-full flex items-center justify-center">
+        <div class="flex justify-center items-center p-8 rounded-lg bg-white max-w-3xl">
+            <h2>No QC results found.</h2>
+        </div>
     </div>
-
 <?php endif;
-
 // Individual data modals ?>
 <div class="modal-wrapper">
     <?php foreach($qcResults as $result) :

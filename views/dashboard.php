@@ -173,7 +173,7 @@ include_once BASE_DIR . "/utils/AgeGroup.php";?>
                                 <?php endif;?>
                             <?php endif;?>
                         </td>
-                        <td class="hidden xs:table-cell"><?= $result['product'];?></td>
+                        <td class="hidden sm:table-cell"><?= $result['product'];?></td>
                             <?php if($serviceEngineer) : ?>
                                 <td>-REDACTED-</td>
                             <?php else : ?>

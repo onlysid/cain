@@ -61,15 +61,15 @@ function route($routes, $apiRoutes) {
 
             $requestedRoute = $routes[$path];
             if($requestedRoute->accessLevel > ($currentUser['user_type'] ?? 0)) {
-                $route = new PageRoute('views/403.php', '403: Forbidden', false, false);
+                $route = new PageRoute('views/403.php', '403: Forbidden', false, false, false);
             } else {
                 $route = $requestedRoute;
             }
         } elseif(http_response_code() === 403) {
-            $route = new PageRoute('views/403.php', '403: Forbidden', false, false);
+            $route = new PageRoute('views/403.php', '403: Forbidden', false, false, false);
         } else {
             http_response_code(400);
-            $route = new PageRoute('views/404.php', '404: Not Found', false, false);
+            $route = new PageRoute('views/404.php', '404: Not Found', false, false, false);
         }
     }
 
@@ -85,11 +85,9 @@ require_once 'utils/PageRoute.php';
 $routes = [
     '/' => new PageRoute('views/dashboard.php', 'All Results'), // Main dashboard
     '/assay-modules' => new PageRoute('views/assay-modules.php', 'Assay Modules'), // Assay Modules List
-    '/users' => new PageRoute('views/users.php', 'Users', true, ADMINISTRATIVE_CLINICIAN), // User config
-    '/qc-policy' => new PageRoute('views/qc-policy.php', 'Quality Control Policy'), // QC Policy config
     '/lots' => new PageRoute('views/lots.php', 'Lots'), // Lots Management
     '/qc-results' => new PageRoute('views/lots-qc-results.php', 'Lots QC Results'), // Lots QC results
-    '/login' => new PageRoute('auth/login.php', 'Login', false, GUEST), // Login page
+    '/login' => new PageRoute('auth/login.php', 'Login', false, GUEST, false), // Login page
     '/blocks' => new PageRoute('views/objects.php', 'Demo', true), // Demo blocks
     '/changelog' => new PageRoute('views/changelog.php', 'Changelog', true), // Changelog for version updates
     '/backup' => new PageRoute('views/backup.php', 'Backup/Delete', true, ADMINISTRATIVE_CLINICIAN), // Backup results
@@ -103,6 +101,7 @@ $settingsRoutes = [
     '/settings/fields' => new PageRoute('views/settings/fields.php', 'Field Selection', false, ADMINISTRATIVE_CLINICIAN),
     '/settings/qc' => new PageRoute('views/settings/qc.php', 'QC Settings', false, ADMINISTRATIVE_CLINICIAN),
     '/settings/qc-types' => new PageRoute('views/settings/qc-types.php', 'Assay QC Types', false, ADMINISTRATIVE_CLINICIAN),
+    '/settings/users-list' => new PageRoute('views/settings/users-list.php', 'Users', false, ADMINISTRATIVE_CLINICIAN), // User config
     '/settings/users' => new PageRoute('views/settings/users.php', 'User Settings', false, ADMINISTRATIVE_CLINICIAN),
     '/settings/network' => new PageRoute('views/settings/network.php', 'Network Settings', false, ADMINISTRATIVE_CLINICIAN),
     '/settings/versions' => new PageRoute('views/settings/versions.php', 'Versions', false, ADMINISTRATIVE_CLINICIAN),

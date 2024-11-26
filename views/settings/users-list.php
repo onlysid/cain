@@ -5,14 +5,6 @@ $userTypes = ["Clinician" => 1, "Admin Clinician" => 2];
 
 // Page setup?>
 
-<!-- Title and quick action -->
-<div class="flex justify-center md:justify-start items-center gap-2 mb-1.5 md:mb-3">
-    <h1 class="mb-0">Users</h1>
-    <svg data-modal-open="newUserModal" class="h-10 w-auto fill-green-600 p-1 cursor-pointer scale-95 transition-all duration-500 hover:scale-105 hover:fill-blue-500 new-user-button" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-        <path class="pointer-events-none" d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM232 344V280H168c-13.3 0-24-10.7-24-24s10.7-24 24-24h64V168c0-13.3 10.7-24 24-24s24 10.7 24 24v64h64c13.3 0 24 10.7 24 24s-10.7 24-24 24H280v64c0 13.3-10.7 24-24 24s-24-10.7-24-24z"/>
-    </svg>
-</div>
-
 <!-- List all users -->
 <table id="usersTable">
     <thead>

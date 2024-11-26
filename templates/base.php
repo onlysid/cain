@@ -10,6 +10,7 @@
 
 <?php // Some initialisation
 $showMenu = $route->showMenu;
+$showFooter = $route->showFooter;
 
 // Check to see if we are using too many results
 $resultsNum = checkResultCapacity();
@@ -112,7 +113,7 @@ $resultsNum = checkResultCapacity();
             <?php endforeach;?>
         </div>
 
-        <?php if($showMenu) {
+        <?php if($showFooter) {
             include 'templates/footer.php';
         }?>
 

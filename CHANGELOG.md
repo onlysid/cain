@@ -6,6 +6,21 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.1.5] - 26/11/2024
+
+Menu and UI ease of use adjustments.
+
+### Changed
+
+-   List of users now accessible via the settings menu.
+-   Added footer to the settings screen.
+-   Removed "Logout" option from the settings menu.
+-   Removed QC Policy page.
+-   Added QC Policy information to the Lots page.
+-   Added showFooter flag for general pages.
+
+&nbsp;
+
 ## [v3.1.4] - 22/11/2024
 
 Added patient ID to the results table and minified CSS.
