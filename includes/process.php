@@ -810,7 +810,6 @@ class Process {
         $qcPolicy = $_POST['qcPolicy'];
         $posRequired = $_POST['posRequired'];
         $negRequired = $_POST['negRequired'];
-        $enableIndependence = $_POST['enableIndependence'] == "on" ? 1 : 0;
 
         // Prepare and execute the query to update all settings in one go
         try {
@@ -819,7 +818,6 @@ class Process {
                 WHEN 'qc_policy' THEN :qcPolicy
                 WHEN 'qc_positive_requirements' THEN :posRequired
                 WHEN 'qc_negative_requirements' THEN :negRequired
-                WHEN 'qc_enable_independence' THEN :enableIndependence
                 ELSE `value`
             END;";
 
@@ -828,11 +826,20 @@ class Process {
                 ':qcPolicy' => $qcPolicy,
                 ':posRequired' => $posRequired,
                 ':negRequired' => $negRequired,
-                ':enableIndependence' => $enableIndependence,
             ];
 
             // Execute the query
             $rowCount = $cainDB->query($query, $params);
+
+            // Now check if the QC is 1 and run automatic QC checks on all unverified lots
+            if($qcPolicy == 1) {
+                // Get the lots
+                $lots = $cainDB->selectAll("SELECT * FROM lots WHERE qc_pass = 0;");
+
+                foreach($lots as $lot) {
+                    lotQCCheck($lot['id']);
+                }
+            }
 
             // Check if the update was successful
             if ($rowCount > 0) {
@@ -944,7 +951,7 @@ class Process {
                 WHEN 'cain_server_ip' THEN :cainIP
                 WHEN 'cain_server_port' THEN :cainPort
                 WHEN 'hl7_server_ip' THEN :hl7IP
-                WHEN 'hly_server_port' THEN :hl7Port
+                WHEN 'hl7_server_port' THEN :hl7Port
                 WHEN 'hl7_server_dest' THEN :hl7ServerName
                 WHEN 'patient_id' THEN :patientId
                 WHEN 'test_mode' THEN :testMode
@@ -1002,6 +1009,23 @@ class Process {
         $sentToLIMS = $_POST['sentToLIMS'] ?? null;
         $filterDates = $_POST['filterDates'] ?? null;
         $resultPolarity = ($_POST['resultPolarity'] ?? null) == "on" ? 1 : 0;
+
+        // Get the default ID Field
+        $defaultId = $_POST['defaultId'] ?? 'patientId';
+
+        try {
+            $cainDB->query("UPDATE settings SET `value` = ? WHERE `name` = 'default_id';", [$defaultId]);
+        } catch (Exception $e) {
+            Session::setNotice("Error: Something went wrong. Please contact an administrator.");
+            // Log detailed information securely
+            $errorDetails = [
+                'error_message' => $e->getMessage(),
+                'stack_trace' => $e->getTraceAsString(),
+                'user_id' => $this->currentUser['operator_id'] ?? 'unknown',
+                'context' => "Edit instrument QC"
+            ];
+            addLogEntry('QC', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+        }
 
         // Get the return path and the query params that already exist
         $url = $_POST['return-path'];
@@ -1373,6 +1397,7 @@ class Process {
         // Get all the input values
         $lot = $_POST['id'];
         $qcResult = $_POST['qcResult'] ?? 0;
+        $notes = $_POST['notes'] ?? null;
 
         $deliveryDate = $_POST['delivery'] == "" ? null : ($_POST['delivery'] ?? null);
         $expirationDate = $_POST['expiration'] == "" ? null : ($_POST['expiration'] ?? null);
@@ -1381,10 +1406,10 @@ class Process {
         // Update the lot
         $time = Date('Y-m-y H:i:s');
 
-        $sql = "UPDATE lots SET delivery_date = ?, expiration_date = ?, qc_pass = ?, last_updated = ? WHERE id = ?;";
+        $sql = "UPDATE lots SET delivery_date = ?, expiration_date = ?, qc_pass = ?, last_updated = ?, reference = ? WHERE id = ?;";
 
         try {
-            $cainDB->query($sql, [$deliveryDate, $expirationDate, $qcResult, $time, $lot]);
+            $cainDB->query($sql, [$deliveryDate, $expirationDate, $qcResult, $time, $notes, $lot]);
 
             Session::setNotice("Successfully updated lot #$lot", 0);
             addLogEntry("events", "{$this->currentUser['operator_id']} edited lot #$lot");

@@ -59,9 +59,9 @@ if($currentUser['user_type'] == ADMINISTRATIVE_CLINICIAN) {
                 </div>
             </div>
 
-            <div id="userInfo" class="px-3 cursor-pointer flex flex-col md:items-start justify-center py-1 overflow-hidden truncate">
+            <div id="userInfo" class="logout-trigger px-3 cursor-pointer flex flex-col md:items-start justify-center py-1 overflow-hidden truncate">
                 <?php if($currentUser) : ?>
-                    <p class="logout-trigger font-bold text-white text-right xl:text-xl text-lg truncate overflow-hidden"><?= $currentUser['first_name'] ? (ucfirst($currentUser['first_name'] ?? "") . " " . ucfirst($currentUser['last_name'] ?? "")) : ucfirst($currentUser['operator_id']);?></p>
+                    <p class="font-bold text-white text-right xl:text-xl text-lg truncate overflow-hidden"><?= $currentUser['first_name'] ? (ucfirst($currentUser['first_name'] ?? "") . " " . ucfirst($currentUser['last_name'] ?? "")) : ucfirst($currentUser['operator_id']);?></p>
                 <?php endif;?>
                 <p class="text-white font-medium text-base xl:text-lg truncate overflow-hidden"><?= $hospitalName;?> - <?= $officeName;?></p>
             </div>
@@ -89,7 +89,7 @@ if($currentUser['user_type'] == ADMINISTRATIVE_CLINICIAN) {
         <div class="flex flex-col w-full gap-5 justify-center items-center max-w-[15rem]">
             <button id="logoutCancel" class="w-full btn simple-border-btn">Cancel</button>
             <a href="/settings" class="w-full btn simple-border-btn">Account Settings</a>
-            <form action="process" method="POST" class="w-full" id="logout">
+            <form action="/process" method="POST" class="w-full" id="logout">
                 <input type="hidden" name="action" value="logout">
                 <input type="hidden" name="return-path" value="<?= $currentURL;?>">
                 <?php if($currentUser) : ?>

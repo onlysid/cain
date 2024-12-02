@@ -53,16 +53,6 @@ $status = $qcStatus[$instrument['qc']['pass']] ?? ['color' => 'gray', 'path' => 
     <button data-modal-open="toggleInstrumentStatus" class="btn smaller-btn <?= $instrument['locked'] ? 'btn-red' : 'btn-green';?>" type="submit"><?= $instrument['locked'] ? "Unlock" : "Lock";?>?</button>
 </section>
 
-<!-- Page description -->
-<section class="notice">
-    <svg viewBox="0 0 512 512">
-        <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/>
-    </svg>
-    <p>Here, you can lock/unlock the instrument and add, view and edit an instrument's QC tests.</p>
-</section>
-
-<h2>General Information</h2>
-
 <?php // If we have not seen the instrument for 2hrs, make sure to alert the user that the information may not be completely up to date
 if(time() - $instrument['last_connected'] > 7200) : ?>
     <section class="notice !bg-red-300 !mb-0">
@@ -86,6 +76,8 @@ if($instrument['device_error']) : ?>
 <!-- Instrument's main information -->
 <section class="mb-2">
     <div class="instrument-info">
+
+        <h4 class="text-center w-full">Status: <span class="status-<?= $instrument['status'];?>"><?= strtoupper(getInstrumentStatusText($instrument['status']));?></span></h4>
         <div class="item">
             <div class="item-title">
                 <svg viewBox="0 0 512 512">
@@ -136,16 +128,8 @@ if($instrument['device_error']) : ?>
             <p><?= $instrument['last_connected'] ? convertTimestamp($instrument['last_connected'], true) : "Never";?></p>
         </div>
 
-    </div>
-</section>
-
-<!-- Status of the instrument -->
-<section class="rounded-lg shadow w-full self-center bg-white flex flex-col gap-2 p-4 mb-2">
-    <h4 class="text-center">Status: <span class="status-<?= $instrument['status'];?>"><?= strtoupper(getInstrumentStatusText($instrument['status']));?></span></h4>
-    <?php if(in_array($instrument['status'], [2, 3, 4, 5, 6, 7, 8, 9])) : ?>
-        <div class="flex gap-x-8 gap-y-2 flex-wrap items-center justify-center">
-
-            <div class="status-item grow lg:grow-0 bg-blue-200">
+        <?php if(in_array($instrument['status'], [2, 3, 4, 5, 6, 7, 8, 9])) : ?>
+            <div class="item">
                 <div class="item-title">
                     <svg viewBox="0 0 512 512">
                         <path d="M0 64C0 46.3 14.3 32 32 32l56 0 48 0 56 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l0 304c0 44.2-35.8 80-80 80s-80-35.8-80-80L32 96C14.3 96 0 81.7 0 64zM136 96L88 96l0 160 48 0 0-160zM288 64c0-17.7 14.3-32 32-32l56 0 48 0 56 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l0 304c0 44.2-35.8 80-80 80s-80-35.8-80-80l0-304c-17.7 0-32-14.3-32-32zM424 96l-48 0 0 160 48 0 0-160z"/>
@@ -155,7 +139,7 @@ if($instrument['device_error']) : ?>
                 <p><?= $instrument['current_assay'] ?? "Unknown";?></p>
             </div>
 
-            <div class="status-item grow lg:grow-0 bg-primary-dark">
+            <div class="item">
                 <div class="item-title">
                     <svg viewBox="0 0 512 512">
                         <path d="M464 256A208 208 0 1 1 48 256a208 208 0 1 1 416 0zM0 256a256 256 0 1 0 512 0A256 256 0 1 0 0 256zM232 120l0 136c0 8 4 15.5 10.7 20l96 64c11 7.4 25.9 4.4 33.3-6.7s4.4-25.9-6.7-33.3L280 243.2 280 120c0-13.3-10.7-24-24-24s-24 10.7-24 24z"/>
@@ -166,7 +150,8 @@ if($instrument['device_error']) : ?>
             </div>
 
             <?php if(in_array($instrument['status'], [2, 3])) : ?>
-                <div class="status-item grow lg:grow-0 bg-primary-dark">
+
+                <div class="item">
                     <div class="item-title">
                         <svg viewBox="0 0 384 512">
                             <path d="M32 0C14.3 0 0 14.3 0 32S14.3 64 32 64l0 11c0 42.4 16.9 83.1 46.9 113.1L146.7 256 78.9 323.9C48.9 353.9 32 394.6 32 437l0 11c-17.7 0-32 14.3-32 32s14.3 32 32 32l32 0 256 0 32 0c17.7 0 32-14.3 32-32s-14.3-32-32-32l0-11c0-42.4-16.9-83.1-46.9-113.1L237.3 256l67.9-67.9c30-30 46.9-70.7 46.9-113.1l0-11c17.7 0 32-14.3 32-32s-14.3-32-32-32L320 0 64 0 32 0zM96 75l0-11 192 0 0 11c0 19-5.6 37.4-16 53L112 128c-10.3-15.6-16-34-16-53zm16 309c3.5-5.3 7.6-10.3 12.1-14.9L192 301.3l67.9 67.9c4.6 4.6 8.6 9.6 12.1 14.9L112 384z"/>
@@ -175,10 +160,9 @@ if($instrument['device_error']) : ?>
                     </div>
                     <p><?= $instrument['duration'];?></p>
                 </div>
-            <?php endif;?>
-
-        </div>
-    <?php endif;?>
+            <?php endif;
+        endif;?>
+    </div>
 </section>
 
 <!-- Modal for locking/unlocking the device -->
@@ -348,10 +332,10 @@ if($instrument['device_error']) : ?>
 </section>
 
 <!-- QC Links -->
-<section class="mb-0 flex flex-col shadow-lg gap-3 justify-center flex-wrap bg-white p-4 rounded-lg">
+<!-- <section class="mb-0 flex flex-col shadow-lg gap-3 justify-center flex-wrap bg-white p-4 rounded-lg">
     <h2 class="underline">Quick Links</h2>
     <div class="flex flex-col justify-center flex-wrap">
         <a href="/settings/qc">General QC Settings</a>
         <a href="/settings/qc-types">QC Type Settings</a>
     </div>
-</section>
+</section> -->

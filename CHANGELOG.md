@@ -6,6 +6,39 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.1.6] - 02/12/2024
+
+HL7 settings/LIMS bug fixes and other adjustments.
+
+### Changed
+
+-   Can no longer edit the type of QC test when editing a specific QC test.
+-   Disabled right click app-wide.
+-   Remove links from about page.
+-   Page name changes.
+-   Moved Positive Patient ID to Cain protocol from HL7.
+-   Changed Cain protocol name to Proprietary.
+-   Removed quick links from individual assay module page.
+-   Allow selection of unverified in manual QC mode.
+-   When switching to automatic QC, make sure to run automatic QC check on all unverified lots.
+-   Added positive patient ID to both LIMS protocols.
+-   When switching to automatic QC or changing the number of tests required on auto QC, a popup warns users that this will affect past results.
+-   Added references to lots.
+-   Added option and setting to select default field name on dashboard for patient identification.
+-   Cleaned up individual assay module page status and removed references to empty data.
+
+### Fixed
+
+-   Updating HL7 Port now works.
+-   Assay modules page now updates every 5s, not 50.
+-   LIMS status now correctly shows on the footer.
+-   Changed default service engineer password.
+-   Fixed timed out user seeing debug in code on individual assay module pages.
+-   Fixed logout not working from footer of certain settings pages.
+-   Automatic DB Update no longer fully recreates the settings table. It instead recreates it if necessary but updates it where possible.
+
+&nbsp;
+
 ## [v3.1.5] - 26/11/2024
 
 Menu and UI ease of use adjustments. Small QC Policy fixes.

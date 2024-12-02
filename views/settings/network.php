@@ -10,7 +10,7 @@ $macAddress = exec('ifconfig | grep -o -E \'([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
         <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM216 336h24V272H216c-13.3 0-24-10.7-24-24s10.7-24 24-24h48c13.3 0 24 10.7 24 24v88h8c13.3 0 24 10.7 24 24s-10.7 24-24 24H216c-13.3 0-24-10.7-24-24s10.7-24 24-24zm40-208a32 32 0 1 1 0 64 32 32 0 1 1 0-64z"/>
     </svg>
-    <p>Set whether or not the system is working with HL7 or Cain protocols and view/change relevant IP addresses.</p>
+    <p>Set whether or not the system is working with HL7 or proprietary protocols and view/change relevant IP addresses.</p>
 </section>
 
 <form action="/process" method="POST">
@@ -23,7 +23,7 @@ $macAddress = exec('ifconfig | grep -o -E \'([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{
             <label for="protocol">Protocol</label>
             <div class="input-wrapper select-wrapper">
                 <select required name="protocol" id="protocol">
-                    <option <?= $networkInfo['selected_protocol'] == "Cain" ? "selected" : "";?> value="0">Cain</option>
+                    <option <?= $networkInfo['selected_protocol'] == "Cain" ? "selected" : "";?> value="0">Proprietary</option>
                     <option <?= $networkInfo['selected_protocol'] == "HL7" ? "selected" : "";?> value="1">HL7</option>
                 </select>
             </div>
@@ -50,16 +50,6 @@ $macAddress = exec('ifconfig | grep -o -E \'([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{
         </div>
     </div>
     <div class="form-fields">
-        <label for="testMode" class="field !flex-row toggle-field !px-6 py-2 rounded-full bg-white shadow-md">
-            <div class="flex flex-col w-full">
-                <div class="shrink">Test Mode</div>
-                <div class="description !text-xs text-grey mr-4">Dummy data and processes for testing.</div>
-            </div>
-            <div class="checkbox-wrapper">
-                <input class="tgl" name="testMode" id="testMode" type="checkbox" <?= $networkInfo['test_mode'] ? "checked" : "";?>>
-                <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="testMode"><span></span></label>
-            </div>
-        </label>
         <label for="appMode" class="field !flex-row toggle-field !px-6 py-2 rounded-full bg-white shadow-md">
             <div class="flex flex-col w-full">
                 <div class="shrink">Enable LIMS</div>
@@ -72,7 +62,7 @@ $macAddress = exec('ifconfig | grep -o -E \'([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{
         </label>
     </div>
     <h3 class="text-dark mt-4 w-full text-center rounded-xl px-4 py-2 bg-blue-200/75 shadow-lg">LIMS Settings</h3>
-    <div id="hl7Options" class="form-fields <?= $networkInfo['selected_protocol'] == "HL7" ? "active" : "";?>">
+    <div id="hl7Options" class="form-fields -mt-4 <?= $networkInfo['selected_protocol'] == "HL7" ? "active" : "";?>">
         <div class="form-fields">
             <div class="field">
                 <label for="hl7IP">HL7 IP Address</label>
@@ -109,17 +99,29 @@ $macAddress = exec('ifconfig | grep -o -E \'([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{
     <div id="cainOptions" class="form-fields <?= $networkInfo['selected_protocol'] == "Cain" ? "active" : "";?>">
         <div class="form-fields">
             <div class="field">
-                <label for="cainIP">Cain IP Address</label>
+                <label for="cainIP">IP Address</label>
                 <div class="input-wrapper">
                     <input required id="cainIP" type="text" name="cainIP" value="<?= $networkInfo['cain_server_ip'];?>">
                 </div>
             </div>
             <div class="field">
-                <label for="cainPort">Cain Port</label>
+                <label for="cainPort">Port</label>
                 <div class="input-wrapper">
                     <input required id="cainPort" type="number" name="cainPort" value="<?= $networkInfo['cain_server_port'];?>">
                 </div>
             </div>
+        </div>
+        <div class="form-fields">
+            <label for="patientId" class="field !flex-row toggle-field !px-6 py-2 rounded-full bg-white shadow-md">
+                <div class="flex flex-col w-full">
+                    <div class="shrink">Positive Patient ID</div>
+                    <div class="description !text-xs text-grey mr-4">Are we able to download patient data from LIMS?</div>
+                </div>
+                <div class="checkbox-wrapper">
+                    <input class="tgl" name="patientId" id="patientId" type="checkbox" <?= $networkInfo['patient_id'] ? "checked" : "";?>>
+                    <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="patientId"><span></span></label>
+                </div>
+            </label>
         </div>
     </div>
     <button class="btn smaller-btn trigger-loading" type="submit">Save Settings</button>

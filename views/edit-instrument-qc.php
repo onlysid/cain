@@ -76,8 +76,8 @@ $hasErrors = $form->getValue("form") == "edit" && $form->getValue("id") == $oper
 
         <div class="field">
             <label for="qcType">QC Type</label>
-            <div class="input-wrapper select-wrapper">
-                <select name="qc-type" id="qcType">
+            <div class="input-wrapper select-wrapper disabled">
+                <select disabled name="qc-type" id="qcType">
                     <?php foreach($qcTestTypes as $qcTestType) : ?>
                         <option value="<?= $qcTestType['id'];?>" <?= $qcTestType['id'] == $qcResult['type'] ? "selected" : "";?>><?= $qcTestType['name'];?></option>
                     <?php endforeach;?>

@@ -52,7 +52,7 @@ function getInstrumentDetails() {
 getInstrumentDetails();
 
 // Get notifications via AJAX every 5 seconds
-var id = setInterval(getInstrumentDetails, 50000);
+var id = setInterval(getInstrumentDetails, 5000);
 
 // Helper function to access nested properties
 function getNestedValue(obj, path) {

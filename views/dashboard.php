@@ -34,6 +34,27 @@ $visibilityFields = getSettingsBitmap(count($dataFields), 3, $fieldInfo['field_b
 // Fields we are interested in
 $listableFields = getFieldVisibilitySettings($dataFields, $visibilityFields);
 
+// What field do we use to ID patient?
+$defaultIdField = $settings['default_id'];
+
+// Column name definition
+if($defaultIdField == 'patientId') {
+    $idColName = "Patient ID";
+}
+
+if($defaultIdField == 'nhsNumber') {
+    $idColName = "NHS #";
+}
+
+if($defaultIdField == 'hospitalId') {
+    $idColName = "Hospital ID";
+}
+
+if(!isset($idColName)) {
+    $defaultIdField = 'patientId';
+    $idColName = "Patient ID";
+}
+
 unset($filters['p']);
 
 foreach ($filters as $key => $value) {
@@ -117,9 +138,9 @@ include_once BASE_DIR . "/utils/AgeGroup.php";?>
                         </a>
                     </th>
                     <th>
-                        <a href="<?= updateQueryString(["sp" => "patientId", "sd" => ((($filters['sd'] ?? "desc") == "desc" && ($filters['sp'] ?? null) == "patientId") || ($filters['sd'] ?? "desc") == "" ? "asc" : "")], true);?>" class="ignore-default flex gap-1.5 items-center">
-                            <span>Patient ID</span>
-                            <svg class="h-4 fill-dark shrink-0 <?= (isset($filters['sp']) && $filters['sp'] == "patientId") ? "" : "opacity-50 !rotate-180";?> <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                        <a href="<?= updateQueryString(["sp" => $defaultIdField, "sd" => ((($filters['sd'] ?? "desc") == "desc" && ($filters['sp'] ?? null) == $defaultIdField) || ($filters['sd'] ?? "desc") == "" ? "asc" : "")], true);?>" class="ignore-default flex gap-1.5 items-center">
+                            <span><?= $idColName;?></span>
+                            <svg class="h-4 fill-dark shrink-0 <?= (isset($filters['sp']) && $filters['sp'] == $defaultIdField) ? "" : "opacity-50 !rotate-180";?> <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                                 <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM385 231c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-71-71V376c0 13.3-10.7 24-24 24s-24-10.7-24-24V193.9l-71 71c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L239 119c9.4-9.4 24.6-9.4 33.9 0L385 231z"/>
                             </svg>
                         </a>
@@ -166,8 +187,8 @@ include_once BASE_DIR . "/utils/AgeGroup.php";?>
                             <?php if($serviceEngineer) : ?>
                                 -REDACTED-
                             <?php else : ?>
-                                <?php if($result['patientId']) : ?>
-                                    <?= $result['patientId'];?>
+                                <?php if($result[$defaultIdField]) : ?>
+                                    <?= $result[$defaultIdField];?>
                                 <?php else : ?>
                                     Unknown
                                 <?php endif;?>
@@ -177,7 +198,7 @@ include_once BASE_DIR . "/utils/AgeGroup.php";?>
                             <?php if($serviceEngineer) : ?>
                                 <td>-REDACTED-</td>
                             <?php else : ?>
-                                <td class="text-elipses hidden sm:table-cell <?= $resultInfo["summary"] == 'Positive' ? "active" : (!$resultInfol['summary'] || $resultInfo['summary'] == 'Invalid' ? 'invalid' : "");?>"><?= $resultInfo['summary'] ?? "Invalid";?></td>
+                                <td class="text-elipses hidden sm:table-cell <?= $resultInfo["summary"] == 'Positive' ? "active" : (!$resultInfo['summary'] || $resultInfo['summary'] == 'Invalid' ? 'invalid' : "");?>"><?= $resultInfo['summary'] ?? "Invalid";?></td>
                             <?php endif;?>
                         <td>
                             <div class="h-full flex items-center gap-1.5 justify-end">
@@ -487,6 +508,16 @@ foreach($resultItems as $result) : ?>
                             <option <?= ($filters['l'] ?? null) == "100" ? "selected" : "";?> value="100">Not Sent</option>
                             <option <?= ($filters['l'] ?? null) == "101" ? "selected" : "";?> value="101">Pending</option>
                             <option <?= ($filters['l'] ?? null) == "102" ? "selected" : "";?> value="102">Sent</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="field">
+                    <label for="defaultId">Default Patient ID?</label>
+                    <div class="input-wrapper select-wrapper">
+                        <select name="defaultId" id="defaultId">
+                            <option <?= $defaultIdField == "patientId" ? "selected" : "";?> value="patientId">Patient ID</option>
+                            <option <?= $defaultIdField == "hospitalId" ? "selected" : "";?> value="hospitalId">Hospital ID</option>
+                            <option <?= $defaultIdField == "nhsNumber" ? "selected" : "";?> value="nhsNumber">NHS Number</option>
                         </select>
                     </div>
                 </div>

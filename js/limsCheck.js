@@ -1,14 +1,14 @@
-/* 
+/*
     We make an AJAX request to lims-check.php.
     This returns a JSON object of each setting.
 */
 
 function limsStatusCheck() {
     var statusSpan = document.getElementById("limsStatus");
-    
+
     // Define the PHP file URL
     var phpFileUrl = '/scripts/lims-check.php';
-    
+
     // Create a new XMLHttpRequest object
     var xhr = new XMLHttpRequest();
 
@@ -31,7 +31,7 @@ function limsStatusCheck() {
                 } else {
                     updateLimsStatus(data);
                 }
-                
+
             } else {
                 // Handle error
                 statusSpan.classList.remove("active");
@@ -52,7 +52,7 @@ var id = setInterval(limsStatusCheck, 10000);
 
 // Function to update table rows with JSON data
 function updateLimsStatus(data) {
-    var commsStatus = data.value;
+    var commsStatus = data;
     var statusSpan = document.getElementById("limsStatus");
     var commsTooltip = statusSpan.querySelector('.tooltip');
 

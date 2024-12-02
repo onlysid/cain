@@ -54,7 +54,7 @@ if($passwordRequired) {
 <div id="login" class="flex flex-col justify-center items-center w-full grow">
     <h1 class="text-center"><?= $title;?></h1>
     <div class="divider !-mt-2"></div>
-    <form action="process" method="POST" id="loginForm" class="flex flex-col items-center gap-3 w-full">
+    <form action="/process" method="POST" id="loginForm" class="flex flex-col items-center gap-3 w-full">
         <?php if($form->getErrors()) : ?>
             <ul class="form-errors">
                 <?php foreach($form->getErrors() as $errorKey => $error) : ?>
@@ -108,7 +108,7 @@ if($passwordRequired) {
         <button type="submit" class="btn alt trigger-loading"><?= $buttonText;?></button>
     </form>
     <?php if($passwordRequired) : ?>
-        <form action="process" method="POST" id="backToLogin" class="mt-3">
+        <form action="/process" method="POST" id="backToLogin" class="mt-3">
             <input required type="hidden" name="action" value="back-to-login">
             <p>Not <?= ucfirst($operatorFirstName ?? $operatorId);?>? <button type="submit" class="a-tag">Go back</button></p>
         </form>

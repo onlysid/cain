@@ -74,7 +74,7 @@ $resultsNum = checkResultCapacity();
             <div id="messageBoard" class="bg-red-500 w-full">
                 <div class="py-2 mx-auto contatiner px-8 text-center text-white flex justify-center items-center">
                     <?php if(in_array('db-error', $warnings)) : ?>
-                        <form action="process" method="POST">
+                        <form action="/process" method="POST">
                             <input type="hidden" name="action" value="reset-db-version">
                             <input type="hidden" name="return-path" value="<?= $currentURL;?>">
                             <p class="text-white text-center font-bold">Warning: Database may be corrupted. Please speak with an admin or <button type="submit" class="!text-blue-100 underline hover:!text-green-100">try safely resetting (click here).</button></p>

@@ -133,7 +133,7 @@ function systemInfo() {
 // Retrieve LIMS connectivity status from db
 function limsConnectivity() {
     global $cainDB;
-    return $cainDB->select("SELECT value FROM settings WHERE `name` = 'comms_status';")['value'];
+    return $cainDB->select("SELECT `value` FROM settings WHERE `name` = 'comms_status';")['value'];
 }
 
 function updateInstruments($tabletData) {
@@ -955,13 +955,6 @@ function lotQCCheck($lot) {
 
     // If the QC Policy is 1 (on), we must run an automatic QC check
     if($qcPolicy == 1) {
-        // Firstly, if we have a lot and it has an expiration date, check if it's expired.
-        if($expirationDate = $cainDB->select("SELECT * FROM lots WHERE id = ?;", [$lot])['expiration_date']) {
-            if(checkExpiration($expirationDate)) {
-                return false;
-            }
-        }
-
         if(lotAutoQCCheck($lot)) {
             return true;
         }
@@ -991,6 +984,14 @@ function lotAutoQCCheck($lot) {
         // QC has failed. Fail the lot and move on.
         $cainDB->query("UPDATE lots SET qc_pass = 2 WHERE id = ?;", [$lot]);
         return false;
+    }
+
+    // Now check if lot has expired
+    if($expirationDate = $cainDB->select("SELECT * FROM lots WHERE id = ?;", [$lot])['expiration_date']) {
+        if(checkExpiration($expirationDate)) {
+            $cainDB->query("UPDATE lots SET qc_pass = 2 WHERE id = ?;", [$lot]);
+            return false;
+        }
     }
 
     // Now, check how many successful positives and negatives we need

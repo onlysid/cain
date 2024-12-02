@@ -11,7 +11,7 @@ $qcKeys = ['qc_enforcement', 'qc_positive_requirements', 'qc_negative_requiremen
 $qcSettings = array_intersect_key($settings, array_flip($qcKeys));
 ?>
 
-<h1>Backup/Export</h1>
+<h1>Backup/Delete</h1>
 
 <section class="notice">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">

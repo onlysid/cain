@@ -1,3 +1,6 @@
+// Disable right click
+document.addEventListener('contextmenu', event => event.preventDefault());
+
 // Mobile menu logic
 var mobileMenuIcon = document.getElementById('menuIcon');
 var mobileMenuCloseIcon = document.getElementById('mobMenuClose');
@@ -436,5 +439,25 @@ if(priorityBox) {
     priority.addEventListener('change', () => {
         // Submit the parent form
         document.getElementById('lotsFilterForm').submit();
+    })
+}
+
+// Check the QC Policy submission and pop up a warning if the QC policy is being switched to automatic
+let qcForm = document.getElementById('qcPolicyForm');
+if(qcForm) {
+    var qcFormSubmitBtn = document.getElementById('qcPolicySubmitButton');
+    var qcFormWarning = document.getElementById('qcFormWarning');
+    var qcSelectDropdown = document.getElementById('qcPolicy');
+
+    // When the button is pressed, prevent defaults
+    qcFormSubmitBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+
+        // If the QC select dropdown is automatic, pop up a warning.
+        if(qcSelectDropdown.value == 1) {
+            qcFormWarning.classList.add('active');
+        } else {
+            qcForm.submit();
+        }
     })
 }

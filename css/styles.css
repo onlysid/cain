@@ -1124,7 +1124,7 @@ a.alt {
 
 #hl7Options.active,
 #cainOptions.active {
-    @apply max-h-[30rem] opacity-100 pointer-events-auto;
+    @apply max-h-[30rem] opacity-100 pointer-events-auto mt-0;
 }
 
 /* Changelog overrides */

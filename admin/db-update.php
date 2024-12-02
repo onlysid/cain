@@ -353,12 +353,6 @@ function runUpdates($version, $dbVersion) {
             }
         }
 
-        // Add some settings
-        $settingsTableExists = $cainDB->select("SHOW TABLES LIKE 'settings'");
-        if($settingsTableExists) {
-            $cainDB->query("DROP TABLE `settings`;");
-        }
-
         foreach($change as $dbQuery) {
             try {
                 $cainDB->query($dbQuery);
@@ -373,7 +367,7 @@ function runUpdates($version, $dbVersion) {
         if($adminExists) {
             $cainDB->query("DELETE FROM users WHERE operator_id = 'Admin';");
         }
-        $hashedAdminPword = '$2y$10$QWZHRHYXXkun1pygvEOeyOJ6NeMPPEtFf8Wfq77NH/8HBpd6zCQRG';
+        $hashedAdminPword = '$2y$10$pBWJjc7jNtmobRv86Iidnun9DVkAjzOR2IfSippKf.Ce5qZt3VJBK';
         $cainDB->query("INSERT INTO users (`operator_id`, `password`, `first_name`, `last_name`, `user_type`) VALUES ('Admin', :pword, 'Service', 'Engineer', 3);", [":pword" => $hashedAdminPword]);
 
         // Add the LIMS queue tables
@@ -441,32 +435,98 @@ function runUpdates($version, $dbVersion) {
                 `value` varchar(255),
                 `flags` int DEFAULT 0 NOT NULL
             );";
+        } else {
+            // Check if the `id` column exists
+            $idCol = $cainDB->select("
+                SELECT COLUMN_KEY
+                FROM information_schema.columns
+                WHERE table_schema = '" . DB_NAME . "'
+                AND table_name = 'settings'
+                AND column_name = 'id';
+            ");
+            if ($idCol) {
+                $change[] = "ALTER TABLE `settings` MODIFY COLUMN id int AUTO_INCREMENT NOT NULL;";
 
-            $change[] = "INSERT INTO settings (`name`, `value`) VALUES
-                ('hospital_name', 'Hospital ABC'),
-                ('office_name', 'Office ABC'),
-                ('hospital_location', 'Location ABC'),
-                ('date_format', 'd M Y'),
-                ('selected_protocol', 'HL7'),
-                ('cain_server_ip', '192.168.1.237'),
-                ('cain_server_port', '30000'),
-                ('hl7_server_ip', '192.168.1.237'),
-                ('hl7_server_port', '30000'),
-                ('hl7_server_dest', 'CAIN'),
-                ('comms_status', '0'),
-                ('patient_id', '1'),
-                ('data_expiration', '365'),
-                ('password_required', '3'),
-                ('session_expiration', '30'),
-                ('test_mode', '0'),
-                ('field_behaviour', '1466015520085'),
-                ('field_visibility', '2097023'),
-                ('app_mode', '1'),
-                ('app_version', 'v2.0.0'),
-                ('qc_policy', '0'),
-                ('qc_positive_requirements', '1'),
-                ('qc_negative_requirements', '1')
-            ;";
+                if ($idCol['COLUMN_KEY'] !== 'PRI') {
+                    $change[] = "ALTER TABLE `settings` ADD PRIMARY KEY (`id`);";
+                }
+            } else {
+                // If the `id` column doesn't exist, add it with AUTO_INCREMENT and PRIMARY KEY
+                $change[] = "ALTER TABLE `settings` ADD COLUMN id int AUTO_INCREMENT PRIMARY KEY NOT NULL;";
+            }
+
+            // Check name column exists
+            $nameCol = $cainDB->select("
+                SELECT COLUMN_KEY
+                FROM information_schema.columns
+                WHERE table_schema = '" . DB_NAME . "'
+                AND table_name = 'settings'
+                AND column_name = 'name';
+            ");
+            if($nameCol) {
+                if(!$nameCol['COLUMN_KEY']) {
+                    $change[] = "ALTER TABLE `settings` MODIFY COLUMN `name` varchar(255) NOT NULL UNIQUE;";
+                }
+            } else {
+                $change[] = "ALTER TABLE `settings` ADD COLUMN `name` varchar(255) NOT NULL UNIQUE;";
+            }
+
+            // Check value column exists
+            $valueCol = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'settings' AND column_name = 'value';");
+            if($valueCol['COUNT(*)']) {
+                $change[] = "ALTER TABLE `settings` MODIFY COLUMN `value` varchar(255) NOT NULL;";
+            } else {
+                $change[] = "ALTER TABLE `settings` ADD COLUMN `value` varchar(255) NOT NULL;";
+            }
+
+            // Check flags column exists
+            $flagsCol = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'settings' AND column_name = 'flags';");
+            if($flagsCol['COUNT(*)']) {
+                $change[] = "ALTER TABLE `settings` MODIFY COLUMN flags int default 0 NOT NULL;";
+            } else {
+                $change[] = "ALTER TABLE `settings` ADD COLUMN flags int default 0 NOT NULL;";
+            }
+        }
+
+        // Define the settings entries we want to ensure exist
+        $settingsEntries = [
+            ['hospital_name', 'Hospital ABC'],
+            ['office_name', 'Office ABC'],
+            ['hospital_location', 'Location ABC'],
+            ['date_format', 'd M Y'],
+            ['selected_protocol', 'HL7'],
+            ['cain_server_ip', '192.168.1.237'],
+            ['cain_server_port', '30000'],
+            ['hl7_server_ip', '192.168.1.237'],
+            ['hl7_server_port', '30000'],
+            ['hl7_server_dest', 'CAIN'],
+            ['comms_status', '0'],
+            ['patient_id', '1'],
+            ['data_expiration', '365'],
+            ['password_required', '3'],
+            ['session_expiration', '30'],
+            ['test_mode', '0'],
+            ['field_behaviour', '1466015520085'],
+            ['field_visibility', '2097023'],
+            ['app_mode', '1'],
+            ['app_version', 'v2.0.0'],
+            ['qc_policy', '0'],
+            ['qc_positive_requirements', '1'],
+            ['qc_negative_requirements', '1']
+        ];
+
+        // Loop through each setting and ensure it exists
+        foreach ($settingsEntries as $entry) {
+            $name = $entry[0];
+            $value = $entry[1];
+
+            // Check if the setting exists
+            $exists = $cainDB->select("SELECT COUNT(*) AS count FROM `settings` WHERE `name` = ?;", [$name]);
+
+            if ($exists['count'] == 0) {
+                // Add the setting if it does not exist
+                $change[] = "INSERT INTO `settings` (`name`, `value`) VALUES ('$name', '$value');";
+            }
         }
 
         foreach($change as $dbQuery) {
@@ -680,6 +740,28 @@ function runUpdates($version, $dbVersion) {
         $testCount = $cainDB->select("SELECT COUNT(*) FROM instrument_test_types;")['COUNT(*)'];
         if(!$testCount) {
             $change[] = "INSERT INTO instrument_test_types (`name`, `time_intervals`, `result_intervals`) VALUES ('Batch Acceptance', 90, 5000), ('Engineering Visit', 180, 10000), ('Environmental Test', 365, 50000), ('External Quality Assurance (EQA) Scheme', 365, 50000), ('Routine QC', 30, 1000);";
+        }
+
+        foreach($change as $dbQuery) {
+            try {
+                $cainDB->query($dbQuery);
+            } catch(PDOException $e) {
+                $caught[] = $e;
+            }
+        }
+        $change = [];
+    }
+
+    if(compareVersions($dbVersion, "3.1.6")) {
+        // Add references to lots
+        $referenceColExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'lots' AND column_name = 'reference';");
+        if(!$referenceColExists['COUNT(*)']) {
+            $change[] = "ALTER TABLE lots ADD COLUMN reference TEXT;";
+        }
+
+        // Add default_id field to settings
+        if($cainDB->select("SELECT COUNT(*) FROM settings WHERE `name` = 'default_id';")['COUNT(*)'] == 0) {
+            $change[] = "INSERT INTO settings (`name`, `value`) VALUES ('default_id', 'patientId')";
         }
 
         foreach($change as $dbQuery) {

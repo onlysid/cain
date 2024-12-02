@@ -14,7 +14,7 @@ function route($routes, $apiRoutes) {
 
     // If not logged in, check access
     if ((!Session::isLoggedIn()) && $currentPage !== '/login') {
-        if(array_key_exists($path, $routes)) {
+        if(array_key_exists($path, $routes) || preg_match('#^/assay-modules/#', $path, $matches)) {
             if($routes[$path]->accessLevel !== GUEST) {
                 header("Location: /login");
                 exit();
