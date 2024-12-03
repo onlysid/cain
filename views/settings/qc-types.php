@@ -193,7 +193,6 @@ $qcTestTypes = getInstrumentQCTypes(true);
 
             // Get the table body
             var qcTableBody = document.getElementById("qcTableBody");
-            console.log(qcTestTypes);
 
             qcTestTypes.forEach((qc) => {
                 const row = qcTableBody.querySelector(`tr[data-row-id="${qc.id}"]`);
@@ -215,7 +214,6 @@ $qcTestTypes = getInstrumentQCTypes(true);
                             qc.name = input.value;
                         }
                         else if (input === row.querySelectorAll("input[type='number']")[0]) {
-                            console.log("NAME CHANGED");
                             qc.time_intervals = input.value;
                         }
                         else if (input === row.querySelectorAll("input[type='number']")[1])

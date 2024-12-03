@@ -6,6 +6,29 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.1.7] - 03/12/2024
+
+Empty result handling bug fix and lot information parsing.
+
+### Added
+
+-   Lot information is now provided by the tablet in the /send API.
+-   Production year added to lots.
+
+### Changed
+
+-   Expiration date is now just a month picker.
+-   Date/month pickers now close on selection. Datetime pickers still require closing.
+-   Lots are now considered "expired" after the end of the expiration month.
+-   Removed unnecessary console logging.
+
+### Fixed
+
+-   When receiving an empty result, display it as invalid.
+-   When submitting lot changes, lots no longer switch to unverified.
+
+&nbsp;
+
 ## [v3.1.6] - 02/12/2024
 
 HL7 settings/LIMS bug fixes and other adjustments.

@@ -116,8 +116,24 @@ $errors = null;
 // Check that the lot number exists in the DB (as it relies on a foreign key)
 $lotNumber = null;
 if($data['lotNumber']) {
+    // Create the expiration date
+    $expirationDate = null;
+    $deliveryDate = null;
+
+    if((isset($data['expiryYear']) && $data['expiryYear'] !== "")) {
+        $expiryYear = intval($data['expiryYear']);
+        $expiryMonth = (isset($data['expiryMonth']) && $data['expiryMonth'] !== "") ? intval($data['expiryMonth']) : 1;
+        $expirationDate = sprintf("%04d-%02d-01 00:00:00", $expiryYear, $expiryMonth);
+    }
+
     // Update the lot number in our DB
-    $lotID = updateLot($data['lotNumber']);
+    $lotID = updateLot($data['lotNumber'], [
+        'assay_type' => $data['assayType'] ?? null,
+        'assay_sub_type' => $data['assaySubType'] ?? null,
+        'sub_lot_number' => $data['subLotNumber'] ?? null,
+        'expiration_date' => $expirationDate,
+        'production_year' => isset($data['productionYear']) && $data['productionYear'] !== "" ? intval($data['productionYear']) : null,
+    ]);
 }
 
 // TODO: Do the same thing for Instrument eventually

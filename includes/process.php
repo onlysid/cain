@@ -1400,11 +1400,11 @@ class Process {
         $notes = $_POST['notes'] ?? null;
 
         $deliveryDate = $_POST['delivery'] == "" ? null : ($_POST['delivery'] ?? null);
-        $expirationDate = $_POST['expiration'] == "" ? null : ($_POST['expiration'] ?? null);
+        $expirationDate = $_POST['expiration'] == "" ? null : ($_POST['expiration'] ? $_POST['expiration'] . "-01" : null);
         $currentUser = userInfo()['id'];
 
         // Update the lot
-        $time = Date('Y-m-y H:i:s');
+        $time = Date('Y-m-d H:i:s');
 
         $sql = "UPDATE lots SET delivery_date = ?, expiration_date = ?, qc_pass = ?, last_updated = ?, reference = ? WHERE id = ?;";
 

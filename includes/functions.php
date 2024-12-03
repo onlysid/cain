@@ -1232,17 +1232,21 @@ function resultStringify($result) {
     $stringifiedResult = '';
     $index = 1;
 
-    foreach ($result as $target => $isPositive) {
-        $targetName = str_replace(['-', ' '], '', ucwords(strtolower($target))); // Normalize the target name
-        if($isPositive === null) {
-            $status = 'Invalid';
-        } else {
-            $status = $isPositive ? 'Positive' : 'Negative';
-        }
+    if($result && $result !== []) {
+        foreach ($result as $target => $isPositive) {
+            $targetName = str_replace(['-', ' '], '', ucwords(strtolower($target))); // Normalize the target name
+            if($isPositive === null) {
+                $status = 'Invalid';
+            } else {
+                $status = $isPositive ? 'Positive' : 'Negative';
+            }
 
-        // Append the formatted target and result status to the string
-        $stringifiedResult .= "{$targetName}: {$index}{$status}, ";
-        $index++;
+            // Append the formatted target and result status to the string
+            $stringifiedResult .= "{$targetName}: {$index}{$status}, ";
+            $index++;
+        }
+    } else {
+        $stringifiedResult = "Invalid";
     }
 
     // Remove trailing comma and space
@@ -1465,14 +1469,14 @@ function getExpiredLogSize() {
 
 // Function to check expiration of cartridge
 function checkExpiration($timestamp) {
-    // Convert the given timestamp to a date (without time)
-    $expirationDate = date('Y-m-d', strtotime($timestamp));
+    // Extract the year and month from the given timestamp
+    $expirationYearMonth = date('Y-m', strtotime($timestamp));
 
-    // Get today's date
-    $currentDate = date('Y-m-d');
+    // Get the current year and month
+    $currentYearMonth = date('Y-m');
 
-    // Compare dates
-    if ($currentDate > $expirationDate) {
+    // Compare year and month
+    if ($currentYearMonth > $expirationYearMonth) {
         return true; // Expired
     } else {
         return false; // Not expired

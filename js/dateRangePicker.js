@@ -115,51 +115,92 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-        // Include the options for configuring the date picker
-        const optionsDatePicker = {
-            input: true,
-            settings: {
-                selection: {
-                    day: 'single',  // Single day selection
-                },
-                visibility: {
-                    daysOutside: false,
-                    weekend: false,
-                },
+    // Include the options for configuring the date picker
+    const optionsDatePicker = {
+        input: true,
+        settings: {
+            selection: {
+                day: 'single',  // Single day selection
             },
-            actions: {
-                changeToInput(e, self) {
-                    if (!self.HTMLInputElement) return;
-                    if (self.selectedDates[0]) {
-                        self.HTMLInputElement.value = self.selectedDates[0];
-                    } else {
-                        self.HTMLInputElement.value = '';
-                    }
-                },
+            visibility: {
+                daysOutside: false,
+                weekend: false,
             },
-        };
-
-        // Initialize all date picker elements
-        var datePickers = document.querySelectorAll('.date-picker');
-        if (datePickers) {
-            datePickers.forEach((datePickerDiv) => {
-
-                var newOptionsDatePicker = optionsDatePicker;
-
-                // See if it already has a value!
-                if (datePickerDiv.value) {
-                    // Get the date
-                    var date = datePickerDiv.value;
-                    newOptionsDatePicker.settings.selected = {
-                        dates: [date],
-                        month: date.split("-")[1] - 1,
-                        year: date.split("-")[0],
-                    };
+        },
+        actions: {
+            changeToInput(e, self) {
+                if (!self.HTMLInputElement) return;
+                if (self.selectedDates[0]) {
+                    self.HTMLInputElement.value = self.selectedDates[0];
+                } else {
+                    self.HTMLInputElement.value = '';
                 }
+                self.hide();
+            },
+        },
+    };
 
-                // Create the calendar for the date picker
-                const datePicker = new VanillaCalendar('#' + datePickerDiv.id, newOptionsDatePicker);
-                datePicker.init();
-            });
-        }
+    // Initialize all date picker elements
+    var datePickers = document.querySelectorAll('.date-picker');
+    if (datePickers) {
+        datePickers.forEach((datePickerDiv) => {
+
+            var newOptionsDatePicker = optionsDatePicker;
+
+            // See if it already has a value!
+            if (datePickerDiv.value) {
+                // Get the date
+                var date = datePickerDiv.value;
+                newOptionsDatePicker.settings.selected = {
+                    dates: [date],
+                    month: date.split("-")[1] - 1,
+                    year: date.split("-")[0],
+                };
+            }
+
+            // Create the calendar for the date picker
+            const datePicker = new VanillaCalendar('#' + datePickerDiv.id, newOptionsDatePicker);
+            datePicker.init();
+        });
+    }
+
+    const optionsMonthPicker = {
+        type: 'month',
+        input: true,
+        settings: {
+        },
+        actions: {
+            clickMonth(e, self) {
+                if (!self.HTMLInputElement) return;
+                if (self.selectedMonth != null && self.selectedYear != null) {
+                    self.HTMLInputElement.value = self.selectedYear + "-" + String(self.selectedMonth + 1).padStart(2, '0');
+                } else {
+                    self.HTMLInputElement.value = '';
+                }
+                self.hide();
+            },
+        },
+    }
+
+    var monthPickers = document.querySelectorAll('.month-picker');
+    if(monthPickers) {
+        monthPickers.forEach((monthPickerDiv) => {
+            var newOptionsMonthPicker = optionsMonthPicker;
+
+            // See if it already has a value!
+            if (monthPickerDiv.value) {
+                // Get the date
+                var date = monthPickerDiv.value;
+                newOptionsMonthPicker.settings.selected = {
+                    dates: [date],
+                    month: date.split("-")[1] - 1,
+                    year: date.split("-")[0],
+                };
+            }
+
+            // Create the calendar for the date picker
+            const monthPicker = new VanillaCalendar('#' + monthPickerDiv.id, newOptionsMonthPicker);
+            monthPicker.init();
+        })
+    }
 });

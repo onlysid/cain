@@ -261,6 +261,9 @@ if($qcPolicy == 2) {
                     <?php if(isset($lot['assay_sub_type'])) : ?>
                         <p>Assay Sub Type: <span class="font-black"><?= $lot['assay_sub_type'];?></span></p>
                     <?php endif;?>
+                    <?php if(isset($lot['production_year'])) : ?>
+                        <p>Production Year: <span class="font-black">20<?= $lot['production_year'];?></span></p>
+                    <?php endif;?>
                 </div>
                 <?php if($qcPolicy) : ?>
                     <hr>
@@ -280,20 +283,18 @@ if($qcPolicy == 2) {
                     <input type="hidden" name="return-path" value="<?= $currentURL;?>">
                     <input type="hidden" name="id" class="lot-id" value="<?= $lot['id'];?>">
 
-                    <?php if($qcPolicy == 2) : ?>
-                        <div class="form-fields">
-                            <div class="field">
-                                <label for="qcResult<?= $lot['id'];?>">QC Result</label>
-                                <div class="input-wrapper select-wrapper">
-                                    <select id="qcResult<?= $lot['id'];?>" required name="qcResult">
-                                        <option <?= $lot['qc_pass'] == 0 ? 'selected' : '';?> value="0">Unverified</option>
-                                        <option <?= $lot['qc_pass'] == 2 ? 'selected' : '';?> value="2">Fail</option>
-                                        <option <?= $lot['qc_pass'] == 1 ? 'selected' : '';?> value="1">Pass</option>
-                                    </select>
-                                </div>
+                    <div class="form-fields <?= $qcPolicy == 2 ? '' : '!hidden';?>">
+                        <div class="field">
+                            <label for="qcResult<?= $lot['id'];?>">QC Result</label>
+                            <div class="input-wrapper select-wrapper">
+                                <select id="qcResult<?= $lot['id'];?>" required name="qcResult">
+                                    <option <?= $lot['qc_pass'] == 0 ? 'selected' : '';?> value="0">Unverified</option>
+                                    <option <?= $lot['qc_pass'] == 2 ? 'selected' : '';?> value="2">Fail</option>
+                                    <option <?= $lot['qc_pass'] == 1 ? 'selected' : '';?> value="1">Pass</option>
+                                </select>
                             </div>
                         </div>
-                    <?php endif;?>
+                    </div>
                     <div class="form-fields">
                         <div class="field">
                             <label for="deliveryDate<?= $lot['id'];?>">Delivery Date</label>
@@ -310,7 +311,7 @@ if($qcPolicy == 2) {
                                 <svg class="cursor-pointer" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
                                     <path d="M128 0c17.7 0 32 14.3 32 32V64H288V32c0-17.7 14.3-32 32-32s32 14.3 32 32V64h48c26.5 0 48 21.5 48 48v48H0V112C0 85.5 21.5 64 48 64H96V32c0-17.7 14.3-32 32-32zM0 192H448V464c0 26.5-21.5 48-48 48H48c-26.5 0-48-21.5-48-48V192zm64 80v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H80c-8.8 0-16 7.2-16 16zm128 0v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H208c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V272c0-8.8-7.2-16-16-16H336zM64 400v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H80c-8.8 0-16 7.2-16 16zm144-16c-8.8 0-16 7.2-16 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H208zm112 16v32c0 8.8 7.2 16 16 16h32c8.8 0 16-7.2 16-16V400c0-8.8-7.2-16-16-16H336c-8.8 0-16 7.2-16 16z"/>
                                 </svg>
-                                <input id="expirationDate<?= $lot['id'];?>" name="expiration" class="date-picker" placeholder="Expiration Date" type="text" value="<?= $lot['expiration_date'] ? Date('Y-m-d', strtotime($lot['expiration_date'])) : '';?>" readonly/>
+                                <input id="expirationDate<?= $lot['id'];?>" name="expiration" class="month-picker" placeholder="Expiration Date" type="text" value="<?= $lot['expiration_date'] ? Date('Y-m', strtotime($lot['expiration_date'])) : '';?>" readonly/>
                             </div>
                         </div>
                     </div>

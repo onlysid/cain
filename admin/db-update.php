@@ -774,6 +774,23 @@ function runUpdates($version, $dbVersion) {
         $change = [];
     }
 
+    if(compareVersions($dbVersion, "3.1.7")) {
+        // Add production year to lots table
+        $prodYearColExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'lots' AND column_name = 'production_year';");
+        if(!$prodYearColExists['COUNT(*)']) {
+            $change[] = "ALTER TABLE lots ADD COLUMN production_year tinyint;";
+        }
+
+        foreach($change as $dbQuery) {
+            try {
+                $cainDB->query($dbQuery);
+            } catch(PDOException $e) {
+                $caught[] = $e;
+            }
+        }
+        $change = [];
+    }
+
     // Test long processes (and add a few seconds for psychological validation)
     if(compareVersions($dbVersion, "100.0.0")) {
         sleep(2);
