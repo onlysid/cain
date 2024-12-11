@@ -1,0 +1,13 @@
+{
+    "status": 42,
+    "auth": false,
+    "res": 4,
+    "operator": {
+        "operatorId": "sid",
+        "firstName": "Sid",
+        "lastName": "Brown",
+        "userType": "2",
+        "status": "1"
+    },
+    "message": "Password required. Please enter a password."
+}
