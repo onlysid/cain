@@ -41,10 +41,11 @@ $resultNumberText = (($qcCount > $itemsPerPage) ? ($firstItemIndex . "-" . $last
         <tbody>
             <?php foreach($qcResults as $result) :
                 $testResult = sanitiseResult($result['result']);
+                $res = $result['qc_result'] === null ? null : (int)$result['qc_result'];
                 $qcResult = 'Unverified';
-                if($result['qc_result'] === 1) {
+                if($res === 1) {
                     $qcResult = 'Pass';
-                } elseif($result['qc_result'] === 0) {
+                } elseif($res === 0) {
                     $qcResult = 'Fail';
                 }?>
                 <tr data-modal-open="<?= $result['id'];?>Modal">
@@ -110,10 +111,11 @@ else : ?>
 <div class="modal-wrapper">
     <?php foreach($qcResults as $result) :
         $qcResultText = 'unverified';
-        if ($result['qc_result'] === null) {
+        $res = $result['qc_result'] === null ? null : (int)$result['qc_result'];
+        if ($res === null) {
             $qcResultText = 'unverified';
         } else {
-            switch ($result['qc_result']) {
+            switch ($res) {
                 case 0:
                     $qcResultText = 'fail';
                     break;
@@ -141,7 +143,7 @@ else : ?>
             </div>
             <hr>
             <div class="qc-result-wrapper">
-                <p>Result: <span class="qc-result"><?= strtoupper($qcResultText);?> <?= $result['qc_result'] !== null ? "(Operator: " . ($result['operator_id'] ?? "unknown") . ")" : "";?></span></p>
+                <p>Result: <span class="qc-result"><?= strtoupper($qcResultText);?> <?= $res !== null ? "(Operator: " . ($result['operator_id'] ?? "unknown") . ")" : "";?></span></p>
             </div>
             <hr>
             <form action="/process" method="POST">
@@ -184,9 +186,9 @@ else : ?>
                         <label>QC Result</label>
                         <div class="input-wrapper select-wrapper">
                             <select required name="qcResult">
-                                <option <?= $result['qc_result'] === null ? 'selected' : '';?> disabled value="">Please select</option>
-                                <option <?= $result['qc_result'] === 0 ? 'selected' : '';?> value="0">Fail</option>
-                                <option <?= $result['qc_result'] === 1 ? 'selected' : '';?> value="1">Pass</option>
+                                <option <?= $res === null ? 'selected' : '';?> disabled value="">Please select</option>
+                                <option <?= $res !== null && $res == 0 ? 'selected' : '';?> value="0">Fail</option>
+                                <option <?= $res == 1 ? 'selected' : '';?> value="1">Pass</option>
                             </select>
                         </div>
                     </div>

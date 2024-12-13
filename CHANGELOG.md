@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.1.8] - 13/12/2024
+
+Fixed lot QC not altering on certain PhP versions.
+
+### Fixed
+
+-   When changing Lot QC result on PhP 7.x, the result would not display correctly on the results screen.
+
+&nbsp;
+
 ## [v3.1.7] - 03/12/2024
 
 Empty result handling bug fix and lot information parsing.

@@ -1059,7 +1059,8 @@ function getLotQCResults($priority = false, $page = 1, $itemsPerPage = 10) {
         qc_results.id AS id,
         results.id AS result_id,
         lots.id AS lot_id,
-        users.id AS user_id
+        users.id AS user_id,
+        qc_results.reference AS reference
     FROM
         lots_qc_results AS qc_results
     JOIN
