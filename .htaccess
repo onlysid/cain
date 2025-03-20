@@ -3,7 +3,7 @@ Options -Indexes
 ErrorDocument 403 /index.php
 
 # Allow access to /phpmyadmin
-SetEnvIf Request_URI "^/phpmyadmin/" allow_phpmyadmin
+SetEnvIfNoCase Request_URI "^/phpmyadmin/" allow_phpmyadmin
 
 # Block direct access to PHP files globally, except in /phpmyadmin
 <FilesMatch "\.php$">

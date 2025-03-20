@@ -793,7 +793,7 @@ function runUpdates($version, $dbVersion, $retry = true) {
                     $cainDB->query("ALTER TABLE lots_qc_results DROP FOREIGN KEY `$fkName`;");
 
                     // Now we need to loop through every result and update the test_result column to have the ID of the master_result instead of the result.
-                    $testResults = $cainDB->selectAll("UPDATE lots_qc_results q
+                    $testResults = $cainDB->query("UPDATE lots_qc_results q
                         LEFT JOIN results r ON q.test_result = r.id
                         SET q.test_result = r.master_result;
                     ");

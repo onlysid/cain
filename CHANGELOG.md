@@ -12,9 +12,9 @@ Changing the way results work slightly and some QOL updates. Updating according 
 
 ### Changed
 
--   Accent colour changed to Fuchsia
--   Font size increased globally by 12.5%
--   Send API now accepts API version 3.0 formats
+-   Accent colour changed to Fuchsia.
+-   Font size increased globally by 12.5%.
+-   Send API now accepts API version 3.0 formats.
 -   Master results now form the source of truth for all results. The standard results that LIMS relies on have foreign key references to their master results.
 -   You can now copy and paste error messages on the update screen and, for particularly long messages, the whole screen is now scrollable.
 -   Setup SQL script now only takes users as far as v0.0.0. The db update script does the rest.
@@ -22,6 +22,8 @@ Changing the way results work slightly and some QOL updates. Updating according 
 -   Sent to LIMS status now works according to the constituent results, not to the result itself. Considerations made for if "part" of the result has been sent to LIMS.
 -   Backup/Delete now includes all CT values and master result parsing.
 -   Allow more time and memory for upgrades (as this is a large one).
+-   .htaccess is now case insensitive in its search for phpmyadmin.
+-   For longer database updates, the browser now refreshes to counteract the browser timeout.
 
 ### Added
 
