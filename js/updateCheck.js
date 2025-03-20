@@ -40,6 +40,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // Create a new XMLHttpRequest object
     var xhr = new XMLHttpRequest();
 
+    xhr.timeout = 0;
+
     // Define the PHP file URL
     var phpFileUrl = '/admin/db-update.php';
 
