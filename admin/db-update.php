@@ -633,14 +633,26 @@ function runUpdates($version, $dbVersion, $retry = true) {
                     $fkName = $fk['CONSTRAINT_NAME'];
                     $cainDB->query("ALTER TABLE results DROP FOREIGN KEY `$fkName`;");
                 }
+                // Check if the master_result column exists; if not, add it.
                 $masterColExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
-                    WHERE table_schema = '" . DB_NAME . "'
-                    AND table_name = 'results'
-                    AND column_name = 'master_result';");
+                WHERE table_schema = '" . DB_NAME . "'
+                AND table_name = 'results'
+                AND column_name = 'master_result';");
                 if (empty($masterColExists) || $masterColExists['cnt'] == 0) {
                     $cainDB->query("ALTER TABLE results ADD master_result INT DEFAULT NULL;");
                 }
-                $cainDB->query("ALTER TABLE results ADD FOREIGN KEY (master_result) REFERENCES master_results(id) ON DELETE CASCADE;");
+
+                // Clean up any orphaned master_result values before adding the constraint.
+                // This query sets master_result to NULL if the referenced master_results id does not exist.
+                $cainDB->query("UPDATE results SET master_result = NULL
+                                WHERE master_result IS NOT NULL
+                                AND master_result NOT IN (SELECT id FROM master_results);");
+
+                // Now safely add the foreign key constraint.
+                $cainDB->query("ALTER TABLE results
+                    ADD FOREIGN KEY (master_result)
+                    REFERENCES master_results(id)
+                    ON DELETE CASCADE;");
                 if($cainDB->conn->inTransaction()) {
                     $cainDB->commit();
                 }
