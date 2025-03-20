@@ -58,6 +58,114 @@ function checkForUpdates($version) {
     return false;
 }
 
+// Function to check for and create missing required tables.
+function checkAndSetupRequiredTables($conn) {
+    // Define the required tables.
+    $requiredTables = ['results', 'settings', 'users'];
+    $missingTable = false;
+
+    // Check for each required table.
+    foreach ($requiredTables as $table) {
+        $stmt = $conn->prepare("SHOW TABLES LIKE :table");
+        $stmt->execute([':table' => $table]);
+        if ($stmt->rowCount() === 0) {
+            $missingTable = true;
+            break;
+        }
+    }
+
+    // If one or more tables are missing, create them.
+    if ($missingTable) {
+        $sql = "
+        CREATE TABLE IF NOT EXISTS `results` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `sender` varchar(256) NOT NULL DEFAULT '\"\"',
+            `sequenceNumber` varchar(256) NOT NULL DEFAULT '\"\"',
+            `version` varchar(256) NOT NULL DEFAULT '\"\"',
+            `assayType` varchar(256) NOT NULL DEFAULT '',
+            `assaySubType` varchar(256) NOT NULL DEFAULT '',
+            `site` varchar(256) NOT NULL DEFAULT '\"\"',
+            `firstName` varchar(256) NOT NULL DEFAULT '\"\"',
+            `lastName` varchar(256) NOT NULL DEFAULT '\"\"',
+            `dob` varchar(256) NOT NULL DEFAULT '\"\"',
+            `hospitalId` varchar(256) NOT NULL DEFAULT '\"\"',
+            `nhsNumber` varchar(256) NOT NULL,
+            `timestamp` varchar(256) NOT NULL DEFAULT '\"\"',
+            `testcompletetimestamp` varchar(256) NOT NULL DEFAULT '\"\"',
+            `clinicId` varchar(256) NOT NULL DEFAULT '\"\"',
+            `operatorId` varchar(256) NOT NULL DEFAULT '\"\"',
+            `moduleSerialNumber` varchar(256) NOT NULL DEFAULT '\"\"',
+            `patientId` varchar(256) NOT NULL DEFAULT '\"\"',
+            `patientAge` varchar(256) NOT NULL DEFAULT '\"\"',
+            `patientSex` varchar(256) NOT NULL DEFAULT '\"\"',
+            `sampleid` varchar(256) NOT NULL DEFAULT '\"\"',
+            `trackingCode` varchar(256) NOT NULL DEFAULT '\"\"',
+            `product` varchar(256) NOT NULL DEFAULT '\"\"',
+            `result` varchar(256) NOT NULL DEFAULT '\"\"',
+            `testPurpose` varchar(256) NOT NULL DEFAULT '\"\"',
+            `abortErrorCode` varchar(255) NOT NULL DEFAULT '\"\"',
+            `patientLocation` varchar(255) NOT NULL DEFAULT '\"\"',
+            `reserve1` varchar(255) NOT NULL DEFAULT '\"\"',
+            `reserve2` varchar(255) NOT NULL DEFAULT '\"\"',
+            `sampleCollected` varchar(255) NOT NULL DEFAULT '\"\"',
+            `sampleReceived` varchar(255) NOT NULL DEFAULT '\"\"',
+            `flag` int(11) DEFAULT NULL,
+            `post_timestamp` bigint(20) DEFAULT NULL,
+            `assayStepNumber` varchar(256) NOT NULL DEFAULT '\"\"',
+            `cameraReadings` varchar(256) NOT NULL DEFAULT '\"\"',
+            `bits` int(11) NOT NULL DEFAULT 0,
+            PRIMARY KEY (`id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+        CREATE TABLE IF NOT EXISTS `settings` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `name` varchar(255) NOT NULL,
+            `value` varchar(255) DEFAULT NULL,
+            `flags` int(11) NOT NULL DEFAULT 0,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `name` (`name`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+        CREATE TABLE IF NOT EXISTS `users` (
+            `id` int(11) NOT NULL AUTO_INCREMENT,
+            `operator_id` varchar(50) NOT NULL,
+            `password` varchar(255) DEFAULT NULL,
+            `user_id` varchar(255) DEFAULT NULL,
+            `first_name` varchar(50) DEFAULT NULL,
+            `last_name` varchar(50) DEFAULT NULL,
+            `user_type` tinyint(4) DEFAULT 1,
+            `last_active` int(11) DEFAULT NULL,
+            `status` tinyint(4) DEFAULT 1,
+            PRIMARY KEY (`id`),
+            UNIQUE KEY `operator_id` (`operator_id`)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+        ";
+
+        try {
+            $conn->exec($sql);
+        } catch (PDOException $ex) {
+            addLogEntry('system', "Database setup failed: " . $ex->getMessage());
+            http_response_code(500);
+            include('views/generic-error.php');
+            exit;
+        }
+        return true;
+    }
+
+    return false;
+}
+
+// Logs update error with context
+function logUpdateError($context, $e) {
+    $errorDetails = [
+        'error_message' => $e->getMessage(),
+        'stack_trace'   => $e->getTraceAsString(),
+        'context'       => $context
+    ];
+    error_log("Update ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+    addLogEntry('system', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+}
+
 // Get current user info
 function userInfo($operatorId = null) {
     global $cainDB, $session;
@@ -464,7 +572,7 @@ function getResults($params, $itemsPerPage) {
     // Get any query params
     $searchFilter = isset($params['s']) ? $params['s'] : null;
     $sortDirection = isset($params['sd']) && ($params['sd'] != "" || $params['sd'] == "asc") ? "ASC" : "DESC";
-    $sortParam = isset($params['sp']) && $params['sp'] != "" ? $params['sp'] : "testcompletetimestamp";
+    $sortParam = isset($params['sp']) && $params['sp'] != "" ? $params['sp'] : "end_time";
     $pageNumber = isset($params['p']) ? $params['p'] : 1;
     $offset = $itemsPerPage ? ($pageNumber - 1) * $itemsPerPage : null;
 
@@ -478,11 +586,11 @@ function getResults($params, $itemsPerPage) {
 
     // Check for positive result
     if($resultPolarity) {
-        $filters[] = "result LIKE '" . ($resultPolarity == 0 ? 'Negative' : 'Positive') . "'";
+        $filters[] = "r.result LIKE '" . ($resultPolarity == 0 ? 'Negative' : 'Positive') . "'";
     }
 
     if($sex) {
-        $filters[] = "patientSex = '$sex'";
+        $filters[] = "r.sex = '$sex'";
     }
 
     if($age) {
@@ -496,14 +604,10 @@ function getResults($params, $itemsPerPage) {
             $maxAge = null;
         }
 
-        $filters[] = "patientAge >= $minAge";
+        $filters[] = "r.age >= $minAge";
         if($maxAge) {
-            $filters[] = "patientAge <= $maxAge";
+            $filters[] = "r.age <= $maxAge";
         }
-    }
-
-    if($sentToLIMS) {
-        $filters[] = "flag = '$sentToLIMS'";
     }
 
     if($dateRange) {
@@ -511,32 +615,59 @@ function getResults($params, $itemsPerPage) {
         $dateRangeArr = explode(' - ', $dateRange);
 
         if($dateRangeArr[0]) {
-            $filters[] = 'STR_TO_DATE(testcompletetimestamp, "%Y-%m-%d %H:%i") >= "' . $dateRangeArr[0] . ' 00:00"';
+            $filters[] = 'STR_TO_DATE(r.end_time, "%Y-%m-%d %H:%i") >= "' . $dateRangeArr[0] . ' 00:00"';
         }
         if(isset($dateRangeArr[1])) {
-            $filters[] = 'STR_TO_DATE(testcompletetimestamp, "%Y-%m-%d %H:%i") <= "' . $dateRangeArr[1] . ' 00:00"';
+            $filters[] = 'STR_TO_DATE(r.end_time, "%Y-%m-%d %H:%i") <= "' . $dateRangeArr[1] . ' 00:00"';
         } else {
-            $filters[] = 'STR_TO_DATE(testcompletetimestamp, "%Y-%m-%d %H:%i") <= "' . $dateRangeArr[0] . ' 23:59"';
+            $filters[] = 'STR_TO_DATE(r.end_time, "%Y-%m-%d %H:%i") <= "' . $dateRangeArr[0] . ' 23:59"';
         }
     }
 
     // Initialize the base SQL queries
-    $query = "SELECT *, r.id AS result_id FROM results r LEFT JOIN lots i ON i.lot_number = r.lot_number ";
-    $countQuery = "SELECT COUNT(*) FROM results r LEFT JOIN lots i ON i.lot_number = r.lot_number ";
+    $query = "SELECT
+        r.*,
+        r.id AS master_result_id,
+        r.result AS result_summary,
+        i.*,
+        res.*,
+        GROUP_CONCAT(res.result SEPARATOR ';') AS result_values,
+        GROUP_CONCAT(res.product SEPARATOR ';') AS assay_names,
+        GROUP_CONCAT(res.flag SEPARATOR ';') AS result_flags,
+        GROUP_CONCAT(res.ct_values SEPARATOR ';') AS ct_values,
+        CASE
+            WHEN SUM(res.flag = 101) > 0 THEN 1
+            WHEN SUM(res.flag = 102) = COUNT(res.flag) THEN 2
+            ELSE 0
+        END AS lims_status
+        FROM master_results r
+        LEFT JOIN lots i ON i.lot_number = r.lot_number
+        LEFT JOIN results res ON res.master_result = r.id ";
+
+    $countQuery = "SELECT COUNT(*) as cnt FROM (
+        SELECT r.id,
+            CASE
+                WHEN SUM(res.flag = 101) > 0 THEN 1
+                WHEN SUM(res.flag = 102) = COUNT(res.flag) THEN 2
+                ELSE 0
+            END AS lims_status
+        FROM master_results r
+        LEFT JOIN lots i ON i.lot_number = r.lot_number
+        LEFT JOIN results res ON res.master_result = r.id ";
 
     $searchConditions = '';
     $queryParams = [];
 
     if ($searchFilter !== null) {
         $searchTerms = explode(" ", $searchFilter);
-        $columns = ['firstName', 'lastName', 'hospitalId', 'nhsNumber', 'clinicId', 'operatorId', 'patientId', 'sampleId', 'trackingCode', 'patientLocation', 'result', 'product'];
+        $columns = ['first_name', 'last_name', 'hospital_id', 'nhs_number', 'operator_id', 'patient_id', 'location', 'result', 'assay_name'];
 
         $termConditions = []; // Array to store each search term's condition group
 
         foreach ($searchTerms as $index => $filterString) {
             $columnConditions = []; // Array to store conditions for each column for this term
             foreach ($columns as $column) {
-                $columnConditions[] = "$column LIKE :filterString{$index}_$column";
+                $columnConditions[] = "r.$column LIKE :filterString{$index}_$column";
                 $queryParams[":filterString{$index}_$column"] = '%' . $filterString . '%';
             }
             // Wrap each term's column conditions in parentheses and join them with OR
@@ -563,20 +694,43 @@ function getResults($params, $itemsPerPage) {
         $countQuery .= "WHERE $searchConditions ";
     }
 
+    $query .= "GROUP BY r.id ";
+    $countQuery .= "GROUP BY r.id ";
+
+    // If $sentToLIMS is provided, map it to the computed lims_status and add a HAVING clause
+    if ($sentToLIMS) {
+        if ($sentToLIMS == 101) {
+            $limsFilter = 1;
+        } else if ($sentToLIMS == 102) {
+            $limsFilter = 2;
+        } else if ($sentToLIMS == 100) {
+            $limsFilter = 0;
+        }
+        $query .= "HAVING lims_status = $limsFilter ";
+        $countQuery .= "HAVING lims_status = $limsFilter ";
+    }
+
     // Add the ORDER BY clause
-    $query .= "ORDER BY $sortParam $sortDirection ";
+    $query .= "ORDER BY r.$sortParam $sortDirection ";
+    $countQuery .= ") as subquery";
 
     // Apply pagination
     if ($itemsPerPage) {
-        $query .= " LIMIT $itemsPerPage OFFSET $offset";
+        $query .= " LIMIT $itemsPerPage OFFSET $offset ";
     }
 
     // Execute the queries
-    $results = $cainDB->selectAll($query, $queryParams);
-    $count = $cainDB->select($countQuery, $queryParams);
+    try {
+        $results = $cainDB->selectAll($query, $queryParams);
+        $count = $cainDB->select($countQuery, $queryParams);
+    } catch(Exception $e) {
+        $err = $e->getMessage();
+        addLogEntry('system', "Error in getting results. $err");
+        return null;
+    }
 
     // Return the results and count
-    return ["results" => $results, "count" => $count['COUNT(*)']];
+    return ["results" => $results, "count" => $count['cnt']];
 
 }
 
@@ -651,9 +805,9 @@ function getLots($params, $itemsPerPage) {
         $positiveResults = isset($lot['positive_results']) ? explode('|||', $lot['positive_results']) : [];
         foreach ($positiveResults as $result) {
             $parsedResult = parseResult($result);
-            if ($parsedResult['result'] === true) {
+            if ($parsedResult['posCount'] > 0) {
                 $positiveCount++;
-            } elseif ($parsedResult['result'] === false) {
+            } elseif ($parsedResult['posCount'] == 0) {
                 $negativeCount++;
             }
         }
@@ -756,6 +910,21 @@ function checkResultCapacity() {
     }
 
     return $resultsCount;
+}
+
+// Check if string is null or empty
+function isNullOrEmptyString($str) {
+    return $str === null || trim($str) === '';
+}
+
+// Check if we have data within an API request. If we don't, check something else!
+function getValueOrFallback($primary, $fallback) {
+    return (isset($primary) && $primary !== '') ? $primary : $fallback;
+}
+
+// If a value is an empty string, just make it null (for use with API)
+function cleanValue($value) {
+    return ($value === '') ? null : $value;
 }
 
 // Function to get all non-service admin operators
@@ -999,8 +1168,10 @@ function lotAutoQCCheck($lot) {
     $negativeTestsRequired = $cainDB->select("SELECT `value` FROM settings WHERE `name` = 'qc_negative_requirements';")['value'];
 
     // Now, check the count of successful positive QC tests
-    $positiveTests = $cainDB->select("SELECT COUNT(*) as count FROM lots_qc_results as qc JOIN results ON qc.test_result = results.id WHERE qc.lot = ? AND qc.qc_result = 1 AND results.result = 'positive';", [$lot])['count'];
-    $negativeTests = $cainDB->select("SELECT COUNT(*) as count FROM lots_qc_results as qc JOIN results ON qc.test_result = results.id WHERE qc.lot = ? AND qc.qc_result = 1 AND results.result = 'negative';", [$lot])['count'];
+    $positiveTests = $cainDB->select("SELECT COUNT(*) as count FROM lots_qc_results as qc JOIN results ON qc.test_result = results.id WHERE qc.lot = ? AND qc.qc_result = 1 AND results.result LIKE '%positive%' AND results.result NOT LIKE 'invalid';", [$lot])['count'];
+
+    // Now, check the count of successful positive QC tests
+    $negativeTests = $cainDB->select("SELECT COUNT(*) as count FROM lots_qc_results as qc JOIN results ON qc.test_result = results.id WHERE qc.lot = ? AND qc.qc_result = 1 AND results.result NOT LIKE '%positive%' AND results.result NOT LIKE 'invalid';", [$lot])['count'];
 
     // If we have the right counts, we have passed QC!
     if($positiveTests >= $positiveTestsRequired && $negativeTests >= $negativeTestsRequired) {
@@ -1053,18 +1224,18 @@ function getLotQCResults($priority = false, $page = 1, $itemsPerPage = 10) {
     // Initialize the SQL query base
     $sql = "SELECT
         qc_results.*,
-        results.*,
+        master_results.*,
         lots.*,
         users.*,
         qc_results.id AS id,
-        results.id AS result_id,
+        master_results.id AS result_id,
         lots.id AS lot_id,
         users.id AS user_id,
         qc_results.reference AS reference
     FROM
         lots_qc_results AS qc_results
     JOIN
-        results ON qc_results.test_result = results.id
+        master_results ON qc_results.test_result = master_results.id
     LEFT JOIN
         users ON qc_results.operator_id = users.id
     JOIN
@@ -1080,7 +1251,7 @@ function getLotQCResults($priority = false, $page = 1, $itemsPerPage = 10) {
     $results = $cainDB->selectAll($sql);
 
     // Get the total count of all results for pagination purposes
-    $count = $cainDB->select("SELECT COUNT(*) as count FROM lots_qc_results")['count'];
+    $count = $cainDB->select("SELECT COUNT(*) as count FROM lots_qc_results WHERE test_result IS NOT null")['count'];
 
     return [
         'results' => $results,
@@ -1095,6 +1266,7 @@ function parseResult($result) {
 
     // Now we must fill it. Begin by exploding by comma
     $resultArray = explode(", ", $result);
+
 
     // Handle multiplex results like "SARS-CoV-2: 1Negative, RSV: 2Positive" or simple "Positive" and "Negative" strings
     if (count($resultArray) >= 2) {
@@ -1137,18 +1309,23 @@ function sanitiseResult($result) {
     $ret = [
         'result' => null,
         'summary' => null,
+        'ct' => null,
     ];
 
+    // If the result is null, just return
+    if($result === null) {
+        return $ret;
+    }
+
     // Check if the result is in JSON format
-    if ($decodedResult = json_decode($result)) {
+    if ($decodedResult = json_decode($result) && !is_string($result)) {
         $ret = processJSONResults($decodedResult);
     } else {
         // Handle non-JSON format by parsing the result
         $parsedResult = parseResult($result) ?? null;
 
-
         // If any part of the parsed result is invalid, set the summary to "Invalid" and return immediately
-        if (($parsedResult['result'] ?? null) === null) {
+        if ($parsedResult['result'] === null) {
             $ret['summary'] = 'Invalid';
             return $ret;
         }
@@ -1169,9 +1346,10 @@ function sanitiseResult($result) {
 
 function processJSONResults($results) {
     $formattedResults = [];
-    $summary = 'Negative';
+    $summary = null;
     $hasPositiveControl = true;
     $hasInvalidControlOrTarget = false;
+    $ctValues = [];
 
     // Process each result entry
     foreach ($results as $result) {
@@ -1179,8 +1357,11 @@ function processJSONResults($results) {
 
         // Check control results to determine if any are "Invalid" or "Negative"
         if ($controlResult === 'Negative' || $controlResult === 'Invalid') {
-            $hasInvalidControlOrTarget = true; // Flag invalid control result
-            $summary = 'Invalid'; // Set summary to Invalid if any control is Negative or Invalid
+            // Flag invalid control result
+            $hasInvalidControlOrTarget = true;
+
+            // Set summary to Invalid if any control is Negative or Invalid
+            $summary = 'Invalid';
         }
 
         if ($controlResult !== 'Positive') {
@@ -1189,7 +1370,12 @@ function processJSONResults($results) {
 
         // Process target results
         foreach ($result->targetResults as $target) {
-            $targetName = str_replace(['-', ' '], '', ucwords(strtolower($target->name))); // Normalize target name
+            // Normalize target name
+            $targetName = str_replace(['-', ' '], '', ucwords(strtolower($target->name)));
+
+            // Add the CT Value
+            $ctValues[] = $target->ct;
+
             if($target->result === 'Invalid') {
                 $targetIsPositive = null;
             } else {
@@ -1224,8 +1410,9 @@ function processJSONResults($results) {
     }
 
     return [
-        'result' => $formattedResults,
-        'summary' => $summary
+        'result' => $summary == 'Invalid' ? 'Invalid' : $formattedResults,
+        'summary' => $summary,
+        'ct' => empty($ctValues) ? null : implode(',', $ctValues),
     ];
 }
 
@@ -1233,18 +1420,28 @@ function resultStringify($result) {
     $stringifiedResult = '';
     $index = 1;
 
-    if($result && $result !== []) {
-        foreach ($result as $target => $isPositive) {
-            $targetName = str_replace(['-', ' '], '', ucwords(strtolower($target))); // Normalize the target name
-            if($isPositive === null) {
-                $status = 'Invalid';
-            } else {
-                $status = $isPositive ? 'Positive' : 'Negative';
-            }
+    if($result !== null && $result !== []) {
+        // Multiplex
+        if(is_array($result)) {
+            foreach ($result as $target => $isPositive) {
+                $targetName = str_replace(['-', ' '], '', ucwords(strtolower($target))); // Normalize the target name
+                if($isPositive === null) {
+                    $status = 'Invalid';
+                } else {
+                    $status = $isPositive ? 'Positive' : 'Negative';
+                }
 
-            // Append the formatted target and result status to the string
-            $stringifiedResult .= "{$targetName}: {$index}{$status}, ";
-            $index++;
+                // Append the formatted target and result status to the string
+                $stringifiedResult .= "{$targetName}: {$index}{$status}, ";
+                $index++;
+            }
+        } else {
+            // Simple SAMBA II result OR Invalid
+            if($result === 'Invalid') {
+                $stringifiedResult = $result;
+            } else {
+                $stringifiedResult = $result ? 'Positive' : 'Negative';
+            }
         }
     } else {
         $stringifiedResult = "Invalid";
@@ -1482,4 +1679,85 @@ function checkExpiration($timestamp) {
     } else {
         return false; // Not expired
     }
+}
+
+// Check if an API Version is valid
+function isValidAPIVersion($version) {
+    // Ensure that the version is a string.
+    if (!is_string($version)) {
+        return false;
+    }
+    // Use a regular expression to check if it follows the pattern "a.b"
+    return preg_match('/^\d+\.\d+$/', $version) === 1;
+}
+
+// Compare two API versions. Returns 1 if x is newer than y, -1 if not and 0 if equal.
+function compareAPIVersions($x, $y) {
+    $validX = isValidAPIVersion($x);
+    $validY = isValidAPIVersion($y);
+
+    // Both versions are invalid.
+    if (!$validX && !$validY) {
+        return 0;
+    }
+    // Only y is invalid: assume y is older.
+    if ($validX && !$validY) {
+        return 1;
+    }
+    // Only x is invalid: assume x is older.
+    if (!$validX && $validY) {
+        return -1;
+    }
+
+    // Both versions are valid; split into major and minor components.
+    list($majorX, $minorX) = explode('.', $x);
+    list($majorY, $minorY) = explode('.', $y);
+
+    // Convert to integers for numerical comparison.
+    $majorX = (int)$majorX;
+    $minorX = (int)$minorX;
+    $majorY = (int)$majorY;
+    $minorY = (int)$minorY;
+
+    // Compare major versions first.
+    if ($majorX > $majorY) {
+        return 1;
+    } elseif ($majorX < $majorY) {
+        return -1;
+    } else {
+        // Compare minor versions if majors are equal.
+        if ($minorX > $minorY) {
+            return 1;
+        } elseif ($minorX < $minorY) {
+            return -1;
+        } else {
+            return 0;
+        }
+    }
+}
+
+// Check, given an array of results, if we are invalid (0), positive (1) or negative (2)
+function resultInterpretation($result) {
+    $invalidCount = 0;
+    $positiveCount = 0;
+
+    foreach($result as $part) {
+        if(strpos(strtolower($part), 'invalid') !== false) {
+            $invalidCount++;
+        }
+
+        if(strpos(strtolower($part), 'positive') !== false) {
+            $positiveCount++;
+        }
+    }
+
+    if($invalidCount > 0) {
+        return 0;
+    }
+
+    if($positiveCount > 0) {
+        return 1;
+    }
+
+    return 2;
 }

@@ -1,0 +1,43 @@
+{
+    "version": "3.0",
+    "sampleId": "01006834",
+    "patientId": "55241",
+    "patientAge": "36",
+    "patientSex": "F",
+    "patientFirstName": "",
+    "patientLastName": "",
+    "patientDoB": "",
+    "hospitalId": "",
+    "nhsNumber": "553200547",
+    "collectedTime": "",
+    "receivedTime": "",
+    "patientLocation": "Clinic G",
+    "comment1": "",
+    "comment2": "",
+    "operatorId": "service",
+    "testPurpose": 1,
+    "deviceError": "",
+    "expectedResult": "",
+    "assayType": "90",
+    "assaySubType": "01",
+    "lotNumber": "001",
+    "subLotNumber": "01",
+    "productionYear": "24",
+    "expiryYear": "2025",
+    "expiryMonth": "02",
+    "assayId": 574,
+    "moduleSerialNumber": "FC:0F:E7:E6:E5:09",
+    "assayName": "AS-SARS-CoV-2, FluA, FluB, RSV Test_NoSCAN_combined",
+    "assayVersion": "0.4.0",
+    "startTime": "2025-01-21 11:29",
+    "endTime": "2025-01-21 12:07",
+    "result": {
+      "signature": {
+        "signature": "MEUCICX8cILPc2q9IU3…",
+        "instrumentId": "SIII-FC0FE7-E6E509"
+      },
+      "safetyCriticalCrc32": 1248536912,
+      "overallResultValueEnum": "INVALID",
+      "overallResultValueString": "Invalid"
+    }
+  }

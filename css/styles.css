@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Update base font size */
+html {
+    font-size: 18px;
+}
+
 /* Define fonts */
 @font-face {
     font-family: "Roboto";
@@ -100,18 +105,18 @@
     scrollbar-width: none; /* Firefox */
 }
 
-.result-details::-webkit-scrollbar-track {
+.result-details::-webkit-scrollbar-track, .response-code::-webkit-scrollbar-track {
     @apply rounded-r-xl;
     background-color: #cccccc;
 }
 
-.result-details::-webkit-scrollbar {
+.result-details::-webkit-scrollbar, .response-code::-webkit-scrollbar {
     @apply rounded-r-full;
     width: 18px;
     background-color: #f5f5f5;
 }
 
-.result-details::-webkit-scrollbar-thumb {
+.result-details::-webkit-scrollbar-thumb, .response-code::-webkit-scrollbar-thumb {
     @apply rounded-r-xl bg-white;
     background-image: -webkit-gradient(
         linear,
@@ -182,7 +187,7 @@ a.ignore-default {
 }
 
 .btn:hover {
-    box-shadow: 0px 0px 10px #7aa8acce;
+    box-shadow: 0px 0px 10px #ac917ace;
     --bgCol1: #4d4c4c;
     --bgCol2: #7c7c7c;
 }
@@ -234,7 +239,7 @@ a.ignore-default {
 
 .alt-border-btn {
     @apply px-8 py-3;
-    box-shadow: inset 0px 0px 3px 3px #00000071, inset 0px 0px 0px 4px #77dfff;
+    box-shadow: inset 0px 0px 3px 3px #00000071, inset 0px 0px 0px 4px #ff77a7;
 }
 
 .btn.has-icon:not(.border-btn) {
@@ -258,7 +263,7 @@ a.ignore-default {
 }
 
 .btn-small {
-    @apply px-4 py-1.5 font-semibold text-base rounded-lg bg-blue-500 !text-white transition-all duration-500 hover:!text-dark hover:bg-tirtiary shadow-md shadow-dark hover:shadow-secondary/50;
+    @apply px-4 py-1.5 font-semibold text-base rounded-lg bg-fuchsia-500 !text-white transition-all duration-500 hover:!text-dark hover:bg-tirtiary shadow-md shadow-dark hover:shadow-secondary/50;
 }
 
 /* Table Styles */
@@ -267,11 +272,15 @@ table {
 }
 
 table thead {
-    @apply text-dark border-light-grey border bg-blue-200;
+    @apply text-dark border-light-grey border bg-fuchsia-200;
 }
 
 table thead th {
     @apply text-start;
+}
+
+table thead th a {
+    @apply !leading-tight;
 }
 
 table tbody {
@@ -523,7 +532,7 @@ tr.instrument.lost td .status-indicator {
 }
 
 #pagination a.active {
-    @apply bg-blue-200 text-dark pointer-events-none;
+    @apply bg-fuchsia-200 text-dark pointer-events-none;
 }
 
 #pagination a.disabled {
@@ -626,7 +635,7 @@ textarea {
 }
 
 .input-wrapper.disabled {
-    @apply cursor-not-allowed bg-blue-200;
+    @apply cursor-not-allowed bg-fuchsia-200;
 }
 
 .input-wrapper.disabled select {
@@ -849,15 +858,15 @@ textarea {
 }
 
 #settingsBackLink:hover {
-    @apply pr-4 bg-blue-800;
+    @apply pr-4 bg-fuchsia-800;
 }
 
 #settingsMenu .menu-item {
-    @apply bg-dark text-white hover:bg-blue-200 hover:text-black flex items-center p-4 basis-16;
+    @apply bg-dark text-white hover:bg-fuchsia-200 hover:text-black flex items-center p-4 basis-16;
 }
 
 #settingsMenu .menu-item.active {
-    @apply bg-blue-200 text-black;
+    @apply bg-fuchsia-200 text-black;
 }
 
 /* Menu Styles */
@@ -870,7 +879,7 @@ textarea {
 }
 
 #mobileMenu {
-    @apply transition-all duration-300 fixed left-0 top-0 z-50 bg-blue-900/40 backdrop-blur-xl md:hidden opacity-0 pointer-events-none w-full h-full flex flex-col justify-center items-center px-4 xs:px-16 sm:px-20 pt-16;
+    @apply transition-all duration-300 fixed left-0 top-0 z-50 bg-fuchsia-900/40 backdrop-blur-xl md:hidden opacity-0 pointer-events-none w-full h-full flex flex-col justify-center items-center px-4 xs:px-16 sm:px-20 pt-16;
 }
 
 #mobileMenu.active {
@@ -950,6 +959,14 @@ body.show-menu #contentWrapper:not(.settings-wrapper) {
     @apply fixed opacity-0 backdrop-blur-xl w-[100vw] h-[100svh] top-0 left-0 bg-black/30 -translate-x-1/2 -translate-y-1/2 transition-all duration-500 flex flex-col justify-center items-center;
 }
 
+.result-accordion .result-accordion-content {
+    @apply max-h-0 overflow-hidden transition-all;
+}
+
+.result-accordion.active .result-accordion-content {
+    @apply max-h-[20rem];
+}
+
 /* Fallback for older browsers that don't support 100svh */
 @supports not (height: 100svh) {
     .result-modal-backdrop,
@@ -970,7 +987,7 @@ body.show-menu #contentWrapper:not(.settings-wrapper) {
 
 .result-info,
 .lot-modal .lot-info {
-    @apply basis-[10rem] grow flex flex-col p-4 rounded-md bg-white shadow-xl shadow-dark/30;
+    @apply basis-[15rem] grow flex flex-col p-4 rounded-md bg-white shadow-xl shadow-dark/30;
 }
 
 .result-info.pos,
@@ -980,6 +997,10 @@ body.show-menu #contentWrapper:not(.settings-wrapper) {
 
 .result-info.invalid {
     @apply bg-gradient-to-r from-gray-800 to-gray-500;
+}
+
+.result-info.neg .title, .result-info.neg .result-accordion {
+    @apply !bg-primary-dark;
 }
 
 .lot-modal .lot-info.pos {
@@ -1035,7 +1056,7 @@ section {
 
 /* Notices and Generic Section Layouts */
 section.notice {
-    @apply px-6 py-4 rounded-xl bg-blue-200 flex flex-col md:flex-row items-start md:items-center gap-1 md:gap-3;
+    @apply px-6 py-4 rounded-xl bg-fuchsia-200 flex flex-col md:flex-row items-start md:items-center gap-1 md:gap-3;
 }
 
 section.notice.error {
@@ -1057,7 +1078,7 @@ section.notice svg {
 
 section p a,
 a.alt {
-    @apply !text-blue-800 hover:!text-green-800;
+    @apply !text-fuchsia-800 hover:!text-green-800;
 }
 
 #updateAlert {
@@ -1079,7 +1100,7 @@ a.alt {
 
 #updateAlert h2 {
     color: #fff !important;
-    font-size: 28px;
+    font-size: 32px;
     font-weight: 700;
 }
 
@@ -1091,7 +1112,7 @@ a.alt {
 }
 
 #updateAlert p {
-    font-size: 19px;
+    font-size: 20px;
 }
 
 #updateAlert .response-code {
@@ -1102,9 +1123,9 @@ a.alt {
     padding: 15px 30px;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
     text-align: center;
+    max-height: 75svh;
+    overflow-y: scroll;
     color: #000;
 }
 
@@ -1114,7 +1135,7 @@ a.alt {
 }
 
 #settingsWrapper {
-    @apply bg-primary-dark rounded-2xl h-full shadow-2xl shadow-blue-200/50 flex relative justify-between overflow-hidden;
+    @apply bg-primary-dark rounded-2xl h-full shadow-2xl shadow-fuchsia-200/50 flex relative justify-between overflow-hidden;
 }
 
 #hl7Options,
@@ -1158,7 +1179,7 @@ ul.form-errors li {
 }
 
 #notices .notice {
-    @apply relative sm:w-[min(20rem,_100vw)] bg-blue-200 cursor-pointer rounded-lg p-3.5 md:p-4 my-1.5;
+    @apply relative sm:w-[min(20rem,_100vw)] bg-fuchsia-200 cursor-pointer rounded-lg p-3.5 md:p-4 my-1.5;
     opacity: 0;
     box-shadow: rgba(0, 0, 0, 0.35) 0px 5px 15px;
 }
@@ -1181,7 +1202,7 @@ ul.form-errors li {
 }
 
 #notices .notice.warn {
-    @apply bg-orange-400;
+    @apply bg-fuchsia-400;
 }
 
 #notices .notice.alert p,
@@ -1241,7 +1262,7 @@ a.log-link.active {
 }
 
 .cain-grid .cain-grid-item {
-    @apply flex items-center gap-3 col-span-2 shadow-white/30 shadow-lg bg-blue-200 rounded-l-lg p-4;
+    @apply flex items-center gap-3 col-span-2 shadow-white/30 shadow-lg bg-fuchsia-200 rounded-l-lg p-4;
 }
 
 .cain-grid-item .grid-title {
@@ -1380,13 +1401,17 @@ a.log-link.active {
     @apply text-red-500;
 }
 
+#messageBoard.fixed-bottom {
+    @apply fixed bottom-0;
+}
+
 /* Calendar styles overrides */
 .vanilla-calendar {
     @apply shadow-xl shadow-dark/50;
 }
 
 .vanilla-calendar-day_selected-intermediate button {
-    @apply !bg-blue-200 !text-dark;
+    @apply !bg-fuchsia-200 !text-dark;
 }
 
 /* Lots-specific styling */

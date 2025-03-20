@@ -12,8 +12,9 @@ $itemsPerPage = $filters['ipp'] ?? 10;
 
 // Get all the data
 $results = getResults($_GET ?? $session->get('result-filters'), $itemsPerPage, false);
-$resultItems = $results["results"];
-$totalResultsCount = $results["count"];
+$resultItems = $results["results"] ?? null;
+
+$totalResultsCount = $results["count"] ?? 0;
 
 // Get the pagination information
 $totalPageCount = ceil($totalResultsCount / $itemsPerPage);
@@ -38,7 +39,7 @@ $listableFields = getFieldVisibilitySettings($dataFields, $visibilityFields);
 $defaultIdField = $settings['default_id'];
 
 // Column name definition
-if($defaultIdField == 'patientId') {
+if($defaultIdField == 'patient_id') {
     $idColName = "Patient ID";
 }
 
@@ -51,7 +52,7 @@ if($defaultIdField == 'hospitalId') {
 }
 
 if(!isset($idColName)) {
-    $defaultIdField = 'patientId';
+    $defaultIdField = 'patient_id';
     $idColName = "Patient ID";
 }
 
@@ -130,9 +131,9 @@ include_once BASE_DIR . "/utils/AgeGroup.php";?>
                         </a>
                     </th>
                     <th>
-                        <a href="<?= updateQueryString(["sp" => "firstName", "sd" => ((($filters['sd'] ?? "desc") == "desc" && ($filters['sp'] ?? null) == "firstName") || ($filters['sd'] ?? "desc") == "" ? "asc" : "")], true);?>" class="ignore-default flex gap-1.5 items-center">
+                        <a href="<?= updateQueryString(["sp" => "first_name", "sd" => ((($filters['sd'] ?? "desc") == "desc" && ($filters['sp'] ?? null) == "first_name") || ($filters['sd'] ?? "desc") == "" ? "asc" : "")], true);?>" class="ignore-default flex gap-1.5 items-center">
                             <span>Name</span>
-                            <svg class="h-4 fill-dark shrink-0 <?= (isset($filters['sp']) && $filters['sp'] == "firstName") ? "" : "opacity-50 !rotate-180";?> <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                            <svg class="h-4 fill-dark shrink-0 <?= (isset($filters['sp']) && $filters['sp'] == "first_name") ? "" : "opacity-50 !rotate-180";?> <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                                 <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM385 231c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-71-71V376c0 13.3-10.7 24-24 24s-24-10.7-24-24V193.9l-71 71c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L239 119c9.4-9.4 24.6-9.4 33.9 0L385 231z"/>
                             </svg>
                         </a>
@@ -145,15 +146,15 @@ include_once BASE_DIR . "/utils/AgeGroup.php";?>
                             </svg>
                         </a>
                     </th>
-                    <th class="hidden xs:table-cell">
-                        <a href="<?= updateQueryString(["sp" => "product", "sd" => ((($filters['sd'] ?? "desc") == "desc" && ($filters['sp'] ?? null) == "product") || ($filters['sd'] ?? "desc") == "" ? "asc" : "")], true);?>" class="ignore-default flex gap-1.5 items-center">
+                    <th class="hidden md:table-cell">
+                        <a href="<?= updateQueryString(["sp" => "assay_name", "sd" => ((($filters['sd'] ?? "desc") == "desc" && ($filters['sp'] ?? null) == "assay_name") || ($filters['sd'] ?? "desc") == "" ? "asc" : "")], true);?>" class="ignore-default flex gap-1.5 items-center">
                             <span>Test</span>
-                            <svg class="h-4 fill-dark shrink-0 <?= (isset($filters['sp']) && $filters['sp'] == "product") ? "" : "opacity-50 !rotate-180";?> <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+                            <svg class="h-4 fill-dark shrink-0 <?= (isset($filters['sp']) && $filters['sp'] == "assay_name") ? "" : "opacity-50 !rotate-180";?> <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                                 <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM385 231c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-71-71V376c0 13.3-10.7 24-24 24s-24-10.7-24-24V193.9l-71 71c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9L239 119c9.4-9.4 24.6-9.4 33.9 0L385 231z"/>
                             </svg>
                         </a>
                     </th>
-                    <th class="hidden sm:table-cell">
+                    <th class="hidden md:table-cell">
                         <a href="<?= updateQueryString(["sp" => "result", "sd" => ((($filters['sd'] ?? "desc") == "desc" && ($filters['sp'] ?? null) == "result") || ($filters['sd'] ?? "desc") == "" ? "asc" : "")], true);?>" class="ignore-default flex gap-1.5 items-center">
                             <span>Result</span>
                             <svg class="h-4 fill-dark shrink-0 <?= (isset($filters['sp']) && $filters['sp'] == "result") ? "" : "opacity-50 !rotate-180";?> <?= (!isset($filters['sd']) || $filters['sd'] == '') ? "rotate-180" : "" ;?>" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
@@ -168,16 +169,23 @@ include_once BASE_DIR . "/utils/AgeGroup.php";?>
             <tbody>
                 <?php foreach($resultItems as $result) : ?>
                     <?php // We need to parse the result sensibly
-                        $resultInfo = sanitiseResult($result["result"]);
+                        $resultInfo = sanitiseResult($result['result']);
+
+                        // We should also just check the given result summary. If there is any reference to "positive" in it, we should give the summary as "positive".
+                        if(strpos(strtolower($result['result_summary'] ?? ""), "invalid") !== false) {
+                            $summary = "Invalid";
+                        } else {
+                            $summary = strpos(strtolower($result['result_summary'] ?? ""), "positive") !== false ? "Positive" : "Negative";
+                        }
                     ;?>
-                    <tr id="result<?= $result['result_id'];?>" class="result">
-                        <td><?= (new DateTime($result['testcompletetimestamp'] ?? $result['testCompleteTimestamp']))->format($hospitalInfoArray['date_format']);?></td>
+                    <tr id="result<?= $result['master_result_id'];?>" class="result">
+                        <td><?= $result['end_time'] ? (new DateTime($result['end_time']))->format($hospitalInfoArray['date_format']) : 'Unknown';?></td>
                         <td>
                             <?php if($serviceEngineer) : ?>
                                 -REDACTED-
                             <?php else : ?>
-                                <?php if($result['firstName'] || $result['lastName']) : ?>
-                                    <?= $result['firstName'];?> <?= $result['lastName'];?>
+                                <?php if($result['first_name'] || $result['last_name']) : ?>
+                                    <?= $result['first_name'];?> <?= $result['last_name'];?>
                                 <?php else : ?>
                                     Unknown
                                 <?php endif;?>
@@ -194,23 +202,23 @@ include_once BASE_DIR . "/utils/AgeGroup.php";?>
                                 <?php endif;?>
                             <?php endif;?>
                         </td>
-                        <td class="hidden sm:table-cell"><?= $result['product'];?></td>
+                        <td class="hidden md:table-cell"><?= $result['assay_name'];?></td>
                             <?php if($serviceEngineer) : ?>
                                 <td>-REDACTED-</td>
                             <?php else : ?>
-                                <td class="text-elipses hidden sm:table-cell <?= $resultInfo["summary"] == 'Positive' ? "active" : (!$resultInfo['summary'] || $resultInfo['summary'] == 'Invalid' ? 'invalid' : "");?>"><?= $resultInfo['summary'] ?? "Invalid";?></td>
+                                <td class="text-elipses hidden md:table-cell <?= $summary == 'Positive' ? "active" : (!$summary || $summary == 'Invalid' ? 'invalid' : "");?>"><?= $summary ?? "Invalid";?></td>
                             <?php endif;?>
                         <td>
                             <div class="h-full flex items-center gap-1.5 justify-end">
                                 <!-- Statuses and chevron -->
-                                <?php if($resultInfo && $resultInfo["summary"] == 'Positive') : ?>
+                                <?php if($result && $summary == 'Positive') : ?>
                                     <button class="flex items-center tooltip" title="Positive Result">
                                         <svg class="h-5 fill-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
                                             <path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"/>
                                         </svg>
                                     </button>
                                 <?php endif;?>
-                                <button id="sendResult<?= $result['id'];?>" class="flex items-center">
+                                <button id="sendResult<?= $result['master_result_id'];?>" class="flex items-center">
                                 <?php
                                 // Determine the symbol (if any) to display
                                 $limsStatus = false;
@@ -220,10 +228,10 @@ include_once BASE_DIR . "/utils/AgeGroup.php";?>
                                     $limsStatus = 'unsent';
                                 }
 
-                                if($result['flag'] == 102) {
+                                if($result['lims_status'] == 2) {
                                     $limsStatus = 'active';
                                     $limsStatusMessage = "Sent to LIMS";
-                                } else if($result['flag'] == 101 && $limsStatus) {
+                                } else if($result['lims_status'] == 1 && $limsStatus) {
                                     $limsStatus = 'pending';
                                     $limsStatusMessage = "Sending to LIMS";
                                 }
@@ -231,11 +239,6 @@ include_once BASE_DIR . "/utils/AgeGroup.php";?>
                                 if($limsStatus !== false) : ?>
                                     <div class="status-indicator <?= $limsStatus;?> tooltip" title="<?= $limsStatusMessage;?>"></div>
                                 <?php endif;?>
-                                </button>
-                                <button class="details tooltip" title="View Details">
-                                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 576 512">
-                                        <path d="M288 80c-65.2 0-118.8 29.6-159.9 67.7C89.6 183.5 63 226 49.4 256c13.6 30 40.2 72.5 78.6 108.3C169.2 402.4 222.8 432 288 432s118.8-29.6 159.9-67.7C486.4 328.5 513 286 526.6 256c-13.6-30-40.2-72.5-78.6-108.3C406.8 109.6 353.2 80 288 80zM95.4 112.6C142.5 68.8 207.2 32 288 32s145.5 36.8 192.6 80.6c46.8 43.5 78.1 95.4 93 131.1c3.3 7.9 3.3 16.7 0 24.6c-14.9 35.7-46.2 87.7-93 131.1C433.5 443.2 368.8 480 288 480s-145.5-36.8-192.6-80.6C48.6 356 17.3 304 2.5 268.3c-3.3-7.9-3.3-16.7 0-24.6C17.3 208 48.6 156 95.4 112.6zM288 336c44.2 0 80-35.8 80-80s-35.8-80-80-80c-.7 0-1.3 0-2 0c1.3 5.1 2 10.5 2 16c0 35.3-28.7 64-64 64c-5.5 0-10.9-.7-16-2c0 .7 0 1.3 0 2c0 44.2 35.8 80 80 80zm0-208a128 128 0 1 1 0 256 128 128 0 1 1 0-256z"/>
-                                    </svg>
                                 </button>
                             </div>
                         </td>
@@ -281,129 +284,233 @@ if($totalPageCount > 1) : ?>
 <?php endif;
 
 // Results modals
-foreach($resultItems as $result) : ?>
-    <?php
-    $positive = (strpos(strtolower($result['result']), "positive")) || strtolower($result['result']) == "positive";
-    try {
-        $dob = (new DateTime($result['dob']))->format($hospitalInfoArray['date_format']);
-        // Further processing with $datetime
-    } catch (Exception $e) {
-        $dob = "Undefined";
-    }
+if($resultItems) {
+    foreach($resultItems as $result) : ?>
+        <?php
+        if (!empty($result['dob'])) {
+            try {
+                $dob = (new DateTime($result['dob']))->format($hospitalInfoArray['date_format']);
+            } catch (Exception $e) {
+                $dob = "Undefined";
+            }
+        } else {
+            $dob = "Undefined";
+        }
 
-    // Result info
-    $resultInfo = sanitiseResult($result['result']);
+        // Result info
+        $resultInfo = sanitiseResult($result['result']);
 
-    // Get the result information
-    ?>
-    <div id="result<?= $result['result_id'];?>Modal" class="result-modal">
-        <div class="result-modal-backdrop">
-            <div class="result-details relative bg-primary shadow-xl shadow-dark flex flex-col rounded-xl max-w-[min(50rem,95vw)] max-h-[calc(min(45rem,_90vh))] h-full w-full mt-4 lg:mt-8 p-4 lg:p-8 overflow-y-scroll">
-                <button class="modal-close absolute top-2 right-2 p-2 transition-all duration-500 hover:scale-110">
-                    <svg class="h-8 fill-dark pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
-                        <path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/>
-                    </svg>
-                </button>
-                <h2 class="flex text-center items-center gap-2.5 sm:text-start mx-12 sm:mx-0 sm:mr-12 mb-2.5 sm:mb-1">
-                    <?= convertTimestamp($result['testcompletetimestamp'] ?? $result['testCompleteTimestamp'], true);?>: <?= $serviceEngineer ? '-REDACTED-' : $result['firstName'];?> <?= !$serviceEngineer ? $result['lastName'] : '';?>
-                    <?php // Determine the symbol (if any) to display
-                    $limsStatus = false;
-                    $limsStatusMessage = "Not sent to LIMS";
+        // Get the master result information
+        $resultSummary = $result['result'];
+        $resultAssayName = $result['assay_name'];
 
-                    if($limsConnection) {
-                        $limsStatus = 'unsent';
-                    }
+        // Get the individual result information (which may be the same!)
+        $individualResults = explode(';', $result['result_values'] ?? "");
+        $individualAssayNames = explode(';', $result['assay_names'] ?? "");
+        $individualCTValues = explode(';', $result['ct_values'] ?? "");
+        $individualStatusFlags = explode(';', $result['result_flags'] ?? "");
+        $individualResultsProcessed = [];
+        $individualAssayNamesProcessed = [];
 
-                    if($result['flag'] == 102) {
-                        $limsStatus = 'active';
-                        $limsStatusMessage = "Sent to LIMS";
-                    } else if($result['flag'] == 101 && $limsStatus) {
-                        $limsStatus = 'pending';
-                        $limsStatusMessage = "Sending to LIMS";
-                    }
+        // We can do some further manupulation to ensure that each result and each name actually breaks up into its product information
+        foreach($individualResults as $key => $individualResult) {
+            $individualResultsProcessed[$key] = explode(', ', $individualResult);
+        }
 
-                    if($limsStatus !== false) : ?>
-                        <div class="status-indicator <?= $limsStatus;?> tooltip" title="<?= $limsStatusMessage;?>"><span class="hidden"> (<?= $limsStatusMessage;?>)</span></div>
-                    <?php endif;?>
+        foreach($individualAssayNames as $key => $individualAssayName) {
+            $individualAssayNamesProcessed[$key] = explode(', ', $individualAssayName);
+        }
+
+        ?>
+        <div id="result<?= $result['master_result_id'];?>Modal" class="result-modal">
+            <div class="result-modal-backdrop">
+                <div class="result-details relative bg-primary shadow-xl shadow-dark flex flex-col rounded-xl max-w-[min(50rem,95vw)] max-h-[calc(min(45rem,_90vh))] h-full w-full mt-4 lg:mt-8 p-4 lg:p-8 overflow-y-scroll">
+                    <button class="modal-close absolute top-2 right-2 p-2 transition-all duration-500 hover:scale-110">
+                        <svg class="h-8 fill-dark pointer-events-none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512">
+                            <path d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/>
+                        </svg>
+                    </button>
+
+                    <h2 class="flex text-center items-center gap-2.5 sm:text-start mx-12 sm:mx-0 sm:mr-12 mb-2.5 sm:mb-1">
+                        <?= convertTimestamp($result['end_time'] ?? $result['end_time'], true);?>: <?= $serviceEngineer ? '-REDACTED-' : $result['first_name'] ?? 'Unknown';?> <?= !$serviceEngineer ? $result['last_name'] : '';?>
+                        <?php // Determine the symbol (if any) to display
+                        $limsStatus = false;
+                        $limsStatusMessage = "Not sent to LIMS";
+
+                        if($limsConnection) {
+                            $limsStatus = 'unsent';
+                        }
+
+                        if($result['lims_status'] == 2) {
+                            $limsStatus = 'active';
+                            $limsStatusMessage = "Sent to LIMS";
+                        } else if($result['lims_status'] == 1 && $limsStatus) {
+                            $limsStatus = 'pending';
+                            $limsStatusMessage = "Sending to LIMS";
+                        }
+
+                        if($limsStatus !== false) : ?>
+                            <div class="status-indicator <?= $limsStatus;?> tooltip" title="<?= $limsStatusMessage;?>"><span class="hidden"> (<?= $limsStatusMessage;?>)</span></div>
+                        <?php endif;?>
                     </h2>
-                <div class="bg-gradient-to-r from-transparent via-grey/75 sm:from-grey/75 to-transparent w-full mb-3 pb-0.5 rounded-full"></div>
 
-                <div class="flex result-details flex-wrap gap-2 items-stretch mb-2">
-                    <?php if(!$resultInfo || $resultInfo['result'] === null) : ?>
-                        <div class="result-info invalid">
-                            <h4><?= $result["product"];?></h4>
-                            <p>Invalid</p>
-                        </div>
-                    <?php elseif(gettype($resultInfo["result"]) === "boolean") : ?>
-                        <div class="result-info <?= $resultInfo["result"] ? "pos" : "";?>">
-                            <h4><?= $result["product"];?></h4>
-                            <p><?= $resultInfo["result"] ? "Positive" : "Negative";?></p>
-                        </div>
-                    <?php else : ?>
+                    <div class="bg-gradient-to-r from-transparent via-grey/75 sm:from-grey/75 to-transparent w-full mb-3 pb-0.5 rounded-full"></div>
 
-                        <?php foreach($resultInfo["result"] as $resultKey => $resultData) : ?>
-                            <div class="<?= $resultData ? "pos" : "";?> result-info">
-                                <h4><?= $resultKey;?></h4>
-                                <p><?= $resultData ? "Positive" : "Negative";?></p>
+                    <!-- Overall result!! -->
+                    <div class="grid gap-2 mb-3 grid-cols-[repeat(auto-fit,minmax(200px,1fr))]">
+                        <div class="result-info <?= $resultInfo['result'] ? 'pos' : '';?>">
+                            <h4 class="underline">Result Summary:</h4>
+                            <p><b><?= $resultAssayName;?>:</b></p>
+                            <p><?= $resultSummary;?></p>
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-l from-transparent via-grey/75 sm:from-grey/75 to-transparent w-full mb-3 pb-0.5 rounded-full"></div>
+
+                    <?php // We only need to display this data if the test is complex
+                    if((gettype($resultInfo["result"]) !== "boolean" && $resultInfo["result"] !== null) || count($individualResultsProcessed) > 1) : ?>
+                        <div class="w-full flex items-stretch justify-center gap-3 flex-wrap">
+
+                            <?php // Show the results
+                            foreach($individualResultsProcessed as $key => $res) : ?>
+
+                                <?php // We should loop through the individual results and display them one by one
+                                $ctValues = explode(",", $individualCTValues[$key] ?? "");
+                                $resultInterpretation = resultInterpretation($res);
+                                $resultClass = '';
+                                $resultString = 'Negative';
+
+                                switch($resultInterpretation) {
+                                    case 0:
+                                        $resultClass = 'invalid';
+                                        $resultString = 'Invalid';
+                                        break;
+                                    case 1:
+                                        $resultClass = 'pos';
+                                        $resultString = 'Positive';
+                                        break;
+                                    default:
+                                        $resultClass = 'neg';
+                                        $resultString = 'Negative';
+                                }?>
+
+                                <div id="<?= $result['master_result_id'];?>Tab<?= $key;?>Content" class="result-info max-w-[20rem] relative !p-2 <?= $resultClass;?>">
+
+                                    <?php // Show the individual status messages
+                                    $individualLimsStatus = false;
+                                    $individualLimsStatusMessage = "Not sent to LIMS";
+
+                                    if($limsConnection) {
+                                        $individualLimsStatus = 'unsent';
+                                    }
+
+                                    if($individualStatusFlags[$key] == 102) {
+                                        $individualLimsStatus = 'active';
+                                        $individualLimsStatusMessage = "Sent to LIMS";
+                                    } else if($individualStatusFlags[$key] == 101 && $individualLimsStatus) {
+                                        $individualLimsStatus = 'pending';
+                                        $individualLimsStatusMessage = "Sending to LIMS";
+                                    }?>
+                                    <h4 class="px-2.5 title border-2 border-transparent py-0.5 flex items-center gap-2 bg-white !text-dark rounded-md w-full">
+                                        <?php if($individualLimsStatus) : ?>
+                                            <div class="status-indicator border-2 <?= $individualLimsStatus;?> tooltip" title="<?= $individualLimsStatusMessage;?>"><span class="hidden"> (<?= $individualLimsStatusMessage;?>)</span></div>
+                                        <?php endif;?>
+                                        <?= $individualAssayNames[$key];?>
+                                    </h4>
+                                    <h4 class="text-center my-2"><?= $resultString;?></h4>
+                                    <?php if($settings['visible_ct'] == "1") : ?>
+                                        <div class="result-accordion border-2 border-transparent w-full transition-all duration-1000 bg-white px-1.5 py-0.5 rounded-md">
+                                            <button class="w-full text-start underline result-accordion-button">More details</button>
+                                            <div class="result-accordion-content">
+                                                <?php foreach($res as $key2 => $individualResult) : ?>
+
+                                                    <?php // Get the individual result information
+                                                    $individualResultExplosion = explode(": ", $individualResult);
+
+                                                    // Display the individual result
+                                                    if(count($individualResultExplosion) > 1) : ?>
+                                                        <p class="<?= ($resultString = substr($individualResultExplosion[1], 1)) == "Positive" ? 'font-bold text-red-500' : '';?> pb-0 !text-base !text-dark"><b><?= $individualResultExplosion[0];?></b>: <?= $resultString;?></p>
+                                                    <?php else : ?>
+                                                        <p class="<?= $individualResultExplosion[0] == "Positive" ? 'font-bold text-red-500' : '';?> !text-base !text-dark"><?= $individualResult;?></p>
+                                                    <?php endif;
+
+                                                    // If the CT Value is not "x", it means we received one.
+                                                    if(isset($ctValues[$key2]) && $ctValues[$key2] !== null && $ctValues[$key2] !== "" && $ctValues[$key2] !== "x") : ?>
+                                                        <p class="!text-sm !text-dark">ct: <?= $ctValues[$key2];?></p>
+                                                    <?php endif;?>
+                                                    </p>
+
+                                                <?php endforeach;?>
+                                            </div>
+                                        </div>
+                                    <?php endif;?>
+
+                                </div>
+                                <?php endforeach;?>
                             </div>
-                        <?php endforeach;?>
 
+                            <div class="bg-gradient-to-r from-transparent via-grey/75 sm:from-grey/75 to-transparent w-full my-3 pb-0.5 rounded-full"></div>
                     <?php endif;?>
-                </div>
 
-                <table class="result-explosion">
-                    <?php foreach($listableFields as $keyset => $value) :
-                        $keys = explode(" ", $keyset);
-                        if($result[$keys[0]]) : ?>
-                            <tr>
-                                <td><?= $value;?></td>
-                                <td>
-                                    <?php foreach($keys as $key) : ?>
-                                        <?= $serviceEngineer ? '-REDACTED-' : $result[$key];?>
-                                    <?php endforeach;?>
-                                </td>
-                            </tr>
-                        <?php endif;
-                    endforeach;?>
-                </table>
+
+                    <table class="result-explosion">
+                        <?php foreach($listableFields as $keyset => $value) :
+                            $keys = explode(" ", $keyset);
+                            if($result[$keys[0]]) : ?>
+                                <tr>
+                                    <td><?= $value;?></td>
+                                    <td>
+                                        <?php foreach($keys as $key) : ?>
+                                            <?= $serviceEngineer ? '-REDACTED-' : $result[$key];?>
+                                        <?php endforeach;?>
+                                    </td>
+                                </tr>
+                            <?php endif;
+                        endforeach;?>
+                    </table>
+
+                    <div class="w-full items-center justify-center -mt-2 mb-2">
+                        <p class="text-xs w-full text-center">Result ID: <?= $result['master_result_id'];?></p>
+                    </div>
+                </div>
+                <script>
+                    // A simple printing function
+                    function PrintElem(elem, title) {
+                        var mywindow = window.open('', 'PRINT');
+
+                        mywindow.document.write('<html><head><title>' + title  + '</title>');
+                        mywindow.document.write('<link href="/css/output.css" rel="stylesheet">');
+                        mywindow.document.write('</head><body >');
+                        mywindow.document.write(document.querySelector("#result" + elem + "Modal .result-details").innerHTML);
+                        mywindow.document.querySelector('.modal-close').remove();
+                        mywindow.document.write('</body></html>');
+
+                        mywindow.document.close(); // necessary for IE >= 10
+                        mywindow.focus(); // necessary for IE >= 10*/
+
+                        mywindow.print();
+                        mywindow.close();
+
+                        return true;
+                    }
+                </script>
+
+                <?php if($currentUser['user_type'] >= ADMINISTRATIVE_CLINICIAN) : ?>
+                    <div class="shrink-0 relative result-actions mt-1.5 bg-black gap-0.5 shadow-xl shadow-dark flex rounded-2xl max-w-[min(15rem,95vw)] overflow-hidden mb-4 lg:mb-8">
+                        <button onclick="PrintElem('<?= $result['master_result_id'];?>', <?= $result['master_result_id'];?>)" class="bg-gradient-to-r from-yellow-300 to-yellow-200 grow-1 px-4 py-1.5 text-black transition-all duration-500 hover:bg-fuchsia-200 hover:saturate-50 hover:scale-105 tooltip" title="Print details">Print</button>
+                        <button data-id="<?= $result['master_result_id'];?>" class="delete-result bg-gradient-to-r from-red-900 to-red-600 grow-1 px-4 py-1.5 text-white transition-all duration-500 hover:bg-fuchsia-200 hover:saturate-50 hover:scale-105 tooltip" title="Delete">Delete</button>
+                    </div>
+                <?php else : ?>
+                    <div class="result-actions mt-1.5 shadow-xl shadow-dark flex rounded-2xl max-w-[min(15rem,95vw)] overflow-hidden mb-4 lg:mb-8">
+                        <button onclick="PrintElem('<?= $result['master_result_id'];?>', <?= $result['master_result_id'];?>)" class="bg-gradient-to-r from-yellow-300 to-yellow-200 grow-1 px-4 py-1.5 text-black transition-all duration-500 hover:bg-fuchsia-200 hover:saturate-50 hover:scale-105 tooltip" title="Print details">Print</button>
+                    </div>
+                <?php endif;?>
             </div>
-            <script>
-                // A simple printing function
-                function PrintElem(elem, title) {
-                    var mywindow = window.open('', 'PRINT');
-
-                    mywindow.document.write('<html><head><title>' + title  + '</title>');
-                    mywindow.document.write('<link href="/css/output.css" rel="stylesheet">');
-                    mywindow.document.write('</head><body >');
-                    mywindow.document.write(document.querySelector("#result" + elem + "Modal .result-details").innerHTML);
-                    mywindow.document.querySelector('.modal-close').remove();
-                    mywindow.document.write('</body></html>');
-
-                    mywindow.document.close(); // necessary for IE >= 10
-                    mywindow.focus(); // necessary for IE >= 10*/
-
-                    mywindow.print();
-                    mywindow.close();
-
-                    return true;
-                }
-            </script>
-
-            <?php if($currentUser['user_type'] >= ADMINISTRATIVE_CLINICIAN) : ?>
-                <div class="shrink-0 relative result-actions mt-1.5 bg-black gap-0.5 shadow-xl shadow-dark flex rounded-2xl max-w-[min(15rem,95vw)] overflow-hidden mb-4 lg:mb-8">
-                    <button onclick="PrintElem('<?= $result['result_id'];?>', <?= $result['result_id'];?>)" class="bg-gradient-to-r from-yellow-300 to-yellow-200 grow-1 px-4 py-1.5 text-black transition-all duration-500 hover:bg-blue-200 hover:saturate-50 hover:scale-105 tooltip" title="Print details">Print</button>
-                    <button data-id="<?= $result['result_id'];?>" class="delete-result bg-gradient-to-r from-red-900 to-red-600 grow-1 px-4 py-1.5 text-white transition-all duration-500 hover:bg-blue-200 hover:saturate-50 hover:scale-105 tooltip" title="Delete">Delete</button>
-                </div>
-            <?php else : ?>
-                <div class="result-actions mt-1.5 shadow-xl shadow-dark flex rounded-2xl max-w-[min(15rem,95vw)] overflow-hidden mb-4 lg:mb-8">
-                    <button onclick="PrintElem('<?= $result['result_id'];?>', <?= $result['result_id'];?>)" class="bg-gradient-to-r from-yellow-300 to-yellow-200 grow-1 px-4 py-1.5 text-black transition-all duration-500 hover:bg-blue-200 hover:saturate-50 hover:scale-105 tooltip" title="Print details">Print</button>
-                </div>
-            <?php endif;?>
         </div>
-    </div>
-<?php endforeach;?>
+    <?php endforeach;
+}
 
-<?php if($currentUser['user_type'] >= ADMINISTRATIVE_CLINICIAN) : ?>
+if($currentUser['user_type'] >= ADMINISTRATIVE_CLINICIAN) : ?>
     <div id="genericModalWrapper" class="modal-wrapper">
         <div class="overlay" data-modal-close></div>
 
@@ -515,9 +622,9 @@ foreach($resultItems as $result) : ?>
                     <label for="defaultId">Default Patient ID?</label>
                     <div class="input-wrapper select-wrapper">
                         <select name="defaultId" id="defaultId">
-                            <option <?= $defaultIdField == "patientId" ? "selected" : "";?> value="patientId">Patient ID</option>
-                            <option <?= $defaultIdField == "hospitalId" ? "selected" : "";?> value="hospitalId">Hospital ID</option>
-                            <option <?= $defaultIdField == "nhsNumber" ? "selected" : "";?> value="nhsNumber">NHS Number</option>
+                            <option <?= $defaultIdField == "patient_id" ? "selected" : "";?> value="patient_id">Patient ID</option>
+                            <option <?= $defaultIdField == "hospital_id" ? "selected" : "";?> value="hospital_id">Hospital ID</option>
+                            <option <?= $defaultIdField == "nhs_number" ? "selected" : "";?> value="nhs_number">NHS Number</option>
                         </select>
                     </div>
                 </div>

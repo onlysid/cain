@@ -136,7 +136,7 @@ if($instrument['device_error']) : ?>
                     </svg>
                     <h5>Current Assay</h5>
                 </div>
-                <p><?= $instrument['current_assay'] ?? "Unknown";?></p>
+                <p><?= isNullOrEmptyString($instrument['current_assay']) ? "Unknown" : $instrument['current_assay'];?></p>
             </div>
 
             <div class="item">

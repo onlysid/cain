@@ -8,7 +8,7 @@ $settings = array_column($hospitalInfo, 'value', 'name');
 
 <div id="settings">
     <h1 class="text-white text-center md:-mt-3">Samba Hub Settings</h1>
-    <div class="bg-primary-dark rounded-2xl h-full shadow-2xl shadow-blue-200/50 flex relative justify-between overflow-hidden">
+    <div class="bg-primary-dark rounded-2xl h-full shadow-2xl shadow-fuchsia-200/50 flex relative justify-between overflow-hidden">
         <a id="settingsBackLink" href="/">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
                 <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/>
@@ -25,7 +25,7 @@ $settings = array_column($hospitalInfo, 'value', 'name');
         </div>
         <?php include_once "templates/settings-menu.php";?>
         <div id="settingWrapper" class="h-full grow mx-auto container py-4 sm:py-6 flex flex-col overflow-y-scroll overflow-x-hidden">
-            <h1 class="text-center sm:text-start mx-12 sm:mx-0 sm:mr-12 mb-2.5 sm:mb-1"><?= $route->title;?></h1>    
+            <h1 class="text-center sm:text-start mx-12 sm:mx-0 sm:mr-12 mb-2.5 sm:mb-1"><?= $route->title;?></h1>
             <div class="bg-gradient-to-r from-transparent via-grey/75 sm:from-grey/75 to-transparent w-full mb-3 pb-0.5 rounded-full"></div>
             <?php include_once $route->view;?>
         </div>

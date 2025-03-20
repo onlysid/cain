@@ -70,7 +70,7 @@ $userSettings = array_intersect_key($settings, array_flip($userSettingsInfo));
         </thead>
 
         <tbody>
-            <tr class="bg-blue-100/50">
+            <tr class="bg-fuchsia-100/50">
                 <td>Clinician</td>
                 <td>
                     <ul>
@@ -88,7 +88,7 @@ $userSettings = array_intersect_key($settings, array_flip($userSettingsInfo));
                     </ul>
                 </td>
             </tr>
-            <tr class="bg-blue-100/50">
+            <tr class="bg-fuchsia-100/50">
                 <td>Admin Clinician</td>
                 <td>
                     <ul>
@@ -108,7 +108,7 @@ $userSettings = array_intersect_key($settings, array_flip($userSettingsInfo));
                     </ul>
                 </td>
             </tr>
-            <tr class="bg-blue-100/50">
+            <tr class="bg-fuchsia-100/50">
                 <td>Service Engineer</td>
                 <td>
                     <ul>

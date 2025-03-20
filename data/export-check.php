@@ -9,9 +9,17 @@ $dateRange = $_POST['dateRange'];
 ini_set('memory_limit', '2048M');
 
 if ($dateRange) {
-    $query = "SELECT *
-              FROM results
-              WHERE STR_TO_DATE(endTime, '%Y-%m-%d %H:%i') BETWEEN ? AND ?";
+    $query = "SELECT
+            r.*,
+            GROUP_CONCAT(res.result SEPARATOR ';') AS result_values,
+            GROUP_CONCAT(res.product SEPARATOR ';') AS assay_names,
+            GROUP_CONCAT(res.flag SEPARATOR ';') AS result_flags,
+            GROUP_CONCAT(res.ct_values SEPARATOR ';') AS ct_values
+        FROM master_results r
+        LEFT JOIN results res ON res.master_result = r.id
+        WHERE STR_TO_DATE(end_time, '%Y-%m-%d %H:%i') BETWEEN ? AND ?
+        GROUP BY r.id;
+    ";
 
     // We need to parse the date range
     $dateRangeArr = explode(' - ', $dateRange);
@@ -27,7 +35,16 @@ if ($dateRange) {
 
     $results = $cainDB->selectAll($query, [$minDate, $maxDate]);
 } else {
-    $query = "SELECT * FROM results;";
+    $query = "SELECT
+            r.*,
+            GROUP_CONCAT(res.result SEPARATOR ';') AS result_values,
+            GROUP_CONCAT(res.product SEPARATOR ';') AS assay_names,
+            GROUP_CONCAT(res.flag SEPARATOR ';') AS result_flags,
+            GROUP_CONCAT(res.ct_values SEPARATOR ';') AS ct_values
+        FROM master_results r
+        LEFT JOIN results res ON res.master_result = r.id
+        GROUP BY r.id;
+        ";
     $results = $cainDB->selectAll($query);
 }
 

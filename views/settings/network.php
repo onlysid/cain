@@ -16,7 +16,7 @@ $macAddress = exec('ifconfig | grep -o -E \'([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{
 <form action="/process" method="POST">
     <input type="hidden" name="action" value="network-settings">
     <input type="hidden" name="return-path" value="<?= $currentURL;?>">
-    <h3 class="text-dark mt-4 w-full text-center rounded-xl px-4 py-2 bg-blue-200/75 shadow-lg">System Settings</h3>
+    <h3 class="text-dark mt-4 w-full text-center rounded-xl px-4 py-2 bg-fuchsia-200/75 shadow-lg">System Settings</h3>
 
     <div class="form-fields">
         <div class="field">
@@ -61,7 +61,7 @@ $macAddress = exec('ifconfig | grep -o -E \'([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{
             </div>
         </label>
     </div>
-    <h3 class="text-dark mt-4 w-full text-center rounded-xl px-4 py-2 bg-blue-200/75 shadow-lg">LIMS Settings</h3>
+    <h3 class="text-dark mt-4 w-full text-center rounded-xl px-4 py-2 bg-fuchsia-200/75 shadow-lg">LIMS Settings</h3>
     <div id="hl7Options" class="form-fields -mt-4 <?= $networkInfo['selected_protocol'] == "HL7" ? "active" : "";?>">
         <div class="form-fields">
             <div class="field">

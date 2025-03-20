@@ -13,7 +13,7 @@ $qcSettings = array_intersect_key($settings, array_flip($qcKeys));
 </section>
 
 <form id="qcPolicyForm" action="/process" method="POST">
-    <h3 class="text-dark mt-4 w-full text-center rounded-xl px-4 py-2 bg-blue-200/75 shadow-lg">General QC Settings</h3>
+    <h3 class="text-dark mt-4 w-full text-center rounded-xl px-4 py-2 bg-fuchsia-200/75 shadow-lg">General QC Settings</h3>
 
     <input type="hidden" name="action" value="qc-settings">
     <input type="hidden" name="return-path" value="<?= $currentURL;?>">

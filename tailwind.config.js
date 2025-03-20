@@ -1,8 +1,7 @@
-/** @type {import('tailwindcss').Config} */
 module.exports = {
   content: [
     "./*/*.php",
-    "./**/*.php",
+    "./views/**/*.php",
     "./css/*.css",
     "./js/*.js",
   ],
@@ -19,8 +18,8 @@ module.exports = {
       colors: {
         "primary": "#E3FFEC",
         "primary-dark": "#D3F1E4",
-        "secondary": "#16cdff",
-        "tirtiary": "#77DFFF",
+        "secondary": "#ff1687",
+        "tirtiary": "#ff77b4",
         "dark": "#4D4C4C",
         "light-grey": "#777777",
         "light": "#00000029",

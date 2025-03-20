@@ -392,6 +392,20 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 
+// Result accordion logic
+const resultAccordions = document.querySelectorAll('.result-accordion');
+if(resultAccordions) {
+    document.addEventListener('click', (e) => {
+        if(e.target.classList.contains('result-accordion-button')) {
+            if(e.target.parentElement.classList.contains('active')) {
+                e.target.parentElement.classList.remove('active');
+            } else {
+                e.target.parentElement.classList.add('active');
+            }
+        }
+    })
+}
+
 // We need to put the fake search into the real search box!
 var fakeSearchInput = document.getElementById('fakeSearch');
 var fakeSearchForm = document.getElementById('fakeSearchForm');

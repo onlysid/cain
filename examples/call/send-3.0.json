@@ -1,0 +1,172 @@
+{
+  "version": "3.0",
+  "assayType": "89",
+  "assaySubType": "01",
+  "assayName": "Respiratory",
+  "lotNumber": "1234",
+  "subLotNumber": "12",
+  "expirationDate": "2024/09",
+  "productionYear": "24",
+  "assayId": 572,
+  "x": "Combined Targets Test",
+  "assayVersion": "0.1",
+  "sampleId": "S8427",
+  "patientId": "P02446782",
+  "patientFirstName": "John",
+  "patientLastName": "Smith",
+  "patientAge": "23",
+  "patientDoB": "1975-07-24",
+  "patientSex": "M",
+  "hospitalId": "38807462",
+  "nhsNumber": "1234567890",
+  "patientLocation": "Ward 10",
+  "collectedTime": "2018-09-23 14:50",
+  "receivedTime": "2018-09-24 08:10",
+  "comment1": "Blah blah blah",
+  "comment2": "",
+  "startTime": "2018-09-24 09:13",
+  "endTime": "2018-09-24 11:09",
+  "testPurpose": "1",
+  "deviceError": "",
+  "expectedResult": "All Positive (free text field)",
+  "clinicId": "Clinic Beta",
+  "site": "Test Site Alpha",
+  "operatorId": "Smith",
+  "moduleSerialNumber": "89674523",
+  "result": {
+    "signature": {
+      "signature": "MEUCIQDcC71qL2wFV…",
+      "instrumentId": "SIII-FC0FE7-E6E509"
+    },
+    "safetyCriticalCrc32": 4122234951,
+    "results": [
+      {
+        "singleResult": {
+          "chamber": "VIRTUAL_CHAMBER_A",
+          "channel": 1,
+          "result": {
+            "resultValueEnum": "POSITIVE",
+            "resultValueString": "Positive",
+            "target": {
+              "assayTargetName": "Covid"
+            },
+            "ct": -5.283018589019775
+          }
+        }
+      },
+      {
+        "combinedResult": {
+          "overallResult": {
+            "resultValueEnum": "POSITIVE",
+            "resultValueString": "Positive",
+            "target": {
+              "assayTargetName": "RSV"
+            }
+          },
+          "constituentResults": [
+            {
+              "chamber": "VIRTUAL_CHAMBER_A",
+              "channel": 1,
+              "result": {
+                "resultValueEnum": "NEGATIVE",
+                "resultValueString": "Negative",
+                "target": {
+                  "assayTargetName": "RSV1"
+                },
+                "ct": -5.283018589019775
+              }
+            },
+            {
+              "chamber": "VIRTUAL_CHAMBER_A",
+              "channel": 2,
+              "result": {
+                "resultValueEnum": "POSITIVE",
+                "resultValueString": "Positive",
+                "target": {
+                  "assayTargetName": "RSV2"
+                },
+                "ct": -4.369657516479492
+              }
+            }
+          ]
+        }
+      },
+      {
+        "combinedResult": {
+          "overallResult": {
+            "resultValueEnum": "NEGATIVE",
+            "resultValueString": "Negative",
+            "target": {
+              "assayTargetName": "FluA"
+            }
+          },
+          "constituentResults": [
+            {
+              "chamber": "VIRTUAL_CHAMBER_A",
+              "channel": 1,
+              "result": {
+                "resultValueEnum": "POSITIVE",
+                "resultValueString": "Positive",
+                "target": {
+                  "assayTargetName": "Flu1"
+                },
+                "ct": -5.283018589019775
+              }
+            },
+            {
+              "chamber": "VIRTUAL_CHAMBER_A",
+              "channel": 2,
+              "result": {
+                "resultValueEnum": "POSITIVE",
+                "resultValueString": "Positive",
+                "target": {
+                  "assayTargetName": "Flu2"
+                },
+                "ct": -4.369657516479492
+              }
+            },
+            {
+              "chamber": "VIRTUAL_CHAMBER_A",
+              "channel": 3,
+              "result": {
+                "resultValueEnum": "POSITIVE",
+                "resultValueString": "Positive",
+                "target": {
+                  "assayTargetName": "Flu3"
+                },
+                "ct": 3.5911951065063477
+              }
+            }
+          ]
+        }
+      },
+      {
+        "combinedResult": {
+          "overallResult": {
+            "resultValueEnum": "POSITIVE",
+            "resultValueString": "Positive",
+            "target": {
+              "assayTargetName": "FluB"
+            }
+          },
+          "constituentResults": [
+            {
+              "chamber": "VIRTUAL_CHAMBER_A",
+              "channel": 1,
+              "result": {
+                "resultValueEnum": "POSITIVE",
+                "resultValueString": "Positive",
+                "target": {
+                  "assayTargetName": "Flu"
+                },
+                "ct": -5.283018589019775
+              }
+            }
+          ]
+        }
+      }
+    ],
+    "overallResultValueEnum": "SOME_POSITIVE",
+    "overallResultValueString": "Some Positive"
+  }
+}

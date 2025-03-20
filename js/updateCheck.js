@@ -65,11 +65,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
                 // Display different messages based on if the updated succeeded or not.
                 updateAlert.style.backgroundColor = validResponse ? "#217153" : "red";
-                updateAlert.innerHTML = (validResponse ? ("<h2>Update complete!</h2>") : ("<h2>Something went wrong!</h2>")) + "<p>Click anywhere to dismiss this message.</p><div class='response-code'>Response: " + responseText + "</div>";
+                updateAlert.innerHTML = (validResponse ? ("<h2>Update complete!</h2>") : ("<h2>Something went wrong!</h2>")) + "<p>Click anywhere to dismiss this message.</p><div class='response-code show-scrollbar'>Response: " + responseText + "</div>";
                 document.title = validResponse ? "Update complete!" : "Something went wrong...";
 
                 // Add an option to hard refresh page on page click
                 document.addEventListener('click', () => {
+                    // If any text is selected, don't reload the page.
+                    if (window.getSelection().toString().length > 0) {
+                        return;
+                    }
                     location.reload(true);
                 });
             } else {

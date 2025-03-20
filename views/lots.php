@@ -9,6 +9,7 @@ $itemsPerPage = $filters['ipp'] ?? 10;
 
 // Get all the data
 $lots = getLots($_GET, $itemsPerPage);
+
 $lotItems = $lots["lots"];
 $totalLotCount = $lots["count"];
 
@@ -75,7 +76,7 @@ if($qcPolicy == 2) {
     <p>View lots and their details and verify QC statuses.</p>
 </section>
 
-<section class="p-4 rounded-lg bg-blue-200 shadow-md">
+<section class="p-4 rounded-lg bg-fuchsia-200 shadow-md">
     <h4 class="underline mb-1">QC Policy Information:</h4>
     <p class="text-base"><span class="font-black">QC Policy: </span><?= $qcPolicyName;?> (<?= $qcDesc;?>)</p>
     <?php if($qcPolicy) : ?>
@@ -164,7 +165,7 @@ if($qcPolicy == 2) {
                 <tr class="lot <?= $qcResult;?><?= $expired ? ' expired' : '';?>" data-modal-open="<?= $lot['id'];?>Modal">
                     <td><?= $lot['lot_number'];?></td>
                     <td><?= convertTimestamp($lot['last_updated'], true);?></td>
-                    <td class="font-black expiration"><?= convertTimestamp($lot['expiration_date']);?></td>
+                    <td class="font-black expiration"><?= $lot['expiration_date'] ? date('m/y', strtotime($lot['expiration_date'])) : 'Unset';?></td>
                     <?php if($qcPolicy) : ?>
                         <td class="font-black <?= $qcResult == 'Fail' ? 'text-red-500' : '';?><?= $qcResult == 'Unverified' ? 'text-amber-500' : '';?><?= $qcResult == 'Pass' ? 'text-green-500' : '';?>">
                             <?= $qcResult;?>
@@ -247,13 +248,12 @@ if($qcPolicy == 2) {
                         <path d="M256 512A256 256 0 1 0 256 0a256 256 0 1 0 0 512zM175 175c9.4-9.4 24.6-9.4 33.9 0l47 47 47-47c9.4-9.4 24.6-9.4 33.9 0s9.4 24.6 0 33.9l-47 47 47 47c9.4 9.4 9.4 24.6 0 33.9s-24.6 9.4-33.9 0l-47-47-47 47c-9.4 9.4-24.6 9.4-33.9 0s-9.4-24.6 0-33.9l47-47-47-47c-9.4-9.4-9.4-24.6 0-33.9z"/>
                     </svg>
                 </div>
-                <h2>Lot #<?= $lot['id'];?><?= $expired ? " (Expired)" : "";?></h2>
+                <h2>Lot <?= $lot['lot_number'];?><?= $expired ? " (Expired)" : "";?></h2>
                 <hr>
                 <div class="flex flex-wrap items-center gap-x-5">
                     <p>Last Updated: <span class="font-black"><?= convertTimestamp($lot['last_updated'], true);?></span></p>
-                    <p>Lot: <span class="font-black"><?= $lot['lot_number'];?></span></p>
                     <?php if(isset($lot['sub_lot_number'])) : ?>
-                        <p>Sub Lot Number: #<span class="font-black"><?= $lot['sub_lot_number'];?></span></p>
+                        <p>Sub Lot Number: <span class="font-black"><?= $lot['sub_lot_number'];?></span></p>
                     <?php endif;?>
                     <?php if(isset($lot['assay_type'])) : ?>
                         <p>Assay Type: <span class="font-black"><?= $lot['assay_type'];?></span></p>

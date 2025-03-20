@@ -13,7 +13,11 @@ $showMenu = $route->showMenu;
 $showFooter = $route->showFooter;
 
 // Check to see if we are using too many results
-$resultsNum = checkResultCapacity();
+try {
+    $resultsNum = checkResultCapacity();
+} catch (Exception $e) {
+    addLogEntry('system', "Could not check results capacity.");
+}
 ?>
 
 <body class="<?= $showMenu ? "show-menu" : "";?>">
@@ -70,14 +74,14 @@ $resultsNum = checkResultCapacity();
         // Show warnings
         $warnings = Session::getWarnings();
 
-        if(Session::getWarnings() && Session::isLoggedIn()) : ?>
-            <div id="messageBoard" class="bg-red-500 w-full">
+        if(Session::getWarnings()) : ?>
+            <div id="messageBoard" class="bg-red-500 w-full <?= Session::isLoggedIn() ? '' : 'fixed-bottom';?>">
                 <div class="py-2 mx-auto contatiner px-8 text-center text-white flex justify-center items-center">
                     <?php if(in_array('db-error', $warnings)) : ?>
                         <form action="/process" method="POST">
                             <input type="hidden" name="action" value="reset-db-version">
                             <input type="hidden" name="return-path" value="<?= $currentURL;?>">
-                            <p class="text-white text-center font-bold">Warning: Database may be corrupted. Please speak with an admin or <button type="submit" class="!text-blue-100 underline hover:!text-green-100">try safely resetting (click here).</button></p>
+                            <p class="text-white text-center font-bold">Warning: Database may be corrupted. Please speak with an admin or <button type="submit" class="!text-fuchsia-100 underline hover:!text-green-100">try safely resetting (click here).</button></p>
                         </form>
                     <?php elseif(in_array('max-results-reached', $warnings)) : ?>
                         <p class="text-white text-center font-bold">Warning: The system has saved <?= $resultsNum;?>/<?= MAX_RESULTS;?> results. Please backup and clear results to ensure continued safe operation of the database.</p>

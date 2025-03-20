@@ -6,6 +6,39 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.2.0] - 19/03/2025
+
+Changing the way results work slightly and some QOL updates. Updating according to API spec 3.0.
+
+### Changed
+
+-   Accent colour changed to Fuchsia
+-   Font size increased globally by 12.5%
+-   Send API now accepts API version 3.0 formats
+-   Master results now form the source of truth for all results. The standard results that LIMS relies on have foreign key references to their master results.
+-   You can now copy and paste error messages on the update screen and, for particularly long messages, the whole screen is now scrollable.
+-   Setup SQL script now only takes users as far as v0.0.0. The db update script does the rest.
+-   Lots QC results now reference their master ID rather than individual result IDs. This is so that one test yields one QC test even if it has multiple targets.
+-   Sent to LIMS status now works according to the constituent results, not to the result itself. Considerations made for if "part" of the result has been sent to LIMS.
+-   Backup/Delete now includes all CT values and master result parsing.
+
+### Added
+
+-   Master results table
+-   CT values are now stored and displayed for each result.
+-   Generic error page thrown when anything in the higher level application goes wrong.
+-   More robust upgrade logic so that any failures in the upgrades are well logged for debugging.
+-   Send API examples in the codebase for each supported API version.
+-   Robust logic for backwards compatibility.
+-   Exceptions now get logged, never displayed.
+
+### Fixed
+
+-   Lots QC results now have better parsing logic to accompany the newer API result logic.
+-
+
+&nbsp;
+
 ## [v3.1.8] - 13/12/2024
 
 Fixed lot QC not altering on certain PhP versions.

@@ -1,827 +1,844 @@
-<?php // Updates the database and its version if it is outdated
+<?php
+// Updates the database and its version if it is outdated
 include_once __DIR__ . "/../includes/config.php";
 include_once __DIR__ . "/../includes/db.php";
 include BASE_DIR . "/includes/version.php";
 include BASE_DIR . "/includes/functions.php";
 
+// Increase memory limit temporarily as this can be a hefty script
+ini_set('memory_limit', '2048M');
+
+/*
+ * Executes an array of SQL queries within a transaction.
+ *
+ * @param object $db The database connection.
+ * @param array $queries An associative array where each key is an SQL query and the value is an array of parameters.
+ * @throws Exception if any query fails.
+ */
+function executeQueries($db, array $queries) {
+    try {
+        $db->beginTransaction();
+        foreach ($queries as $sql => $params) {
+            $params = is_array($params) ? $params : [];
+            $db->query($sql, $params);
+        }
+        if($db->conn->inTransaction()) {
+            $db->commit();
+        }
+    } catch (PDOException $e) {
+        if ($db->conn->inTransaction()) {
+            $db->rollBack();
+        }
+        throw $e;
+    }
+}
+
+/*
+ * Recursively deletes a directory and all its contents.
+ *
+ * @param string $dir Directory path.
+ */
+function deleteDirectory($dir) {
+    if (!is_dir($dir)) {
+        addLogEntry('system', "ERROR: Unable to delete $dir. It is not a directory.");
+        return;
+    }
+    $files = array_diff(scandir($dir), ['.', '..']);
+    foreach ($files as $file) {
+        $filePath = $dir . DIRECTORY_SEPARATOR . $file;
+        if (is_dir($filePath)) {
+            deleteDirectory($filePath);
+        } else {
+            if (unlink($filePath)) {
+                addLogEntry('system', "$filePath successfully deleted.");
+            } else {
+                addLogEntry('system', "ERROR: Unable to delete $filePath. Please check permissions.");
+            }
+        }
+    }
+    if (rmdir($dir)) {
+        addLogEntry('system', "$dir successfully deleted.");
+    } else {
+        addLogEntry('system', "ERROR: Unable to delete $dir. Please check permissions.");
+    }
+}
+
+/*
+ * Compares two version strings (semantic versioning: x.x.x).
+ *
+ * @param string $oldV The current version.
+ * @param string $newV The target version.
+ * @return bool Returns true if an update is needed (i.e. $oldV is less than $newV), false otherwise.
+ */
+function compareVersions($oldV, $newV) {
+    $oldParts = array_map('intval', explode('.', $oldV));
+    $newParts = array_map('intval', explode('.', $newV));
+    if ($oldParts[0] < $newParts[0]) return true;
+    if ($oldParts[0] > $newParts[0]) return false;
+    if ($oldParts[1] < $newParts[1]) return true;
+    if ($oldParts[1] > $newParts[1]) return false;
+    return ($oldParts[2] < $newParts[2]);
+}
+
+/*
+ * Automatically updates the database schema if it is outdated.
+ *
+ * @param string $version The target version.
+ */
 function autoUpdate($version) {
     global $cainDB;
     addLogEntry('system', "Running automatic updates.");
 
-    // Get a list of all versions tables
+    // Check if the versions table exists.
     $versionsTable = $cainDB->select("SHOW TABLES LIKE 'versions';");
-
-    if(!$versionsTable) {
-        addLogEntry('system', "No version control found.");
-
-        // If the versions table does not exist, create it!
+    if (!$versionsTable) {
+        addLogEntry('system', "No version control found. Creating versions table.");
         $cainDB->query(
-                "CREATE TABLE `versions` (
-                `id` INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-                `info` VARCHAR(50) UNIQUE,
-                `value` VARCHAR(50)
-            );
-        ");
-
-        // Insert a value of 0.0.0. If the table doesn't exist, we must assume the site is at version 0.
+            "CREATE TABLE `versions` (
+                id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
+                info VARCHAR(50) UNIQUE,
+                value VARCHAR(50)
+            );"
+        );
+        // Insert initial version as 0.0.0.
         $cainDB->query(
-            "INSERT INTO versions (info, value)
-            VALUES ('web-app', '0.0.0');"
+            "INSERT INTO versions (info, value) VALUES ('web-app', '0.0.0');"
         );
         addLogEntry('system', "Created version control system for SAMBA III.");
-
-        // Reccur the function
         autoUpdate($version);
+        return;
     } else {
-        // We know the table exists, so get the version of the database.
+        // Get the current database version.
         $dbVersionInfo = $cainDB->select("SELECT value FROM versions WHERE info = 'web-app'");
-        addLogEntry('system', "Getting database version.");
+        addLogEntry('system', "Current database version: " . ($dbVersionInfo['value'] ?? 'unknown'));
 
-        // Just in case, check if the dbVersionInfo exists. If not, create it.
-        if(!$dbVersionInfo) {
+        // If the version entry does not exist, create it.
+        if (!$dbVersionInfo) {
             $cainDB->query(
-                "INSERT INTO versions (info, value)
-                VALUES ('web-app', '0.0.0');"
+                "INSERT INTO versions (info, value) VALUES ('web-app', '0.0.0');"
             );
-
-            addLogEntry('system', "Created version control system for SAMBA III.");
-
-            // Recur the function
+            addLogEntry('system', "Created version control entry for SAMBA III.");
             autoUpdate($version);
-        } elseif($dbVersionInfo['value'] != $version && $dbVersionInfo['value'] !== 'updating' && $dbVersionInfo !== 'error') {
-            // Set a flag to indicate updates are in progress (if we are not already in progress)
-            $cainDB->query("UPDATE versions SET `value` = 'updating' WHERE info = 'web-app';");
-
+            return;
+        } elseif ($dbVersionInfo['value'] != $version && $dbVersionInfo['value'] !== 'updating' && $dbVersionInfo['value'] !== 'error') {
+            // Flag that updates are in progress.
+            $cainDB->query("UPDATE versions SET value = 'updating' WHERE info = 'web-app';");
             addLogEntry('system', "Updating DMS. Upgrading from v{$dbVersionInfo['value']} to v$version.");
-
-            // Run updates
             runUpdates($version, $dbVersionInfo['value']);
         } else {
-            // We are already updating. Initiate some timeouts.
+            // If updates are already in progress, wait until they complete.
             $timeout = 600;
             $startTime = time();
-
-            // Incrementally check the db for if we have finished updating.
             while (time() - $startTime < $timeout) {
-                // Check the status of the queue entry
                 $status = $cainDB->select("SELECT value FROM versions WHERE info = 'web-app';");
-
-                // If update is successful, we will break out of our loop.
                 if ($status && ($status['value'] !== 'updating')) {
                     break;
                 }
-
-                // Sleep for 1 second before polling again
                 sleep(1);
             }
         }
     }
 }
 
-// Function to compare two version strings (semantic versioning x.x.x)
-function compareVersions($oldV, $newV) {
-    $oldV = explode(".", $oldV);
-    $newV = explode(".", $newV);
-    $oldV = array_map('intval', $oldV);
-    $newV = array_map('intval', $newV);
+/*
+ * Runs all database updates based on version differences.
+ *
+ * @param string $version The target version.
+ * @param string $dbVersion The current database version.
+ * @param bool $retry If this is the second attempt.
+ */
+function runUpdates($version, $dbVersion, $retry = true) {
+    global $cainDB;
+    try {
+        // Refresh the current database version.
+        $dbVersion = $cainDB->select("SELECT value FROM versions WHERE info = 'web-app';")['value'];
 
-    if ($oldV[0] < $newV[0]) {
-        return 1;
-    } elseif ($oldV[0] > $newV[0]) {
-        return 0;
-    } elseif ($oldV[1] < $newV[1]) {
-        return 1;
-    } elseif ($oldV[1] > $newV[1]) {
-        return 0;
-    } elseif ($oldV[2] < $newV[2]) {
-        return 1;
-    } else {
-        return 0;
-    }
-}
-
-// Function to run all updates to the database
-function runUpdates($version, $dbVersion) {
-    global $cainDB, $casinoGames;
-
-    $dbVersion = $cainDB->select("SELECT value FROM versions WHERE info = 'web-app';")['value'];
-
-    /*
-     * Here we outline the versions of the database for which we need to run updates.
-     * If the database is particularly old, it will run through each of these statements,
-     * executing tasks one by one until it reaches the end. Newer versions of the site will skip
-     * to their current DB version and execute the tasks following.
-     */
-    $change = [];
-
-    // We need to track if anything goes wrong, and where.
-    $caught = [];
-
-    // v3.0.0 - We jumped ahead a bit, believe it or not!
-    if(compareVersions($dbVersion, "3.0.0")) {
-
-        // Firstly, we must go through and delete unused files
-        $filesToDelete = [
-            'CainMedical.gif',
-            'delete.php',
-            'error-log.php',
-            'error.php',
-            'list.php',
-            'login.php',
-            'lookup.php',
-            'operator.php',
-            'Patientresult.php',
-            'phpinfo.php',
-            'process.php',
-            'send.php',
-            'submit.php',
-            'update.php',
-            'verify.php'
-        ];
-
-        // Loop through the files and attempt to delete each one
-        foreach ($filesToDelete as $file) {
-            $filePath = BASE_DIR . DIRECTORY_SEPARATOR . $file;
-
-            // Check if the file exists
-            if (file_exists($filePath)) {
-                if(unlink($filePath)) {
-                    addLogEntry('system', "$file successfully deleted.");
-                } else {
-                    addLogEntry('system', "ERROR: Unable to delete $file. Please check permissions.");
-                }
-            }
-        }
-
-
-        // Function to recursively delete a directory and its contents
-        function deleteDirectory($dir) {
-            // Check if the directory exists
-            if (!is_dir($dir)) {
-                addLogEntry('system', "ERROR: Unable to delete $dir. It is not a directory.");
-                return;
-            }
-
-            // Get all files and directories within the directory
-            $files = array_diff(scandir($dir), array('.', '..')); // Exclude '.' and '..'
-
-            foreach ($files as $file) {
-                $filePath = $dir . DIRECTORY_SEPARATOR . $file;
-
-                // If it's a directory, recursively call deleteDirectory
-                if (is_dir($filePath)) {
-                    deleteDirectory($filePath); // Recursively delete subdirectory
-                } else {
-                    // If it's a file, delete it
-                    if(unlink($filePath)) {
-                        addLogEntry('system', "$filePath successfully deleted.");
+        // =================== Version 3.0.0 Updates =================== //
+        if (compareVersions($dbVersion, "3.0.0")) {
+            // Delete unused files.
+            $filesToDelete = [
+                'CainMedical.gif', 'delete.php', 'error-log.php', 'error.php', 'list.php', 'login.php',
+                'lookup.php', 'operator.php', 'Patientresult.php', 'phpinfo.php', 'process.php',
+                'send.php', 'submit.php', 'update.php', 'verify.php'
+            ];
+            foreach ($filesToDelete as $file) {
+                $filePath = BASE_DIR . DIRECTORY_SEPARATOR . $file;
+                if (file_exists($filePath)) {
+                    if (unlink($filePath)) {
+                        addLogEntry('system', "$file successfully deleted.");
                     } else {
-                        addLogEntry('system', "ERROR: Unable to delete $filePath. Please check permissions.");
+                        addLogEntry('system', "ERROR: Unable to delete $file. Please check permissions.");
                     }
                 }
             }
 
-            // After deleting contents, remove the directory itself
-            if(rmdir($dir)) {
-                addLotEntry('system', "$dir successfully deleted.");
-            } else {
-                addLogEntry('system', "ERROR: Unable to delete $dir. Please check permissions.");
-            }
-        }
-
-        // Recursively delete the "include" directory and its contents
-        $includeDirectory = BASE_DIR . DIRECTORY_SEPARATOR . 'include';
-        if (is_dir($includeDirectory)) {
-            deleteDirectory($includeDirectory);
-        }
-
-        // We are going to get all the tables as we have many alterations to perform
-        $result = $cainDB->conn->query("SHOW TABLES");
-        foreach($result as $table) {
-            // Set whole DB to InnoDB utf8mb4_unicode_ci
-            $change[] = "ALTER TABLE `$table[0]` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci";
-            $change[] = "ALTER TABLE `$table[0]` ENGINE=InnoDB";
-        }
-
-        $lastCommandTableExists = $cainDB->select("SHOW TABLES LIKE 'last_command';");
-        if($lastCommandTableExists) {
-            $change[] = "DROP TABLE last_command;";
-        }
-
-        foreach($change as $dbQuery) {
-            try {
-                $cainDB->query($dbQuery);
-            } catch(PDOException $e) {
-                $caught[] = $e;
-            }
-        }
-        $change = [];
-
-        // Add the Lot Management Table
-        $lotTable = $cainDB->select("SHOW TABLES LIKE 'lots';");
-        if(!$lotTable) {
-            $change[] = "CREATE TABLE lots (
-                id INT PRIMARY KEY AUTO_INCREMENT,
-                `lot_number` varchar(100) UNIQUE,
-                `sub_lot_number` varchar(100),
-                `assay_type` varchar(256),
-                `assay_sub_type` varchar(256),
-                `delivery_date` timestamp,
-                `expiration_date` timestamp,
-                `qc_pass` tinyint DEFAULT 0,
-                `last_updated` timestamp
-            );";
-        }
-
-        foreach($change as $dbQuery) {
-            try {
-                $cainDB->query($dbQuery);
-            } catch(PDOException $e) {
-                $caught[] = $e;
-            }
-        }
-        $change = [];
-
-        $resultsTableExists = $cainDB->select("SHOW TABLES LIKE 'results';");
-        if($resultsTableExists) {
-
-            // Drop any foreign keys related to lot_number
-            $foreignKey = $cainDB->select("SELECT CONSTRAINT_NAME
-                FROM information_schema.KEY_COLUMN_USAGE
-                WHERE TABLE_SCHEMA = '" . DB_NAME . "'
-                AND TABLE_NAME = 'results'
-                AND COLUMN_NAME = 'lot_number';");
-
-            if (!empty($foreignKey)) {
-                $foreignKeyName = $foreignKey['CONSTRAINT_NAME'];
-                $cainDB->query("ALTER TABLE results DROP FOREIGN KEY `$foreignKeyName`;");
+            // Recursively delete the "include" directory.
+            $includeDirectory = BASE_DIR . DIRECTORY_SEPARATOR . 'include';
+            if (is_dir($includeDirectory)) {
+                deleteDirectory($includeDirectory);
             }
 
-            // Change the collation of the table
-            $cainDB->query("ALTER TABLE results CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
+            // Alter all tables to use InnoDB and utf8mb4_unicode_ci.
+            $alterQueries = [];
+            $result = $cainDB->conn->query("SHOW TABLES");
+            foreach ($result as $table) {
+                $tableName = $table[0];
+                $alterQueries["ALTER TABLE `$tableName` CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci"] = [];
+                $alterQueries["ALTER TABLE `$tableName` ENGINE=InnoDB"] = [];
+            }
+            // Drop the last_command table if it exists.
+            if ($cainDB->select("SHOW TABLES LIKE 'last_command';")) {
+                $alterQueries["DROP TABLE last_command;"] = [];
+            }
+            executeQueries($cainDB, $alterQueries);
 
-            $change[] = "ALTER TABLE results MODIFY flag int;";
-            $change[] = "ALTER TABLE results MODIFY post_timestamp BIGINT;";
-
-            $lotsColumnExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'lot_number';");
-            if (!empty($lotsColumnExists) && $lotsColumnExists['COUNT(*)'] == 0) {
-                // Ensure the column has the same data type as in the lots table
-                $cainDB->query("ALTER TABLE results ADD lot_number varchar(100);");
+            // Add the Lot Management table if it doesn't exist.
+            if (!$cainDB->select("SHOW TABLES LIKE 'lots';")) {
+                executeQueries($cainDB, [
+                    "CREATE TABLE lots (
+                        id INT PRIMARY KEY AUTO_INCREMENT,
+                        lot_number VARCHAR(100) UNIQUE,
+                        sub_lot_number VARCHAR(100),
+                        assay_type VARCHAR(256),
+                        assay_sub_type VARCHAR(256),
+                        delivery_date TIMESTAMP,
+                        expiration_date TIMESTAMP,
+                        qc_pass TINYINT DEFAULT 0,
+                        last_updated TIMESTAMP
+                    )" => []
+                ]);
             }
 
-            // Add the foreign key (we know by this point that it does not exist)
-            $change[] = "ALTER TABLE results ADD FOREIGN KEY (lot_number) REFERENCES lots(lot_number);";
-
-            $summaryColumnExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'summary';");
-            if (!empty($summaryColumnExists) && $summaryColumnExists['COUNT(*)'] == 0) {
-                // Ensure the column has the same data type as in the lots table
-                $change[] = "ALTER TABLE results ADD summary varchar(100);";
-            }
-
-            $patientLocationExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'patientLocation';");
-            if (!empty($patientLocationExists) && $patientLocationExists['COUNT(*)'] == 0) {
-                // Ensure the column has the same data type as in the lots table
-                $change[] = "ALTER TABLE results ADD patientLocation varchar(256) DEFAULT '';";
-            }
-
-            $sampleCollectedExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'sampleCollected';");
-            if (!empty($sampleCollectedExists) && $sampleCollectedExists['COUNT(*)'] == 0) {
-                // Ensure the column has the same data type as in the lots table
-                $change[] = "ALTER TABLE results ADD sampleCollected varchar(256) DEFAULT '';";
-            }
-
-            $sampleReceivedExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'sampleReceived';");
-            if (!empty($sampleReceivedExists) && $sampleReceivedExists['COUNT(*)'] == 0) {
-                // Ensure the column has the same data type as in the lots table
-                $change[] = "ALTER TABLE results ADD sampleReceived varchar(256) DEFAULT '';";
-            }
-
-            $reserve1Exists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'reserve1';");
-            if (!empty($reserve1Exists) && $reserve1Exists['COUNT(*)'] == 0) {
-                // Ensure the column has the same data type as in the lots table
-                $change[] = "ALTER TABLE results ADD reserve1 varchar(256) DEFAULT '';";
-            }
-
-            $reserve2Exists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'reserve2';");
-            if (!empty($reserve2Exists) && $reserve2Exists['COUNT(*)'] == 0) {
-                // Ensure the column has the same data type as in the lots table
-                $change[] = "ALTER TABLE results ADD reserve2 varchar(256) DEFAULT '';";
-            }
-
-            $abortErrorCodeExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'abortErrorCode';");
-            if (!empty($abortErrorCodeExists) && $abortErrorCodeExists['COUNT(*)'] == 0) {
-                // Ensure the column has the same data type as in the lots table
-                $change[] = "ALTER TABLE results ADD abortErrorCode varchar(256) DEFAULT '';";
-            }
-        }
-
-        // Adjustments to the users table
-        $usersTableExists = $cainDB->select("SHOW TABLES LIKE 'users';");
-        if($usersTableExists) {
-            // Alter collation
-            $change[] = "ALTER TABLE users CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;";
-
-            $emailFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'users' AND column_name = 'email';");
-            if($emailFieldExists["COUNT(*)"]) {
-                $change[] = "RENAME TABLE users TO old_users";
-                $change[] = "CREATE TABLE users(
-                    id int AUTO_INCREMENT PRIMARY KEY NOT NULL,
-                    operator_id varchar(50) NOT NULL UNIQUE,
-                    `password` varchar(255),
-                    user_id varchar(255),
-                    first_name varchar(50),
-                    last_name varchar(50),
-                    user_type tinyint DEFAULT 1,
-                    last_active int,
-                    `status` tinyint DEFAULT 1
-                );";
-                $change[] = "INSERT INTO users (operator_id, `password`, user_id, first_name, user_type, last_active, status)
-                    SELECT email, null, userid, `name`,
-                        CASE
-                            WHEN userlevel = 9 THEN 3
-                            WHEN userlevel = 1 THEN 1
-                            ELSE 2
-                        END AS user_type,
-                        `timestamp` AS last_active,
-                        CASE
-                            WHEN `status` = 'Active' or `status` = 'active' THEN 1
-                            ELSE 0
-                        END AS `status`
-                    FROM old_users;";
-
-                $change[] = "DROP TABLE old_users;";
-            }
-        }
-
-        foreach($change as $dbQuery) {
-            try {
-                $cainDB->query($dbQuery);
-            } catch(PDOException $e) {
-                $caught[] = $e;
-            }
-        }
-        $change = [];
-
-        // If no service engineer admin exists, add them.
-        $adminExists = $cainDB->select("SELECT * FROM users WHERE operator_id = 'Admin';");
-        if($adminExists) {
-            $cainDB->query("DELETE FROM users WHERE operator_id = 'Admin';");
-        }
-        $hashedAdminPword = '$2y$10$pBWJjc7jNtmobRv86Iidnun9DVkAjzOR2IfSippKf.Ce5qZt3VJBK';
-        $cainDB->query("INSERT INTO users (`operator_id`, `password`, `first_name`, `last_name`, `user_type`) VALUES ('Admin', :pword, 'Service', 'Engineer', 3);", [":pword" => $hashedAdminPword]);
-
-        // Add the LIMS queue tables
-        $processQueueExists = $cainDB->select("SHOW TABLES LIKE 'process_queue';");
-        if(!$processQueueExists) {
-            $change[] = "CREATE TABLE process_queue (
-                id INT PRIMARY KEY AUTO_INCREMENT,
-                `status` VARCHAR(50) NOT NULL
-            );";
-        }
-
-        $processDataExists = $cainDB->select("SHOW TABLES LIKE 'process_data';");
-        if(!$processDataExists) {
-            $change[] = "CREATE TABLE process_data (
-                id INT PRIMARY KEY AUTO_INCREMENT,
-                `key` VARCHAR(50) NOT NULL,
-                `value` VARCHAR(255),
-                process_id INT,
-                FOREIGN KEY (process_id) REFERENCES process_queue(id)
-            );";
-        }
-
-        foreach($change as $dbQuery) {
-            try {
-                $cainDB->query($dbQuery);
-            } catch(PDOException $e) {
-                $caught[] = $e;
-            }
-        }
-        $change = [];
-
-        $softwareTableExists = $cainDB->select("SHOW TABLES LIKE 'software';");
-        if(!$softwareTableExists) {
-            $change[] = "CREATE TABLE software (
-                id INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
-                `name` VARCHAR(50)
-            );";
-
-            $change[] = "INSERT INTO software (`name`) VALUES ('Web App'), ('Hub'), ('Tablet App'), ('Instrument'), ('Scripts');";
-        }
-
-        $softwareFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'versions' AND column_name = 'software';");
-        if(!$softwareFieldExists["COUNT(*)"]) {
-            $change[] = "ALTER TABLE versions ADD software int UNSIGNED NOT NULL DEFAULT 1;";
-            $change[] = "ALTER TABLE versions ADD FOREIGN KEY (software) REFERENCES software(id);";
-
-            $change[] = "INSERT INTO versions (`value`, `software`) VALUES ('3.1.004', 2), ('ER - 3.1.003', 3), ('ER - 3.1.004', 3), ('SIIIAM-0003 0 3.1.007', 4), ('SIIIAM-0004 0 3.1.007', 4), ('SIIIAM-0013 0 3.1.007', 4), ('SCoV - 0.0.1', 5), ('SCoV/Flu/RSV - 0.0.2', 5);";
-        }
-
-        foreach($change as $dbQuery) {
-            try {
-                $cainDB->query($dbQuery);
-            } catch(PDOException $e) {
-                $caught[] = $e;
-            }
-        }
-        $change = [];
-
-        // We need to change the settings page!
-        $settingsTableExists = $cainDB->select("SHOW TABLES LIKE 'settings';");
-        if(!$settingsTableExists) {
-            $change[] = "CREATE TABLE `settings` (
-                id int AUTO_INCREMENT PRIMARY KEY NOT NULL,
-                `name` varchar(255) NOT NULL UNIQUE,
-                `value` varchar(255),
-                `flags` int DEFAULT 0 NOT NULL
-            );";
-        } else {
-            // Check if the `id` column exists
-            $idCol = $cainDB->select("
-                SELECT COLUMN_KEY
-                FROM information_schema.columns
-                WHERE table_schema = '" . DB_NAME . "'
-                AND table_name = 'settings'
-                AND column_name = 'id';
-            ");
-            if ($idCol) {
-                $change[] = "ALTER TABLE `settings` MODIFY COLUMN id int AUTO_INCREMENT NOT NULL;";
-
-                if ($idCol['COLUMN_KEY'] !== 'PRI') {
-                    $change[] = "ALTER TABLE `settings` ADD PRIMARY KEY (`id`);";
+            // Update the structure of the 'results' table.
+            if ($cainDB->select("SHOW TABLES LIKE 'results';")) {
+                // Drop foreign key for lot_number if it exists.
+                $fk = $cainDB->select("SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE
+                    WHERE TABLE_SCHEMA = '" . DB_NAME . "'
+                    AND TABLE_NAME = 'results'
+                    AND COLUMN_NAME = 'lot_number';");
+                if (!empty($fk)) {
+                    $fkName = $fk['CONSTRAINT_NAME'];
+                    $cainDB->query("ALTER TABLE results DROP FOREIGN KEY `$fkName`;");
                 }
-            } else {
-                // If the `id` column doesn't exist, add it with AUTO_INCREMENT and PRIMARY KEY
-                $change[] = "ALTER TABLE `settings` ADD COLUMN id int AUTO_INCREMENT PRIMARY KEY NOT NULL;";
-            }
-
-            // Check name column exists
-            $nameCol = $cainDB->select("
-                SELECT COLUMN_KEY
-                FROM information_schema.columns
-                WHERE table_schema = '" . DB_NAME . "'
-                AND table_name = 'settings'
-                AND column_name = 'name';
-            ");
-            if($nameCol) {
-                if(!$nameCol['COLUMN_KEY']) {
-                    $change[] = "ALTER TABLE `settings` MODIFY COLUMN `name` varchar(255) NOT NULL UNIQUE;";
+                // Convert collation.
+                $cainDB->query("ALTER TABLE results CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
+                // Batch alteration queries.
+                $resultsAlter = [];
+                $resultsAlter["ALTER TABLE results MODIFY flag INT;"] = [];
+                $resultsAlter["ALTER TABLE results MODIFY post_timestamp BIGINT;"] = [];
+                $columnsToCheck = [
+                    'lot_number'      => "ALTER TABLE results ADD lot_number VARCHAR(100);",
+                    'summary'         => "ALTER TABLE results ADD summary VARCHAR(100);",
+                    'patientLocation' => "ALTER TABLE results ADD patientLocation VARCHAR(256) DEFAULT '';",
+                    'sampleCollected' => "ALTER TABLE results ADD sampleCollected VARCHAR(256) DEFAULT '';",
+                    'sampleReceived'  => "ALTER TABLE results ADD sampleReceived VARCHAR(256) DEFAULT '';",
+                    'reserve1'        => "ALTER TABLE results ADD reserve1 VARCHAR(256) DEFAULT '';",
+                    'reserve2'        => "ALTER TABLE results ADD reserve2 VARCHAR(256) DEFAULT '';",
+                    'abortErrorCode'  => "ALTER TABLE results ADD abortErrorCode VARCHAR(256) DEFAULT '';"
+                ];
+                foreach ($columnsToCheck as $col => $sql) {
+                    $exists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+                        WHERE table_schema = '" . DB_NAME . "'
+                        AND table_name = 'results'
+                        AND column_name = '$col';");
+                    if ($exists['cnt'] == 0) {
+                        $resultsAlter[$sql] = [];
+                    }
                 }
+                executeQueries($cainDB, $resultsAlter);
+            }
+
+            // Adjust the 'users' table.
+            if ($cainDB->select("SHOW TABLES LIKE 'users';")) {
+                $usersAlter = [];
+                $usersAlter["ALTER TABLE users CONVERT TO CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"] = [];
+                $emailExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+                    WHERE table_schema = '" . DB_NAME . "'
+                    AND table_name = 'users'
+                    AND column_name = 'email';");
+                if ($emailExists["cnt"]) {
+                    $usersAlter["RENAME TABLE users TO old_users;"] = [];
+                    $usersAlter["CREATE TABLE users(
+                        id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                        operator_id VARCHAR(50) NOT NULL UNIQUE,
+                        password VARCHAR(255),
+                        user_id VARCHAR(255),
+                        first_name VARCHAR(50),
+                        last_name VARCHAR(50),
+                        user_type TINYINT DEFAULT 1,
+                        last_active INT,
+                        status TINYINT DEFAULT 1
+                    );"] = [];
+                    $usersAlter["INSERT INTO users (operator_id, password, user_id, first_name, user_type, last_active, status)
+                        SELECT email, NULL, userid, name,
+                        CASE WHEN userlevel = 9 THEN 3 WHEN userlevel = 1 THEN 1 ELSE 2 END,
+                        timestamp,
+                        CASE WHEN status = 'Active' OR status = 'active' THEN 1 ELSE 0 END
+                        FROM old_users;"] = [];
+                    $usersAlter["DROP TABLE old_users;"] = [];
+                }
+                executeQueries($cainDB, $usersAlter);
+            }
+
+            // Ensure the Service Engineer admin exists.
+            $adminExists = $cainDB->select("SELECT * FROM users WHERE operator_id = 'Admin';");
+            if ($adminExists) {
+                $cainDB->query("DELETE FROM users WHERE operator_id = 'Admin';");
+            }
+            $hashedAdminPword = '$2y$10$pBWJjc7jNtmobRv86Iidnun9DVkAjzOR2IfSippKf.Ce5qZt3VJBK';
+            $cainDB->query("INSERT INTO users (operator_id, password, first_name, last_name, user_type)
+                VALUES ('Admin', :pword, 'Service', 'Engineer', 3);", [":pword" => $hashedAdminPword]);
+
+            // Create LIMS queue tables.
+            $limsQueries = [];
+            if (!$cainDB->select("SHOW TABLES LIKE 'process_queue';")) {
+                $limsQueries["CREATE TABLE process_queue (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    status VARCHAR(50) NOT NULL
+                );"] = [];
+            }
+            if (!$cainDB->select("SHOW TABLES LIKE 'process_data';")) {
+                $limsQueries["CREATE TABLE process_data (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    `key` VARCHAR(50) NOT NULL,
+                    value VARCHAR(255),
+                    process_id INT,
+                    FOREIGN KEY (process_id) REFERENCES process_queue(id)
+                );"] = [];
+            }
+            executeQueries($cainDB, $limsQueries);
+
+            // Create the software table and update the versions table if necessary.
+            $softwareQueries = [];
+            if (!$cainDB->select("SHOW TABLES LIKE 'software';")) {
+                $softwareQueries["CREATE TABLE software (
+                    id INT UNSIGNED NOT NULL PRIMARY KEY AUTO_INCREMENT,
+                    name VARCHAR(50)
+                );"] = [];
+                $softwareQueries["INSERT INTO software (name) VALUES ('Web App'), ('Hub'), ('Tablet App'), ('Instrument'), ('Scripts');"] = [];
+            }
+            $softwareFieldExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+                WHERE table_schema = '" . DB_NAME . "'
+                AND table_name = 'versions'
+                AND column_name = 'software';");
+            if (!$softwareFieldExists["cnt"]) {
+                $softwareQueries["ALTER TABLE versions ADD software INT UNSIGNED NOT NULL DEFAULT 1;"] = [];
+                $softwareQueries["ALTER TABLE versions ADD FOREIGN KEY (software) REFERENCES software(id);"] = [];
+                $softwareQueries["INSERT INTO versions (value, software) VALUES
+                    ('3.1.004', 2), ('ER - 3.1.003', 3), ('ER - 3.1.004', 3), ('SIIIAM-0003 0 3.1.007', 4),
+                    ('SIIIAM-0004 0 3.1.007', 4), ('SIIIAM-0013 0 3.1.007', 4), ('SCoV - 0.0.1', 5), ('SCoV/Flu/RSV - 0.0.2', 5);"] = [];
+            }
+            executeQueries($cainDB, $softwareQueries);
+
+            // Update or create the settings table.
+            $settingsQueries = [];
+            if (!$cainDB->select("SHOW TABLES LIKE 'settings';")) {
+                $settingsQueries["CREATE TABLE settings (
+                    id INT AUTO_INCREMENT PRIMARY KEY NOT NULL,
+                    name VARCHAR(255) NOT NULL UNIQUE,
+                    value VARCHAR(255),
+                    flags INT DEFAULT 0 NOT NULL
+                );"] = [];
             } else {
-                $change[] = "ALTER TABLE `settings` ADD COLUMN `name` varchar(255) NOT NULL UNIQUE;";
+                // Ensure the 'id' column is AUTO_INCREMENT and primary key.
+                $idCol = $cainDB->select("SELECT COLUMN_KEY FROM information_schema.columns
+                    WHERE table_schema = '" . DB_NAME . "'
+                    AND table_name = 'settings'
+                    AND column_name = 'id';");
+                if ($idCol) {
+                    $settingsQueries["ALTER TABLE settings MODIFY COLUMN id INT AUTO_INCREMENT NOT NULL;"] = [];
+                    if ($idCol['COLUMN_KEY'] !== 'PRI') {
+                        $settingsQueries["ALTER TABLE settings ADD PRIMARY KEY (id);"] = [];
+                    }
+                } else {
+                    $settingsQueries["ALTER TABLE settings ADD COLUMN id INT AUTO_INCREMENT PRIMARY KEY NOT NULL;"] = [];
+                }
+                // Check the 'name' column.
+                $nameCol = $cainDB->select("SELECT COLUMN_KEY FROM information_schema.columns
+                    WHERE table_schema = '" . DB_NAME . "'
+                    AND table_name = 'settings'
+                    AND column_name = 'name';");
+                if ($nameCol) {
+                    if (!$nameCol['COLUMN_KEY']) {
+                        $settingsQueries["ALTER TABLE settings MODIFY COLUMN name VARCHAR(255) NOT NULL UNIQUE;"] = [];
+                    }
+                } else {
+                    $settingsQueries["ALTER TABLE settings ADD COLUMN name VARCHAR(255) NOT NULL UNIQUE;"] = [];
+                }
+                // Check the 'value' column.
+                $valueCol = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+                    WHERE table_schema = '" . DB_NAME . "'
+                    AND table_name = 'settings'
+                    AND column_name = 'value';");
+                if ($valueCol['cnt']) {
+                    $settingsQueries["ALTER TABLE settings MODIFY COLUMN value VARCHAR(255) NOT NULL;"] = [];
+                } else {
+                    $settingsQueries["ALTER TABLE settings ADD COLUMN value VARCHAR(255) NOT NULL;"] = [];
+                }
+                // Check the 'flags' column.
+                $flagsCol = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+                    WHERE table_schema = '" . DB_NAME . "'
+                    AND table_name = 'settings'
+                    AND column_name = 'flags';");
+                if ($flagsCol['cnt']) {
+                    $settingsQueries["ALTER TABLE settings MODIFY COLUMN flags INT DEFAULT 0 NOT NULL;"] = [];
+                } else {
+                    $settingsQueries["ALTER TABLE settings ADD COLUMN flags INT DEFAULT 0 NOT NULL;"] = [];
+                }
             }
-
-            // Check value column exists
-            $valueCol = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'settings' AND column_name = 'value';");
-            if($valueCol['COUNT(*)']) {
-                $change[] = "ALTER TABLE `settings` MODIFY COLUMN `value` varchar(255) NOT NULL;";
-            } else {
-                $change[] = "ALTER TABLE `settings` ADD COLUMN `value` varchar(255) NOT NULL;";
+            // Ensure default settings entries exist.
+            $settingsEntries = [
+                ['hospital_name', 'Hospital ABC'],
+                ['office_name', 'Office ABC'],
+                ['hospital_location', 'Location ABC'],
+                ['date_format', 'd M Y'],
+                ['selected_protocol', 'HL7'],
+                ['cain_server_ip', '192.168.1.237'],
+                ['cain_server_port', '30000'],
+                ['hl7_server_ip', '192.168.1.237'],
+                ['hl7_server_port', '30000'],
+                ['hl7_server_dest', 'CAIN'],
+                ['comms_status', '0'],
+                ['patient_id', '1'],
+                ['data_expiration', '365'],
+                ['password_required', '3'],
+                ['session_expiration', '30'],
+                ['test_mode', '0'],
+                ['field_behaviour', '1466015520085'],
+                ['field_visibility', '2097023'],
+                ['app_mode', '1'],
+                ['app_version', 'v2.0.0'],
+                ['qc_policy', '0'],
+                ['qc_positive_requirements', '1'],
+                ['qc_negative_requirements', '1']
+            ];
+            foreach ($settingsEntries as $entry) {
+                $name = $entry[0];
+                $value = $entry[1];
+                $exists = $cainDB->select("SELECT COUNT(*) AS count FROM settings WHERE name = ?;", [$name]);
+                if ($exists['count'] == 0) {
+                    $settingsQueries["INSERT INTO settings (name, value) VALUES ('$name', '$value');"] = [];
+                }
             }
+            executeQueries($cainDB, $settingsQueries);
 
-            // Check flags column exists
-            $flagsCol = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'settings' AND column_name = 'flags';");
-            if($flagsCol['COUNT(*)']) {
-                $change[] = "ALTER TABLE `settings` MODIFY COLUMN flags int default 0 NOT NULL;";
-            } else {
-                $change[] = "ALTER TABLE `settings` ADD COLUMN flags int default 0 NOT NULL;";
+            // Create tablets, instruments, and instrument test types tables if they don't exist.
+            $otherTablesQueries = [];
+            if (!$cainDB->select("SHOW TABLES LIKE 'tablets';")) {
+                $otherTablesQueries["CREATE TABLE tablets (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    tablet_id VARCHAR(100) UNIQUE,
+                    app_version VARCHAR(100)
+                );"] = [];
+            }
+            if (!$cainDB->select("SHOW TABLES LIKE 'instruments';")) {
+                $otherTablesQueries["CREATE TABLE instruments (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    serial_number VARCHAR(100) UNIQUE NOT NULL,
+                    module_version VARCHAR(100),
+                    front_panel_id VARCHAR(100),
+                    status TINYINT NOT NULL DEFAULT 0,
+                    current_assay VARCHAR(255),
+                    assay_start_time BIGINT,
+                    duration INT,
+                    device_error VARCHAR(255),
+                    tablet_version VARCHAR(100),
+                    enforcement TINYINT,
+                    last_connected BIGINT,
+                    locked TINYINT
+                );"] = [];
+            }
+            if (!$cainDB->select("SHOW TABLES LIKE 'instrument_test_types';")) {
+                $otherTablesQueries["CREATE TABLE instrument_test_types (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    name VARCHAR(100) UNIQUE NOT NULL,
+                    time_intervals INT,
+                    result_intervals INT
+                );"] = [];
+            }
+            executeQueries($cainDB, $otherTablesQueries);
+
+            // Create instrument QC results and lots QC results tables if they don't exist.
+            $qcTablesQueries = [];
+            if (!$cainDB->select("SHOW TABLES LIKE 'instrument_qc_results';")) {
+                $qcTablesQueries["CREATE TABLE instrument_qc_results (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    timestamp BIGINT NOT NULL,
+                    result TINYINT NOT NULL,
+                    instrument INT NULL,
+                    user INT NULL,
+                    type INT NULL,
+                    result_counter INT DEFAULT 0 NOT NULL,
+                    notes TEXT,
+                    FOREIGN KEY (instrument) REFERENCES instruments(id) ON DELETE SET NULL,
+                    FOREIGN KEY (user) REFERENCES users(id) ON DELETE SET NULL,
+                    FOREIGN KEY (type) REFERENCES instrument_test_types(id) ON DELETE SET NULL
+                );"] = [];
+            }
+            if (!$cainDB->select("SHOW TABLES LIKE 'lots_qc_results';")) {
+                $qcTablesQueries["CREATE TABLE lots_qc_results (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    lot INT,
+                    timestamp BIGINT,
+                    operator_id VARCHAR(50) NULL,
+                    qc_result TINYINT,
+                    reference TEXT,
+                    test_result INT,
+                    FOREIGN KEY (lot) REFERENCES lots(id),
+                    FOREIGN KEY (test_result) REFERENCES results(id) ON DELETE SET NULL
+                );"] = [];
+            }
+            executeQueries($cainDB, $qcTablesQueries);
+
+            // Alter the results table to add assayType and assaySubType columns if they don't exist.
+            $resultsExtraQueries = [];
+            $assayTypeExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+                WHERE table_schema = '" . DB_NAME . "'
+                AND table_name = 'results'
+                AND column_name = 'assayType';");
+            if (!$assayTypeExists['cnt']) {
+                $resultsExtraQueries["ALTER TABLE results ADD assayType VARCHAR(256) NOT NULL DEFAULT '' AFTER version;"] = [];
+            }
+            $assaySubTypeExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+                WHERE table_schema = '" . DB_NAME . "'
+                AND table_name = 'results'
+                AND column_name = 'assaySubType';");
+            if (!$assaySubTypeExists['cnt']) {
+                $resultsExtraQueries["ALTER TABLE results ADD assaySubType VARCHAR(256) NOT NULL DEFAULT '' AFTER assayType;"] = [];
+            }
+            executeQueries($cainDB, $resultsExtraQueries);
+        }
+
+        // =================== Version 3.1.2 Updates =================== //
+        if (compareVersions($dbVersion, "3.1.2")) {
+            $updateResultsQueries = [];
+            $fields = [
+                'assayStepNumber' => "ALTER TABLE results %s assayStepNumber VARCHAR(255) NOT NULL DEFAULT '';",
+                'cameraReadings'  => "ALTER TABLE results %s cameraReadings VARCHAR(255) NOT NULL DEFAULT '';",
+                'sender'          => "ALTER TABLE results %s sender VARCHAR(255) NOT NULL DEFAULT '';",
+                'sequenceNumber'  => "ALTER TABLE results %s sequenceNumber VARCHAR(255) NOT NULL DEFAULT '';"
+            ];
+            foreach ($fields as $field => $template) {
+                $exists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+                    WHERE table_schema = '" . DB_NAME . "'
+                    AND table_name = 'results'
+                    AND column_name = '$field';");
+                if ($exists['cnt']) {
+                    $updateResultsQueries[sprintf($template, "MODIFY COLUMN")] = [];
+                } else {
+                    $updateResultsQueries[sprintf($template, "ADD COLUMN")] = [];
+                }
+            }
+            executeQueries($cainDB, $updateResultsQueries);
+        }
+
+        // =================== Version 3.1.3 Updates =================== //
+        if (compareVersions($dbVersion, "3.1.3")) {
+            $testCount = $cainDB->select("SELECT COUNT(*) AS cnt FROM instrument_test_types;")['cnt'];
+            if (!$testCount) {
+                executeQueries($cainDB, [
+                    "INSERT INTO instrument_test_types (name, time_intervals, result_intervals) VALUES
+                    ('Batch Acceptance', 90, 5000),
+                    ('Engineering Visit', 180, 10000),
+                    ('Environmental Test', 365, 50000),
+                    ('External Quality Assurance (EQA) Scheme', 365, 50000),
+                    ('Routine QC', 30, 1000);" => []
+                ]);
             }
         }
 
-        // Define the settings entries we want to ensure exist
-        $settingsEntries = [
-            ['hospital_name', 'Hospital ABC'],
-            ['office_name', 'Office ABC'],
-            ['hospital_location', 'Location ABC'],
-            ['date_format', 'd M Y'],
-            ['selected_protocol', 'HL7'],
-            ['cain_server_ip', '192.168.1.237'],
-            ['cain_server_port', '30000'],
-            ['hl7_server_ip', '192.168.1.237'],
-            ['hl7_server_port', '30000'],
-            ['hl7_server_dest', 'CAIN'],
-            ['comms_status', '0'],
-            ['patient_id', '1'],
-            ['data_expiration', '365'],
-            ['password_required', '3'],
-            ['session_expiration', '30'],
-            ['test_mode', '0'],
-            ['field_behaviour', '1466015520085'],
-            ['field_visibility', '2097023'],
-            ['app_mode', '1'],
-            ['app_version', 'v2.0.0'],
-            ['qc_policy', '0'],
-            ['qc_positive_requirements', '1'],
-            ['qc_negative_requirements', '1']
-        ];
+        // =================== Version 3.1.6 Updates =================== //
+        if (compareVersions($dbVersion, "3.1.6")) {
+            $updates = [];
+            $refExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+                WHERE table_schema = '" . DB_NAME . "'
+                AND table_name = 'lots'
+                AND column_name = 'reference';");
+            if (!$refExists['cnt']) {
+                $updates["ALTER TABLE lots ADD COLUMN reference TEXT;"] = [];
+            }
+            $defaultIdExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM settings WHERE name = 'default_id';");
+            if ($defaultIdExists['cnt'] == 0) {
+                $updates["INSERT INTO settings (name, value) VALUES ('default_id', 'patientId');"] = [];
+            }
+            executeQueries($cainDB, $updates);
+        }
 
-        // Loop through each setting and ensure it exists
-        foreach ($settingsEntries as $entry) {
-            $name = $entry[0];
-            $value = $entry[1];
-
-            // Check if the setting exists
-            $exists = $cainDB->select("SELECT COUNT(*) AS count FROM `settings` WHERE `name` = ?;", [$name]);
-
-            if ($exists['count'] == 0) {
-                // Add the setting if it does not exist
-                $change[] = "INSERT INTO `settings` (`name`, `value`) VALUES ('$name', '$value');";
+        // =================== Version 3.1.7 Updates ===================
+        if (compareVersions($dbVersion, "3.1.7")) {
+            $prodYearExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+                WHERE table_schema = '" . DB_NAME . "'
+                AND table_name = 'lots'
+                AND column_name = 'production_year';");
+            if (!$prodYearExists['cnt']) {
+                executeQueries($cainDB, [
+                    "ALTER TABLE lots ADD COLUMN production_year TINYINT;" => []
+                ]);
             }
         }
 
-        foreach($change as $dbQuery) {
+        // =================== Version 3.2.0 Updates =================== //
+        if (compareVersions($dbVersion, "3.2.0")) {
+            // Create the master_results table if it doesn't exist.
+            if (!$cainDB->select("SHOW TABLES LIKE 'master_results';")) {
+                executeQueries($cainDB, [
+                    "CREATE TABLE master_results (
+                        id INT PRIMARY KEY AUTO_INCREMENT,
+                        version VARCHAR(256) DEFAULT NULL,
+                        patient_id VARCHAR(256) DEFAULT NULL,
+                        age VARCHAR(256) DEFAULT NULL,
+                        sex VARCHAR(256) DEFAULT NULL,
+                        first_name VARCHAR(256) DEFAULT NULL,
+                        last_name VARCHAR(256) DEFAULT NULL,
+                        dob VARCHAR(256) DEFAULT NULL,
+                        nhs_number VARCHAR(256) DEFAULT NULL,
+                        hospital_id VARCHAR(256) DEFAULT NULL,
+                        location VARCHAR(256) DEFAULT NULL,
+                        collected_time VARCHAR(256) DEFAULT NULL,
+                        received_time VARCHAR(256) DEFAULT NULL,
+                        start_time VARCHAR(256) DEFAULT NULL,
+                        end_time VARCHAR(256) DEFAULT NULL,
+                        comment_1 VARCHAR(256) DEFAULT NULL,
+                        comment_2 VARCHAR(256) DEFAULT NULL,
+                        operator_id VARCHAR(256) DEFAULT NULL,
+                        test_purpose VARCHAR(256) DEFAULT NULL,
+                        device_error VARCHAR(256) DEFAULT NULL,
+                        module_serial_number VARCHAR(256) DEFAULT NULL,
+                        lot_number VARCHAR(256) DEFAULT NULL,
+                        assay_id VARCHAR(256) DEFAULT NULL,
+                        assay_name VARCHAR(256) DEFAULT NULL,
+                        assay_type VARCHAR(256) DEFAULT NULL,
+                        assay_sub_type VARCHAR(256) DEFAULT NULL,
+                        assay_version VARCHAR(256) DEFAULT NULL,
+                        expected_result TEXT,
+                        result VARCHAR(256) DEFAULT NULL,
+                        FOREIGN KEY (lot_number) REFERENCES lots(lot_number) ON DELETE SET NULL
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;" => []
+                ]);
+            }
+
+            // Add a foreign key reference from the results table to the master_results table.
             try {
-                $cainDB->query($dbQuery);
-            } catch(PDOException $e) {
-                $caught[] = $e;
+                $cainDB->beginTransaction();
+                $resultsTableExists = $cainDB->select("SHOW TABLES LIKE 'results';");
+                if (!$resultsTableExists) {
+                    throw new Exception("Results table does not exist. Database may be corrupt. Please contact an admin.");
+                }
+                $fk = $cainDB->select("SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE
+                    WHERE TABLE_SCHEMA = '" . DB_NAME . "'
+                    AND TABLE_NAME = 'results'
+                    AND COLUMN_NAME = 'master_result';");
+                if (!empty($fk)) {
+                    $fkName = $fk['CONSTRAINT_NAME'];
+                    $cainDB->query("ALTER TABLE results DROP FOREIGN KEY `$fkName`;");
+                }
+                $masterColExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+                    WHERE table_schema = '" . DB_NAME . "'
+                    AND table_name = 'results'
+                    AND column_name = 'master_result';");
+                if (empty($masterColExists) || $masterColExists['cnt'] == 0) {
+                    $cainDB->query("ALTER TABLE results ADD master_result INT DEFAULT NULL;");
+                }
+                $cainDB->query("ALTER TABLE results ADD FOREIGN KEY (master_result) REFERENCES master_results(id) ON DELETE CASCADE;");
+                if($cainDB->conn->inTransaction()) {
+                    $cainDB->commit();
+                }
+            } catch (Exception $e) {
+                if($cainDB->conn->inTransaction()) {
+                    $cainDB->rollBack();
+                }
+                throw $e;
             }
-        }
-        $change = [];
 
-        // Add the tablets table
-        $tabletsTableExists = $cainDB->select("SHOW TABLES LIKE 'tablets';");
-        if(!$tabletsTableExists) {
-            $change[] = "CREATE TABLE tablets (
-                id INT PRIMARY KEY AUTO_INCREMENT,
-                tablet_id varchar(100) UNIQUE,
-                `app_version` varchar(100)
-            );";
-        }
+            // For every existing result, create a corresponding master_results record and update the result.
+            $results = $cainDB->selectAll("SELECT * FROM results ORDER BY id DESC;");
+            $columnsMap = [
+                'version'              => 'version',
+                'patient_id'           => 'patientId',
+                'age'                  => 'patientAge',
+                'sex'                  => 'patientSex',
+                'first_name'           => 'firstName',
+                'last_name'            => 'lastName',
+                'dob'                  => 'dob',
+                'hospital_id'          => 'hospitalId',
+                'nhs_number'           => 'nhsNumber',
+                'collected_time'       => 'sampleCollected',
+                'received_time'        => 'sampleReceived',
+                'location'             => 'patientLocation',
+                'comment_1'            => 'reserve1',
+                'comment_2'            => 'reserve2',
+                'result'               => 'result',
+                'operator_id'          => 'operatorId',
+                'test_purpose'         => 'testPurpose',
+                'device_error'         => 'abortErrorCode',
+                'assay_type'           => 'assayType',
+                'assay_sub_type'       => 'assaySubType',
+                'lot_number'           => 'lot_number',
+                'module_serial_number' => 'moduleSerialNumber',
+                'assay_name'           => 'product',
+                'start_time'           => 'timestamp',
+                'end_time'             => 'testcompletetimestamp'
+            ];
+            foreach ($results as $result) {
+                try {
+                    // Only move the result if it isn't already referencing another result
+                    if($result['master_result'] == null) {
+                        $columns = array_keys($columnsMap);
+                        $placeholders = array_fill(0, count($columns), '?');
+                        $sql = "INSERT INTO master_results (" . implode(", ", $columns) . ") VALUES (" . implode(", ", $placeholders) . ")";
+                        $cainDB->beginTransaction();
+                        $values = [];
+                        foreach ($columnsMap as $column => $key) {
+                            $values[] = (isNullOrEmptyString($result[$key]) ? null : $result[$key]);
+                        }
+                        $cainDB->query($sql, $values);
+                        $masterId = $cainDB->conn->lastInsertId();
+                        $updateSql = "UPDATE results SET master_result = ? WHERE id = ?";
+                        $cainDB->query($updateSql, [$masterId, $result['id']]);
+                        if($cainDB->conn->inTransaction()) {
+                            $cainDB->commit();
+                        }
+                    }
+                } catch (PDOException $e) {
+                    if($cainDB->conn->inTransaction()) {
+                        $cainDB->rollBack();
+                    }
+                    throw $e;
+                }
+            }
 
-        // Add the Instrument table
-        $instrumentsTableExists = $cainDB->select("SHOW TABLES LIKE 'instruments';");
-        if(!$instrumentsTableExists) {
-            $change[] = "CREATE TABLE instruments (
-                `id` INT PRIMARY KEY AUTO_INCREMENT,
-                `serial_number` varchar(100) UNIQUE NOT NULL,
-                `module_version` varchar(100),
-                `front_panel_id` varchar(100),
-                `status` tinyint NOT NULL DEFAULT 0,
-                `current_assay` varchar(255),
-                `assay_start_time` bigint,
-                `duration` int,
-                `device_error` varchar(255),
-                `tablet_version` varchar(100),
-                `enforcement` tinyint,
-                `last_connected` bigint,
-                `locked` tinyint
-            );";
-        }
+            // Further results table modifications
+            if ($cainDB->select("SHOW TABLES LIKE 'results';")) {
+                // Remove lot_number, assay_subtype, assay_type and summary from the results table (if they exist)
+                $resultsQueries = [];
+                $assayTypeExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+                WHERE table_schema = '" . DB_NAME . "'
+                AND table_name = 'results'
+                AND column_name = 'assayType';");
+                if ($assayTypeExists['cnt']) {
+                    $resultsQueries["ALTER TABLE results DROP assayType;"] = [];
+                }
 
-        // Add Instrument QC Test Types
-        $instrumentQCTestTypesTableExists = $cainDB->select("SHOW TABLES LIKE 'instrument_test_types';");
-        if(!$instrumentQCTestTypesTableExists) {
-            $change[] = "CREATE TABLE instrument_test_types (
-                `id` INT PRIMARY KEY AUTO_INCREMENT,
-                `name` varchar(100) UNIQUE NOT NULL,
-                `time_intervals` int,
-                `result_intervals` int
-            );";
-        }
+                $lotNumberExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+                WHERE table_schema = '" . DB_NAME . "'
+                AND table_name = 'results'
+                AND column_name = 'lot_number';");
+                if ($lotNumberExists['cnt']) {
+                    $resultsQueries["ALTER TABLE results DROP lot_number;"] = [];
+                }
 
-        // Required for Foreign Key Later
-        foreach($change as $dbQuery) {
+                $assaySubTypeExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+                WHERE table_schema = '" . DB_NAME . "'
+                AND table_name = 'results'
+                AND column_name = 'assaySubType';");
+                if ($assaySubTypeExists['cnt']) {
+                    $resultsQueries["ALTER TABLE results DROP assaySubType;"] = [];
+                }
+
+                $summaryExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+                WHERE table_schema = '" . DB_NAME . "'
+                AND table_name = 'results'
+                AND column_name = 'summary';");
+                if ($summaryExists['cnt']) {
+                    $resultsQueries["ALTER TABLE results DROP summary;"] = [];
+                }
+
+                $ctExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+                WHERE table_schema = '" . DB_NAME . "'
+                AND table_name = 'results'
+                AND column_name = 'ct_values';");
+                if (!$ctExists['cnt']) {
+                    $resultsQueries["ALTER TABLE results ADD ct_values VARCHAR(256);"] = [];
+                }
+
+                executeQueries($cainDB, $resultsQueries);
+            }
+
+            // Add a ct flag to the database
+            $updates = [];
+            $defaultIdExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM settings WHERE name = 'visible_ct';");
+            if ($defaultIdExists['cnt'] == 0) {
+                $updates["INSERT INTO settings (name, value) VALUES ('visible_ct', '0');"] = [];
+            }
+            executeQueries($cainDB, $updates);
+
+            // Reassign lots_qc_results information from results table to the new master_results table
+            $updates = [];
             try {
-                $cainDB->query($dbQuery);
-            } catch(PDOException $e) {
-                $caught[] = $e;
+                $cainDB->beginTransaction();
+                // This is quite complex. If there is a foreign key to the test_result data, remove it
+                $resultsTableExists = $cainDB->select("SHOW TABLES LIKE 'lots_qc_results';");
+                if (!$resultsTableExists) {
+                    throw new Exception("Lots QC table does not exist. Database may be corrupt. Please contact an admin.");
+                }
+                $fk = $cainDB->select("SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE
+                    WHERE TABLE_SCHEMA = '" . DB_NAME . "'
+                    AND TABLE_NAME = 'lots_qc_results'
+                    AND COLUMN_NAME = 'test_result';");
+                if (!empty($fk)) {
+                    $fkName = $fk['CONSTRAINT_NAME'];
+                    $cainDB->query("ALTER TABLE lots_qc_results DROP FOREIGN KEY `$fkName`;");
+
+                    // Now we need to loop through every result and update the test_result column to have the ID of the master_result instead of the result.
+                    $testResults = $cainDB->selectAll("UPDATE lots_qc_results q
+                        LEFT JOIN results r ON q.test_result = r.id
+                        SET q.test_result = r.master_result;
+                    ");
+
+                    // We do this here because if we never had a foreign key, then we never needed this logic to begin with
+                }
+
+                // Finally, we need to add a foreign key to the master results table
+                $fk = $cainDB->select("SELECT CONSTRAINT_NAME FROM information_schema.KEY_COLUMN_USAGE
+                    WHERE TABLE_SCHEMA = '" . DB_NAME . "'
+                    AND TABLE_NAME = 'lots_qc_results'
+                    AND COLUMN_NAME = 'test_result';");
+                if (empty($fk)) {
+                    $cainDB->query("ALTER TABLE lots_qc_results ADD FOREIGN KEY (test_result) REFERENCES master_results(id) ON DELETE CASCADE;");
+                }
+
+                if($cainDB->conn->inTransaction()) {
+                    $cainDB->commit();
+                }
+            } catch (Exception $e) {
+                if($cainDB->conn->inTransaction()) {
+                    $cainDB->rollBack();
+                }
+                throw $e;
             }
         }
-        $change = [];
 
-        // Add Instrument QC Results
-        $instrumentQCResultsTableExists = $cainDB->select("SHOW TABLES LIKE 'instrument_qc_results';");
-        if (!$instrumentQCResultsTableExists) {
-            $change[] = "CREATE TABLE instrument_qc_results (
-                `id` INT PRIMARY KEY AUTO_INCREMENT,
-                `timestamp` BIGINT NOT NULL,
-                `result` TINYINT NOT NULL,
-                `instrument` INT NULL,
-                `user` INT NULL,
-                `type` INT NULL,
-                `result_counter` INT DEFAULT 0 NOT NULL,
-                `notes` TEXT,
-                FOREIGN KEY (`instrument`) REFERENCES instruments(id) ON DELETE SET NULL,
-                FOREIGN KEY (`user`) REFERENCES users(id) ON DELETE SET NULL,
-                FOREIGN KEY (`type`) REFERENCES instrument_test_types(id) ON DELETE SET NULL
-            );";
+        // =================== Version 100.0.0 Updates (Test) ===================
+        if (compareVersions($dbVersion, "100.0.0")) {
+            sleep(2);
         }
 
-        // Add the QC Results table
-        $qcResultsTableExists = $cainDB->select("SHOW TABLES LIKE 'lots_qc_results';");
-        if(!$qcResultsTableExists) {
-            $change[] = "CREATE TABLE lots_qc_results (
-                id INT PRIMARY KEY AUTO_INCREMENT,
-                lot INT,
-                `timestamp` BIGINT,
-                `operator_id` varchar(50) NULL,
-                `qc_result` TINYINT,
-                `reference` TEXT,
-                `test_result` INT,
-                FOREIGN KEY (lot) REFERENCES lots(id),
-                FOREIGN KEY (`test_result`) REFERENCES results(id) ON DELETE SET NULL
-            );";
-        }
-
-        // Whilst we no longer need many of the columns in the results table, we are keeping them for reasons of spec fluctuations and indecisiveness.
-
-        // Large changes to the results table. Firstly, we no longer need "sender" if it exists
-        // $senderFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'sender';");
-        // if($senderFieldExists['COUNT(*)']) {
-        //     $change[] = "ALTER TABLE results DROP COLUMN sender;";
-        // }
-
-        // No longer need sequenceNumber
-        // $sequenceNumberFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'sequenceNumber';");
-        // if($sequenceNumberFieldExists['COUNT(*)']) {
-        //     $change[] = "ALTER TABLE results DROP COLUMN sequenceNumber;";
-        // }
-
-        // No longer need assayStepNumber
-        // $assayStepNumberFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'assayStepNumber';");
-        // if($assayStepNumberFieldExists['COUNT(*)']) {
-        //     $change[] = "ALTER TABLE results DROP COLUMN assayStepNumber;";
-        // }
-
-        // No longer need cameraReadings
-        // $cameraReadingsFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'cameraReadings';");
-        // if($cameraReadingsFieldExists['COUNT(*)']) {
-        //     $change[] = "ALTER TABLE results DROP COLUMN cameraReadings;";
-        // }
-
-        // Add assayType column
-        $assayTypeColumnExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'assayType';");
-        if(!$assayTypeColumnExists['COUNT(*)']) {
-            $change[] = "ALTER TABLE results ADD assayType VARCHAR(256) NOT NULL DEFAULT '' AFTER `version`;";
-        }
-
-        // Add assaySubType column
-        $assaySubTypeColumnExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'assaySubType';");
-        if(!$assaySubTypeColumnExists['COUNT(*)']) {
-            $change[] = "ALTER TABLE results ADD assaySubType VARCHAR(256) NOT NULL DEFAULT '' AFTER `assayType`;";
-        }
-
-        // A few mappings should be considered, though not necessarily implemented due to LIMS integrity
-
-        /*
-            sampleCollected = collectedTime
-            sampleReceived = receivedTime
-            reserve1 = comment1
-            reserve2 = comment2
-            timestamp = startTime
-            testcompletetimestamp = endTime
-            abortCodeError = deviceError
-            product = assayName
-            firstName = patientFirstName
-            lastName = patientLastName
-            dob = patientDoB
-        */
-
-        foreach($change as $dbQuery) {
-            try {
-                $cainDB->query($dbQuery);
-            } catch(PDOException $e) {
-                $caught[] = $e;
-            }
-        }
-        $change = [];
-    }
-
-    if(compareVersions($dbVersion, "3.1.2")) {
-        // We need to add some checks for legacy databases
-        $assayStepNumberFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'assayStepNumber';");
-        if($assayStepNumberFieldExists['COUNT(*)']) {
-            // If the field exists, update it.
-            $change[] = "ALTER TABLE results MODIFY COLUMN assayStepNumber varchar(255) NOT NULL DEFAULT '';";
-        } else {
-            // If not, create it.
-            $change[] = "ALTER TABLE results ADD COLUMN assayStepNumber varchar(255) NOT NULL DEFAULT '';";
-        }
-
-        $cameraReadingsFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'cameraReadings';");
-        if($cameraReadingsFieldExists['COUNT(*)']) {
-            // If the field exists, update it.
-            $change[] = "ALTER TABLE results MODIFY COLUMN cameraReadings varchar(255) NOT NULL DEFAULT '';";
-        } else {
-            // If not, create it.
-            $change[] = "ALTER TABLE results ADD COLUMN cameraReadings varchar(255) NOT NULL DEFAULT '';";
-        }
-
-        $senderFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'sender';");
-        if($senderFieldExists['COUNT(*)']) {
-            // If the field exists, update it.
-            $change[] = "ALTER TABLE results MODIFY COLUMN sender varchar(255) NOT NULL DEFAULT '';";
-        } else {
-            // If not, create it.
-            $change[] = "ALTER TABLE results ADD COLUMN sender varchar(255) NOT NULL DEFAULT '';";
-        }
-
-        $sequenceNumberFieldExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'results' AND column_name = 'sequenceNumber';");
-        if($sequenceNumberFieldExists['COUNT(*)']) {
-            // If the field exists, update it.
-            $change[] = "ALTER TABLE results MODIFY COLUMN sequenceNumber varchar(255) NOT NULL DEFAULT '';";
-        } else {
-            // If not, create it.
-            $change[] = "ALTER TABLE results ADD COLUMN sequenceNumber varchar(255) NOT NULL DEFAULT '';";
-        }
-
-        foreach($change as $dbQuery) {
-            try {
-                $cainDB->query($dbQuery);
-            } catch(PDOException $e) {
-                $caught[] = $e;
-            }
-        }
-        $change = [];
-    }
-
-    if(compareVersions($dbVersion, "3.1.3")) {
-        // Add some default instrument QC test types
-        $testCount = $cainDB->select("SELECT COUNT(*) FROM instrument_test_types;")['COUNT(*)'];
-        if(!$testCount) {
-            $change[] = "INSERT INTO instrument_test_types (`name`, `time_intervals`, `result_intervals`) VALUES ('Batch Acceptance', 90, 5000), ('Engineering Visit', 180, 10000), ('Environmental Test', 365, 50000), ('External Quality Assurance (EQA) Scheme', 365, 50000), ('Routine QC', 30, 1000);";
-        }
-
-        foreach($change as $dbQuery) {
-            try {
-                $cainDB->query($dbQuery);
-            } catch(PDOException $e) {
-                $caught[] = $e;
-            }
-        }
-        $change = [];
-    }
-
-    if(compareVersions($dbVersion, "3.1.6")) {
-        // Add references to lots
-        $referenceColExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'lots' AND column_name = 'reference';");
-        if(!$referenceColExists['COUNT(*)']) {
-            $change[] = "ALTER TABLE lots ADD COLUMN reference TEXT;";
-        }
-
-        // Add default_id field to settings
-        if($cainDB->select("SELECT COUNT(*) FROM settings WHERE `name` = 'default_id';")['COUNT(*)'] == 0) {
-            $change[] = "INSERT INTO settings (`name`, `value`) VALUES ('default_id', 'patientId')";
-        }
-
-        foreach($change as $dbQuery) {
-            try {
-                $cainDB->query($dbQuery);
-            } catch(PDOException $e) {
-                $caught[] = $e;
-            }
-        }
-        $change = [];
-    }
-
-    if(compareVersions($dbVersion, "3.1.7")) {
-        // Add production year to lots table
-        $prodYearColExists = $cainDB->select("SELECT COUNT(*) FROM information_schema.columns WHERE table_schema = '" . DB_NAME . "' AND table_name = 'lots' AND column_name = 'production_year';");
-        if(!$prodYearColExists['COUNT(*)']) {
-            $change[] = "ALTER TABLE lots ADD COLUMN production_year tinyint;";
-        }
-
-        foreach($change as $dbQuery) {
-            try {
-                $cainDB->query($dbQuery);
-            } catch(PDOException $e) {
-                $caught[] = $e;
-            }
-        }
-        $change = [];
-    }
-
-    // Test long processes (and add a few seconds for psychological validation)
-    if(compareVersions($dbVersion, "100.0.0")) {
-        sleep(2);
-    }
-
-    // Finally, update the DB version to match the app version
-    if($caught) {
+        // Finally, update the database version to the target version.
+        $cainDB->query("UPDATE versions SET value = '$version' WHERE info = 'web-app';");
+        addLogEntry('system', "DMS successfully updated. Now running version $version.");
+        echo("Successfully updated.");
+    } catch (Exception $e) {
+        // On error, mark the version as error.
         $cainDB->query("UPDATE versions SET value = 'error' WHERE info = 'web-app';");
-        echo('<br>');
-        echo("Something has gone wrong. Please speak with an admin about database integrity.");
-        echo("<br>");
-        echo("Error: $caught[0]");
-
-        // Log detailed information securely
-        $errorDetails = [
-            'error_message' => $caught[0]->getMessage(),
-            'stack_trace' => $caught[0]->getTraceAsString(),
-            'user_id' => $currentUser['operator_id'] ?? 'unknown',
-            'context' => 'Updating DMS'
-        ];
-        addLogEntry('system', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+        // Now double-check integrity on first error.
+        if ($retry) {
+            $conn = $cainDB->connect();
+            if (checkAndSetupRequiredTables($conn)) {
+                // If tables were missing and have now been created, try updates once more.
+                runUpdates($version, $dbVersion, false);
+                return;
+            } else {
+                // If tables exist, rethrow.
+                throw $e;
+            }
+        } else {
+            throw $e;
+        }
+        logUpdateError("Updating DMS", $e);
+        echo("Something has gone wrong. Please speak with an admin about database integrity. <br><br> Message: $e");
         return;
     }
-
-    // Give some feedback to the AJAX call if everything went well
-    echo("Successfully updated.");
-
-    // Set the flag to indicate updates are complete
-    $cainDB->query("UPDATE versions SET `value` = '$version' WHERE info = 'web-app';");
-    addLogEntry('system', "DMS successfully updated. Now running version $version.");
 }
 
-// Set the session to determine if any of this is necessary!
+// Kick off the auto-update process.
 autoUpdate($version);

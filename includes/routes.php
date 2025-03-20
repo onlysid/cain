@@ -1,4 +1,6 @@
 <?php
+include_once BASE_DIR . '/includes/process.php';
+
 // Function to handle routing
 function route($routes, $apiRoutes) {
     global $cainDB, $form, $settingsRoutes;
@@ -22,9 +24,10 @@ function route($routes, $apiRoutes) {
         }
     }
 
-    // Process specific handling
-    if($path === '/process') {
-        include BASE_DIR . '/includes/process.php';
+    // Special handling for /process:
+    if ($path === '/process') {
+        // Instead of including process.php again, call our helper.
+        runProcess();
         return;
     }
 
@@ -99,8 +102,8 @@ $settingsRoutes = [
     '/settings' => new PageRoute('views/settings/account.php', 'Account Settings', false),
     '/settings/general' => new PageRoute('views/settings/general.php', 'General', false, ADMINISTRATIVE_CLINICIAN),
     '/settings/fields' => new PageRoute('views/settings/fields.php', 'Field Selection', false, ADMINISTRATIVE_CLINICIAN),
-    '/settings/qc' => new PageRoute('views/settings/qc.php', 'Lot QC Policy', false, ADMINISTRATIVE_CLINICIAN),
     '/settings/qc-types' => new PageRoute('views/settings/qc-types.php', 'Assay QC Types', false, ADMINISTRATIVE_CLINICIAN),
+    '/settings/qc' => new PageRoute('views/settings/qc.php', 'Lot QC Policy', false, ADMINISTRATIVE_CLINICIAN),
     '/settings/users-list' => new PageRoute('views/settings/users-list.php', 'Users', false, ADMINISTRATIVE_CLINICIAN), // User config
     '/settings/users' => new PageRoute('views/settings/users.php', 'User Settings', false, ADMINISTRATIVE_CLINICIAN),
     '/settings/network' => new PageRoute('views/settings/network.php', 'Network Settings', false, ADMINISTRATIVE_CLINICIAN),
@@ -125,5 +128,23 @@ foreach ($apiFiles as $file) {
 }
 
 // Handle the request
-route($routes, $apiRoutes);
+try {
+    route($routes, $apiRoutes);
+} catch (Exception $e) {
+    // Log the original error.
+    $err = $e->getMessage();
+    addLogEntry('system', "ERROR: $err");
+
+    // Instantiate the DB class and connect.
+    $conn = $cainDB->connect();
+
+    // Use the helper to check for and create required tables.
+    if (checkAndSetupRequiredTables($conn)) {
+        // If tables were missing and have now been created, retry the operation.
+        route($routes, $apiRoutes);
+    } else {
+        // If the tables exist, rethrow the original exception.
+        throw $e;
+    }
+}
 ?>

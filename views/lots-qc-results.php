@@ -151,18 +151,19 @@ else : ?>
                 <input type="hidden" name="return-path" value="<?= $currentURL;?>">
                 <input type="hidden" name="id" class="lot-result-id" value="<?= $result['id'];?>">
 
-                <div class="p-4 w-full rounded-xl border-4 border-primary shadow-lg bg-gradient-to-r from-cyan-200/25 to-secondary/25">
+                <div class="p-4 w-full rounded-xl border-4 border-primary shadow-lg bg-gradient-to-r from-purple-200/25 to-secondary/25">
                     <h4 class="mb-3">Result Information:</h4>
+
                     <div class="flex gap-x-2 gap-y-4 justify-center items-stretch w-full flex-wrap">
-                        <div class="grow flex result-details flex-wrap gap-2 items-stretch">
+                        <div class="grow flex max-w-md result-details flex-wrap gap-2 items-stretch">
                             <?php if(!$resultInfo || $resultInfo['result'] === null) : ?>
                                 <div class="result-info invalid">
-                                    <h4><?= $result["product"];?></h4>
+                                    <h4><?= $result["assay_name"];?></h4>
                                     <p>Invalid</p>
                                 </div>
                             <?php elseif(gettype($resultInfo["result"]) === "boolean") : ?>
                                 <div class="result-info <?= $resultInfo["result"] ? "pos" : "";?>">
-                                    <h4><?= $result["product"];?></h4>
+                                    <h4><?= $result["assay_name"];?></h4>
                                     <p><?= $resultInfo["result"] ? "Positive" : "Negative";?></p>
                                 </div>
                             <?php else : ?>
@@ -176,7 +177,7 @@ else : ?>
 
                             <?php endif;?>
                         </div>
-                        <p class="grow shadow-xl basis-1/2 text-base bg-white rounded-lg p-2 border-secondary border h-auto"><?= $result['reserve1'] || $result['reserve2'] ? $result['reserve1'] . " " . $result['reserve2'] : "Operator left no notes.";?></p>
+                        <p class="grow shadow-xl basis-1/2 text-base bg-white rounded-lg p-2 border-secondary border h-auto"><?= $result['comment_1'] || $result['comment_2'] ? $result['comment_1'] . " " . $result['comment_2'] : "Operator left no notes.";?></p>
                     </div>
                 </div>
 

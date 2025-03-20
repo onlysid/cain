@@ -89,6 +89,32 @@ document.addEventListener('DOMContentLoaded', () => {
         },
     };
 
+    // Options for the date time picker (with no future)
+    const options3 = {
+        input: true,
+        actions: {
+            changeToInput(e, self) {
+                if (!self.HTMLInputElement) return;
+                updateInput(e, self);
+            },
+            changeTime(e, self) {
+                if (!self.HTMLInputElement) return;
+                updateInput(e, self);
+            }
+        },
+        date: {
+            max: new Date().toJSON().slice(0, 10)
+        },
+        settings: {
+            visibility: {
+                positionToInput: 'center',
+            },
+            selection: {
+                time: 24,
+            },
+        },
+    };
+
     // Initialize all date time picker elements
     var dateTimePickers = document.querySelectorAll('.date-time-picker');
     if (dateTimePickers) {
@@ -111,6 +137,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Create the calendar for the date time picker
             const dateTimePicker = new VanillaCalendar('#' + dateTimePickerDiv.id, options2);
+            dateTimePicker.init();
+        });
+    }
+
+    var dateTimePickers = document.querySelectorAll('.date-time-picker-no-future');
+    if (dateTimePickers) {
+        dateTimePickers.forEach((dateTimePickerDiv) => {
+
+            var newOptions3 = options3;
+
+            // Get specific pre-filled items for that date time picker
+            if (dateTimePickerDiv.value) {
+                var dateTime = dateTimePickerDiv.value.split(" ");
+                if (dateTime.length === 2) {
+                    var date = dateTime[0];
+                    var time = dateTime[1];
+                    newOptions3.settings.selected = {
+                        dates: [date],
+                        time: time,
+                    };
+                }
+            }
+
+            // Create the calendar for the date time picker
+            const dateTimePicker = new VanillaCalendar('#' + dateTimePickerDiv.id, options3);
             dateTimePicker.init();
         });
     }
