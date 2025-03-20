@@ -34,13 +34,34 @@ document.addEventListener('DOMContentLoaded', function() {
     // Append the loading spinner to the container
     container.appendChild(loadingSpinner);
 
-    // Append the container to the body
+    // Append the container to the updateAlert element
     updateAlert.appendChild(container);
 
     // Create a new XMLHttpRequest object
     var xhr = new XMLHttpRequest();
 
+    // Disable built-in timeout
     xhr.timeout = 0;
+
+    // Custom refresh logic
+    var refreshTimeout = 30000;
+    var maxRefreshAttempts = 10;
+    // Use localStorage to store the count of refresh attempts.
+    var refreshAttempts = parseInt(localStorage.getItem('updateRefreshAttempts') || "0", 10);
+
+    // Set a timer that will refresh the page if no response is received in 30s.
+    var refreshTimer = setTimeout(function() {
+        refreshAttempts++;
+        localStorage.setItem('updateRefreshAttempts', refreshAttempts);
+        if (refreshAttempts < maxRefreshAttempts) {
+            // Refresh the page
+            location.reload(true);
+        } else {
+            // Stop auto-refreshing after max attempts and display an error
+            updateAlert.innerHTML = '<h2>Something went wrong!</h2><p>Error updating after multiple attempts. Please refresh manually.</p>';
+            document.title = "Something went wrong...";
+        }
+    }, refreshTimeout);
 
     // Define the PHP file URL
     var phpFileUrl = '/admin/db-update.php';
@@ -50,37 +71,37 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // When the file is ready
     xhr.onreadystatechange = function() {
-        // If the file has been successfully opened, watch it for progress
         if (xhr.readyState === 4) {
+            // Clear the refresh timer and reset the counter
+            clearTimeout(refreshTimer);
+            localStorage.removeItem('updateRefreshAttempts');
 
             // If we got a valid response, interpret it
             if (xhr.status === 200) {
-                // The response code/message
                 var responseText = xhr.responseText;
-
-                // What we expect
-                var validResponse = responseText == "Successfully updated." || responseText == "";
-                if(responseText == "") {
+                // What we expect is either "Successfully updated." or an empty response.
+                var validResponse = responseText === "Successfully updated." || responseText === "";
+                if (responseText === "") {
                     // We updated successfully!
                     responseText = "N/A";
                 }
 
-                // Display different messages based on if the updated succeeded or not.
+                // Display different messages based on whether the update succeeded.
                 updateAlert.style.backgroundColor = validResponse ? "#217153" : "red";
-                updateAlert.innerHTML = (validResponse ? ("<h2>Update complete!</h2>") : ("<h2>Something went wrong!</h2>")) + "<p>Click anywhere to dismiss this message.</p><div class='response-code show-scrollbar'>Response: " + responseText + "</div>";
+                updateAlert.innerHTML = (validResponse ? ("<h2>Update complete!</h2>") : ("<h2>Something went wrong!</h2>")) +
+                    "<p>Click anywhere to dismiss this message.</p><div class='response-code show-scrollbar'>Response: " + responseText + "</div>";
                 document.title = validResponse ? "Update complete!" : "Something went wrong...";
 
-                // Add an option to hard refresh page on page click
+                // Add an option to hard refresh page on click, unless text is selected.
                 document.addEventListener('click', () => {
-                    // If any text is selected, don't reload the page.
                     if (window.getSelection().toString().length > 0) {
                         return;
                     }
                     location.reload(true);
                 });
             } else {
-                // Handle error
-                updateAlert.innerHTML = 'Error updating. Please refresh and try again.';
+                // Handle error status codes
+                updateAlert.innerHTML = '<h2>Error updating.</h2><p>Please refresh and try again.</p>';
             }
         }
     };
