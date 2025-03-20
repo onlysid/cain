@@ -7,6 +7,7 @@ include BASE_DIR . "/includes/functions.php";
 
 // Increase memory limit temporarily as this can be a hefty script
 ini_set('memory_limit', '2048M');
+ini_set('max_execution_time', '300');
 
 /*
  * Executes an array of SQL queries within a transaction.

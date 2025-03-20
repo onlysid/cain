@@ -21,6 +21,7 @@ Changing the way results work slightly and some QOL updates. Updating according 
 -   Lots QC results now reference their master ID rather than individual result IDs. This is so that one test yields one QC test even if it has multiple targets.
 -   Sent to LIMS status now works according to the constituent results, not to the result itself. Considerations made for if "part" of the result has been sent to LIMS.
 -   Backup/Delete now includes all CT values and master result parsing.
+-   Allow more time and memory for upgrades (as this is a large one).
 
 ### Added
 
@@ -35,7 +36,6 @@ Changing the way results work slightly and some QOL updates. Updating according 
 ### Fixed
 
 -   Lots QC results now have better parsing logic to accompany the newer API result logic.
--
 
 &nbsp;
 
