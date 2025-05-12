@@ -631,7 +631,7 @@ function getResults($params, $itemsPerPage) {
         r.result AS result_summary,
         i.*,
         res.*,
-        GROUP_CONCAT(res.result SEPARATOR ';') AS result_values,
+        GROUP_CONCAT(res.overall_result SEPARATOR ';') AS result_values,
         GROUP_CONCAT(res.product SEPARATOR ';') AS assay_names,
         GROUP_CONCAT(res.flag SEPARATOR ';') AS result_flags,
         GROUP_CONCAT(res.ct_values SEPARATOR ';') AS ct_values,
@@ -731,7 +731,6 @@ function getResults($params, $itemsPerPage) {
 
     // Return the results and count
     return ["results" => $results, "count" => $count['cnt']];
-
 }
 
 function getLots($params, $itemsPerPage) {
@@ -775,11 +774,11 @@ function getLots($params, $itemsPerPage) {
     // Build the SQL query
     $query = "
         SELECT lots.*,
-               GROUP_CONCAT(CASE WHEN lots_qc_results.qc_result = 1 THEN results.result END SEPARATOR '|||') AS positive_results,
-               GROUP_CONCAT(CASE WHEN lots_qc_results.qc_result = 0 THEN results.result END SEPARATOR '|||') AS failure_results
+               GROUP_CONCAT(CASE WHEN lots_qc_results.qc_result = 1 THEN master_results.result END SEPARATOR '|||') AS positive_results,
+               GROUP_CONCAT(CASE WHEN lots_qc_results.qc_result = 0 THEN master_results.result END SEPARATOR '|||') AS failure_results
         FROM lots
         LEFT JOIN lots_qc_results ON lots.id = lots_qc_results.lot
-        LEFT JOIN results ON lots_qc_results.test_result = results.id
+        LEFT JOIN master_results ON lots_qc_results.test_result = master_results.id
     ";
     $countQuery = "SELECT COUNT(*) FROM lots ";
 
@@ -1168,10 +1167,10 @@ function lotAutoQCCheck($lot) {
     $negativeTestsRequired = $cainDB->select("SELECT `value` FROM settings WHERE `name` = 'qc_negative_requirements';")['value'];
 
     // Now, check the count of successful positive QC tests
-    $positiveTests = $cainDB->select("SELECT COUNT(*) as count FROM lots_qc_results as qc JOIN results ON qc.test_result = results.id WHERE qc.lot = ? AND qc.qc_result = 1 AND results.result LIKE '%positive%' AND results.result NOT LIKE 'invalid';", [$lot])['count'];
+    $positiveTests = $cainDB->select("SELECT COUNT(*) as count FROM lots_qc_results as qc JOIN master_results ON qc.test_result = master_results.id WHERE qc.lot = ? AND qc.qc_result = 1 AND master_results.result LIKE '%positive%' AND master_results.result NOT LIKE 'invalid';", [$lot])['count'];
 
     // Now, check the count of successful positive QC tests
-    $negativeTests = $cainDB->select("SELECT COUNT(*) as count FROM lots_qc_results as qc JOIN results ON qc.test_result = results.id WHERE qc.lot = ? AND qc.qc_result = 1 AND results.result NOT LIKE '%positive%' AND results.result NOT LIKE 'invalid';", [$lot])['count'];
+    $negativeTests = $cainDB->select("SELECT COUNT(*) as count FROM lots_qc_results as qc JOIN master_results ON qc.test_result = master_results.id WHERE qc.lot = ? AND qc.qc_result = 1 AND master_results.result NOT LIKE '%positive%' AND master_results.result NOT LIKE 'invalid';", [$lot])['count'];
 
     // If we have the right counts, we have passed QC!
     if($positiveTests >= $positiveTestsRequired && $negativeTests >= $negativeTestsRequired) {

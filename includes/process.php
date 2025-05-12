@@ -286,8 +286,7 @@ if (!class_exists('Process')) {
             $hospitalLocation = $_POST['hospitalLocation'];
             $dateFormat = $_POST['dateFormat'];
             $additionalInfo = ($_POST['ctVisible'] ?? null) == "on" ? 1 : 0;
-
-            var_dump($additionalInfo);
+            $verboseLogging = ($_POST['verboseLogging'] ?? null) == "on" ? 1 : 0;
 
             if(!testInput($hospitalName)) {
                 $errors['hospitalName'] = "Hospital name cannot be empty.";
@@ -318,6 +317,7 @@ if (!class_exists('Process')) {
                     WHEN 'hospital_location' THEN :hospitalLocation
                     WHEN 'date_format' THEN :dateFormat
                     WHEN 'visible_ct' THEN :additionalInfo
+                    WHEN 'verbose_logging' THEN :verboseLogging
                     ELSE `value`
                 END;";
 
@@ -327,7 +327,8 @@ if (!class_exists('Process')) {
                     ':officeName' => $officeName,
                     ':hospitalLocation' => $hospitalLocation,
                     ':dateFormat' => $dateFormat,
-                    ':additionalInfo' => $additionalInfo
+                    ':additionalInfo' => $additionalInfo,
+                    ':verboseLogging' => $verboseLogging
                 ];
 
                 // Execute the query
@@ -1207,7 +1208,7 @@ if (!class_exists('Process')) {
                 $locked = $cainDB->select("SELECT * FROM instruments WHERE id = ?;", [$instrument]);
 
                 if($locked['locked']) {
-                    $cainDB->query("UPDATE instruments SET locked = 0 WHERE id = ?;", [$instrument]);
+                    $cainDB->query("UPDATE instruments SET locked = NULL WHERE id = ?;", [$instrument]);
                     Session::setNotice("Unlocked instrument #$instrument.");
                     addLogEntry("events", "{$this->currentUser['operator_id']} unlocked instrument $instrument.");
                 } else {

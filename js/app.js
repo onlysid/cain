@@ -185,14 +185,15 @@ if(resultsTable) {
 
                             // If we have an error in our JSON, display the error.
                             if(data.error) {
-                                // Render an error div with relevant information.
-                                var errorDiv = document.createElement('div');
-                                errorDiv.id = id + "Canvas";
-                                errorDiv.classList.add("error");
+                                // ! Deprecated as of v3.1.0. Kept alive for backwards compatibility
+                                // // Render an error div with relevant information.
+                                // var errorDiv = document.createElement('div');
+                                // errorDiv.id = id + "Canvas";
+                                // errorDiv.classList.add("error");
 
-                                errorDiv.innerHTML = `
-                                    <p>No Graph Data Found.</p>
-                                `;
+                                // errorDiv.innerHTML = `
+                                //     <p>No Graph Data Found.</p>
+                                // `;
 
                                 resultDetailsSection.appendChild(errorDiv);
                             } else {

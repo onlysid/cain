@@ -557,315 +557,322 @@ $version = $data['version'] ?? null;
 // No matter the API version, we will always have a result of some sort.
 $result = $data['result'] ?? null;
 
-// If we have no result, we can just end here.
-if(!$result) {
-    $errors = "An empty result was received.";
-} else {
-    // We have some sort of result! We must first try to interpret it. We may have multiple results so create a results array.
-    $results = [];
+// We have some sort of result! We must first try to interpret it. We may have multiple results so create a results array.
+$results = [];
 
-    // We will also need some kind of summary
-    $resultSummary = null;
+// We will also need some kind of summary
+$resultSummary = null;
 
-    // Check the version
-    if(!isValidAPIVersion($version)) {
-        /*
-            This means we have a legacy (pre-3.0) API version.
-            This will only ever need to be broken into ONE master_result and ONE result.
-            The result may either be simply Positive or Negative, or it may be some combination for multiplex tests.
-            Sanitise the result and create something we can put into the database.
-        */
+// Check the version
+if(!isValidAPIVersion($version)) {
+    /*
+        This means we have a legacy (pre-3.0) API version.
+        This will only ever need to be broken into ONE master_result and ONE result.
+        The result may either be simply Positive or Negative, or it may be some combination for multiplex tests.
+        Sanitise the result and create something we can put into the database.
+    */
 
-        /*
-            Some keywords have been changed between versions so these need to be kept track of and accounted for.
-            Some additions have also been made so we should not necessarily treat an empty value as invalid.
-        */
+    /*
+        Some keywords have been changed between versions so these need to be kept track of and accounted for.
+        Some additions have also been made so we should not necessarily treat an empty value as invalid.
+    */
 
-        /*
-            SEND 2 LEGACY PARAM NAME TRANSFORMS:
-            testStartTimestamp    => startTime
-            testCompleteTimestamp => endTime
-            firstName             => patientFirstName
-            lastName              => patientLastName
-            dob                   => patientDoB
-            sampleCollected       => collectedTime
-            sampleReceived        => receivedTime
-            product               => assayName
-            abortErrorCode        => deviceError
-            reserve1              => comment1
-            reserve2              => comment2
-        */
+    /*
+        SEND 2 LEGACY PARAM NAME TRANSFORMS:
+        testStartTimestamp    => startTime
+        testCompleteTimestamp => endTime
+        firstName             => patientFirstName
+        lastName              => patientLastName
+        dob                   => patientDoB
+        sampleCollected       => collectedTime
+        sampleReceived        => receivedTime
+        product               => assayName
+        abortErrorCode        => deviceError
+        reserve1              => comment1
+        reserve2              => comment2
+    */
 
-        // Transform the variable names
-        $data['startTime'] = getValueOrFallback($data['startTime'] ?? null, $data['testStartTimestamp'] ?? null);
-        $data['endTime'] = getValueOrFallback($data['endTime'] ?? null, $data['testCompleteTimestamp'] ?? null);
-        $data['patientFirstName'] = getValueOrFallback($data['patientFirstName'] ?? null, $data['firstName'] ?? null);
-        $data['patientLastName'] = getValueOrFallback($data['patientLastName'] ?? null, $data['lastName'] ?? null);
-        $data['patientDoB'] = getValueOrFallback($data['patientDoB'] ?? null, $data['dob'] ?? null);
-        $data['collectedTime'] = getValueOrFallback($data['collectedTime'] ?? null, $data['sampleCollected'] ?? null);
-        $data['receivedTime'] = getValueOrFallback($data['receivedTime'] ?? null, $data['sampleReceived'] ?? null);
-        $data['assayName'] = getValueOrFallback($data['assayName'] ?? null, $data['product'] ?? null);
-        $data['deviceError'] = getValueOrFallback($data['deviceError'] ?? null, $data['abortErrorCode'] ?? null);
-        $data['comment1'] = getValueOrFallback($data['comment1'] ?? null, $data['reserve1'] ?? null);
-        $data['comment2'] = getValueOrFallback($data['comment2'] ?? null, $data['reserve2'] ?? null);
+    // Transform the variable names
+    $data['startTime'] = getValueOrFallback($data['startTime'] ?? null, $data['testStartTimestamp'] ?? null);
+    $data['endTime'] = getValueOrFallback($data['endTime'] ?? null, $data['testCompleteTimestamp'] ?? null);
+    $data['patientFirstName'] = getValueOrFallback($data['patientFirstName'] ?? null, $data['firstName'] ?? null);
+    $data['patientLastName'] = getValueOrFallback($data['patientLastName'] ?? null, $data['lastName'] ?? null);
+    $data['patientDoB'] = getValueOrFallback($data['patientDoB'] ?? null, $data['dob'] ?? null);
+    $data['collectedTime'] = getValueOrFallback($data['collectedTime'] ?? null, $data['sampleCollected'] ?? null);
+    $data['receivedTime'] = getValueOrFallback($data['receivedTime'] ?? null, $data['sampleReceived'] ?? null);
+    $data['assayName'] = getValueOrFallback($data['assayName'] ?? null, $data['product'] ?? null);
+    $data['deviceError'] = getValueOrFallback($data['deviceError'] ?? null, $data['abortErrorCode'] ?? null);
+    $data['comment1'] = getValueOrFallback($data['comment1'] ?? null, $data['reserve1'] ?? null);
+    $data['comment2'] = getValueOrFallback($data['comment2'] ?? null, $data['reserve2'] ?? null);
 
-        // If the data is not a string, json_encode it!
-        if(!is_string($data['result'])) {
-            $sanitisedResult = sanitiseResult(json_encode($data['result']));
-        } else {
-            // This will return a result and a summary
-            $sanitisedResult = sanitiseResult($data['result']);
-        }
-
-        // Get the summary
-        $resultSummary = $sanitisedResult['summary'];
-
-        // Add this to the results
-        $results = [
-            $data['assayName'] => [
-                'result'   => resultStringify($sanitisedResult['result']),
-                'ct_values' => $sanitisedResult['ct'],
-            ]
-        ];
+    // If the data is not a string, json_encode it!
+    if(!is_string($data['result'])) {
+        $sanitisedResult = sanitiseResult(json_encode($data['result']));
     } else {
-        // This means we have a post-3.0 API version.
+        // This will return a result and a summary
+        $sanitisedResult = sanitiseResult($data['result']);
+    }
 
-        // We are given a summary
-        $resultSummary = $data['result']['overallResultValueString'] ?? "Invalid";
+    // Get the summary
+    $resultSummary = $sanitisedResult['summary'];
 
-        // Get the result array
-        $resultArray = $data['result']['results'] ?? null;
+    // Add this to the results
+    $results = [
+        $data['assayName'] => [
+            'result'   => resultStringify($sanitisedResult['result']),
+            'ct_values' => $sanitisedResult['ct'],
+        ]
+    ];
+} else {
+    // This means we have a post-3.0 API version.
 
-        // We are also given many results. Parse them all
-        if(is_array($resultArray)) {
+    // We are given a summary
+    $resultSummary = $data['result']['overallResultValueString'] ?? "Invalid";
 
-            foreach($resultArray as $individualResultArr) {
-                // We know that the first array key tells us what the result type is
-                $resultType = array_key_first($individualResultArr);
+    // Get the result array
+    $resultArray = $data['result']['results'] ?? null;
 
-                // Assign the actual result to a variable
-                $individualResult = $individualResultArr[$resultType];
+    // We are also given many results. Parse them all
+    if(is_array($resultArray)) {
 
-                // If we have a single result, proceed as normal
-                if($resultType == 'singleResult') {
-                    // This will return a result and a summary
-                    $sanitisedResult = sanitiseResult($individualResult['result']['resultValueString']);
+        foreach($resultArray as $individualResultArr) {
+            // We know that the first array key tells us what the result type is
+            $resultType = array_key_first($individualResultArr);
 
-                    // Add this to the results
-                    $results += [
-                        $individualResult['result']['target']['assayTargetName'] => [
-                            'result' => resultStringify($sanitisedResult['result']),
-                            'ct_values' => $individualResult['result']['ct'] ?? 'x',
-                        ]
-                    ];
-                } elseif($resultType == 'combinedResult') {
-                    // If we have multiple results, loop through them and add a multiplex-style result
-                    $combinedResultJSON = $individualResultArr[$resultType];
+            // Assign the actual result to a variable
+            $individualResult = $individualResultArr[$resultType];
 
-                    // Set up a counter to keep track of the result we have for LIMS
-                    $i = 0;
+            // If we have a single result, proceed as normal
+            if($resultType == 'singleResult') {
+                // This will return a result and a summary
+                $sanitisedResult = sanitiseResult($individualResult['result']['resultValueString']);
 
-                    // Set up a result string
-                    $resultString = "";
+                // Add this to the results
+                $results += [
+                    $individualResult['result']['target']['assayTargetName'] => [
+                        'result' => resultStringify($sanitisedResult['result']),
+                        'overall_result' => resultStringify($sanitisedResult['result']),
+                        'ct_values' => $individualResult['result']['ct'] ?? 'x',
+                    ]
+                ];
+            } elseif($resultType == 'combinedResult') {
+                // If we have multiple results, loop through them and add a multiplex-style result
+                $combinedResultJSON = $individualResultArr[$resultType];
 
-                    // Set up a ct string
-                    $ctString = "";
+                // Overall result for the combined result
+                $overallResult = $combinedResultJSON['overallResult']['resultValueString'] ?? 'Invalid';
 
-                    // Get the constituent results
-                    foreach($combinedResultJSON['constituentResults'] as $constituentResult) {
-                        // We want results in the form: SARS-CoV-2: 1Negative, RSV: 2Positive
-                        if($i !== 0) {
-                            // Add the comma separation logic if we aren't on the first result
-                            $resultString .= ", ";
-                            $ctString .= ",";
-                        }
+                // Set up a counter to keep track of the result we have for LIMS
+                $i = 0;
 
-                        // Add to the result string
-                        $resultString .= $constituentResult['result']['target']['assayTargetName'] . ": " . ($i + 1) . $constituentResult['result']['resultValueString'];
+                // Set up a result string
+                $resultString = "";
 
-                        // Add to the CT String
-                        $ctString .= $constituentResult['result']['ct'] ?? "x";
+                // Set up a ct string
+                $ctString = "";
 
-                        // Increment counter
-                        $i++;
+                // Get the constituent results
+                foreach($combinedResultJSON['constituentResults'] as $constituentResult) {
+                    // We want results in the form: SARS-CoV-2: 1Negative, RSV: 2Positive
+                    if($i !== 0) {
+                        // Add the comma separation logic if we aren't on the first result
+                        $resultString .= ", ";
+                        $ctString .= ",";
                     }
 
-                    $results += [
-                        $combinedResultJSON['overallResult']['target']['assayTargetName'] => [
-                            'result' => $resultString,
-                            'ct_values' => cleanValue($ctString),
-                        ]
-                    ];
+                    // Add to the result string
+                    $resultString .= $constituentResult['result']['target']['assayTargetName'] . ": " . ($i + 1) . $constituentResult['result']['resultValueString'];
+
+                    // Add to the CT String
+                    $ctString .= $constituentResult['result']['ct'] ?? "x";
+
+                    // Increment counter
+                    $i++;
                 }
 
+                // Confusingly, the result field needs to provide the unparsed overall result, and the overall_result field needs to show the parsed result for the DMS
+                $results += [
+                    $combinedResultJSON['overallResult']['target']['assayTargetName'] => [
+                        'overall_result' => $resultString,
+                        'ct_values' => cleanValue($ctString),
+                        'result' => $overallResult,
+                    ]
+                ];
             }
-        } else {
-            // This means we may have an invalid result
-            $results += [
-                ($data['assayName'] ?? "Unknown") => [
-                    'result' => "Invalid",
-                    'ct_values' => null,
-                ]
-            ];
-        }
-    }
 
-    // Again, if our results are empty at this point, throw an error:
-    if(empty($results)) {
-        $errors = "Unable to parse result. Please contact an administrator.";
+        }
     } else {
-        // Parse the data for the master_results table
-        $masterData = [
-            "version"              => $version,
-            "patient_id"           => cleanValue($data['patientId'] ?? null),
-            "age"                  => cleanValue($data['patientAge'] ?? null),
-            "sex"                  => cleanValue($data['patientSex'] ?? null),
-            "first_name"           => cleanValue($data['patientFirstName'] ?? null),
-            "last_name"            => cleanValue($data['patientLastName'] ?? null),
-            "dob"                  => cleanValue($data['patientDoB'] ?? null),
-            "nhs_number"           => cleanValue($data['nhsNumber'] ?? null),
-            "hospital_id"          => cleanValue($data['hospitalId'] ?? null),
-            "location"             => cleanValue($data['patientLocation'] ?? null),
-            "collected_time"       => cleanValue($data['collectedTime'] ?? null),
-            "received_time"        => cleanValue($data['receivedTime'] ?? null),
-            "start_time"           => cleanValue($data['startTime'] ?? null),
-            "end_time"             => cleanValue($data['endTime'] ?? null),
-            "comment_1"            => cleanValue($data['comment1'] ?? null),
-            "comment_2"            => cleanValue($data['comment2'] ?? null),
-            "operator_id"          => cleanValue($data['operatorId'] ?? null),
-            "test_purpose"         => cleanValue($data['testPurpose'] ?? null),
-            "device_error"         => cleanValue($data['deviceError'] ?? null),
-            "module_serial_number" => cleanValue($data['moduleSerialNumber'] ?? null),
-            "lot_number"           => $lotNumber ?? null,
-            "assay_name"           => cleanValue($data['assayName'] ?? null),
-            "assay_id"             => cleanValue($data['assayId'] ?? null),
-            "assay_type"           => cleanValue($data['assayType'] ?? null),
-            "expected_result"      => cleanValue($data['expectedResult'] ?? null),
-            "result"               => $resultSummary
+        // This means we may have an invalid result
+        $results += [
+            ($data['assayName'] ?? "Unknown") => [
+                'result' => "Invalid",
+                'ct_values' => null,
+                'overall_result' => "Invalid",
+            ]
         ];
+    }
+}
 
-        // Add the data to an array which can be iterated over to add each field to the db. THIS IS ESSENTIALLY WHAT IS SENT TO LIMS
-        $resultData = [
-            "version"               => $data['version'] ?? "",
-            "sampleId"              => $data['sampleId'] ?? "",
-            "patientId"             => $data['patientId'] ?? "",
-            "firstName"             => $data['patientFirstName'] ?? "",
-            "lastName"              => $data['patientLastName'] ?? "",
-            "patientAge"            => $data['patientAge'] ?? "",
-            "dob"                   => $data['patientDoB'] ?? "",
-            "patientSex"            => $data['patientSex'] ?? "",
-            "hospitalId"            => $data['hospitalId'] ?? "",
-            "nhsNumber"             => $data['nhsNumber'] ?? "",
-            "patientLocation"       => $data['patientLocation'] ?? "",
-            "sampleCollected"       => $data['collectedTime'] ?? "",
-            "sampleReceived"        => $data['receivedTime'] ?? "",
-            "reserve1"              => $data['comment1'] ?? "",
-            "reserve2"              => $data['comment2'] ?? "",
-            "flag"                  => $data['flag'] ?? 100,
-            "timestamp"             => $data['startTime'] ?? "",
-            "testcompletetimestamp" => $data['endTime'] ?? "",
-            "testPurpose"           => $purpose,
-            "abortErrorCode"        => $data['deviceError'] ?? "",
-            "clinicId"              => $data['clinicId'] ?? "",
-            "site"                  => $data['site'] ?? "",
-            "operatorId"            => $data['operatorId'] ?? "",
-            "moduleSerialNumber"    => $data['moduleSerialNumber'] ?? "",
-            "post_timestamp"        => time(),
+// Again, if our results are empty at this point, throw an error:
+if(empty($results)) {
+    $errors = "Unable to parse result. Please contact an administrator.";
+} else {
+    // Parse the data for the master_results table
+    $masterData = [
+        "version"              => $version,
+        "patient_id"           => cleanValue($data['patientId'] ?? null),
+        "age"                  => cleanValue($data['patientAge'] ?? null),
+        "sex"                  => cleanValue($data['patientSex'] ?? null),
+        "first_name"           => cleanValue($data['patientFirstName'] ?? null),
+        "last_name"            => cleanValue($data['patientLastName'] ?? null),
+        "dob"                  => cleanValue($data['patientDoB'] ?? null),
+        "nhs_number"           => cleanValue($data['nhsNumber'] ?? null),
+        "hospital_id"          => cleanValue($data['hospitalId'] ?? null),
+        "location"             => cleanValue($data['patientLocation'] ?? null),
+        "collected_time"       => cleanValue($data['collectedTime'] ?? null),
+        "received_time"        => cleanValue($data['receivedTime'] ?? null),
+        "start_time"           => cleanValue($data['startTime'] ?? null),
+        "end_time"             => cleanValue($data['endTime'] ?? null),
+        "comment_1"            => cleanValue($data['comment1'] ?? null),
+        "comment_2"            => cleanValue($data['comment2'] ?? null),
+        "operator_id"          => cleanValue($data['operatorId'] ?? null),
+        "test_purpose"         => cleanValue($data['testPurpose'] ?? null),
+        "device_error"         => cleanValue($data['deviceError'] ?? null),
+        "module_serial_number" => cleanValue($data['moduleSerialNumber'] ?? null),
+        "lot_number"           => $lotNumber ?? null,
+        "assay_name"           => cleanValue($data['assayName'] ?? null),
+        "assay_id"             => cleanValue($data['assayId'] ?? null),
+        "assay_type"           => cleanValue($data['assayType'] ?? null),
+        "expected_result"      => cleanValue($data['expectedResult'] ?? null),
+        "result"               => $resultSummary
+    ];
 
-            // Linking with the parent result (filled dynamically)
-            "master_result"         => null,
+    // Add the data to an array which can be iterated over to add each field to the db. THIS IS ESSENTIALLY WHAT IS SENT TO LIMS
+    $resultData = [
+        "version"               => $data['version'] ?? "",
+        "sampleId"              => $data['sampleId'] ?? "",
+        "patientId"             => $data['patientId'] ?? "",
+        "firstName"             => $data['patientFirstName'] ?? "",
+        "lastName"              => $data['patientLastName'] ?? "",
+        "patientAge"            => $data['patientAge'] ?? "",
+        "dob"                   => $data['patientDoB'] ?? "",
+        "patientSex"            => $data['patientSex'] ?? "",
+        "hospitalId"            => $data['hospitalId'] ?? "",
+        "nhsNumber"             => $data['nhsNumber'] ?? "",
+        "patientLocation"       => $data['patientLocation'] ?? "",
+        "sampleCollected"       => $data['collectedTime'] ?? "",
+        "sampleReceived"        => $data['receivedTime'] ?? "",
+        "reserve1"              => $data['comment1'] ?? "",
+        "reserve2"              => $data['comment2'] ?? "",
+        "flag"                  => $data['flag'] ?? 100,
+        "timestamp"             => $data['startTime'] ?? "",
+        "testcompletetimestamp" => $data['endTime'] ?? "",
+        "testPurpose"           => $purpose,
+        "abortErrorCode"        => $data['deviceError'] ?? "",
+        "clinicId"              => $data['clinicId'] ?? "",
+        "site"                  => $data['site'] ?? "",
+        "operatorId"            => $data['operatorId'] ?? "",
+        "moduleSerialNumber"    => $data['moduleSerialNumber'] ?? "",
+        "post_timestamp"        => time(),
 
-            // This parameter is filled later as there may be multiple results
-            "result"                => null,
+        // Linking with the parent result (filled dynamically)
+        "master_result"         => null,
 
-            // CT Value is passed per result too
-            "ct_values"              => null,
+        // This parameter is filled later as there may be multiple results
+        "result"                => null,
 
-            // Also dynamically added
-            "product"               => null,
-        ];
+        // CT Value is passed per result too
+        "ct_values"             => null,
 
-        // We need a query for adding things to the master result table
-        $masterQuery = "INSERT INTO master_results (";
-        $masterQuery .= implode(", ", array_keys($masterData));
-        $masterQuery .= ") VALUES (";
-        $masterQuery .= implode(", ", array_fill(0, count($masterData), "?"));
-        $masterQuery .= ")";
+        // Also dynamically added
+        "product"               => null,
 
-        // Get the master results into an array
-        $masterParams = array_values($masterData);
+        // Also dynamically added
+        "overall_result"        => null,
+    ];
 
+    // We need a query for adding things to the master result table
+    $masterQuery = "INSERT INTO master_results (";
+    $masterQuery .= implode(", ", array_keys($masterData));
+    $masterQuery .= ") VALUES (";
+    $masterQuery .= implode(", ", array_fill(0, count($masterData), "?"));
+    $masterQuery .= ")";
+
+    // Get the master results into an array
+    $masterParams = array_values($masterData);
+
+    $masterID = null;
+    $resultCount = 0;
+
+    $resultQuery = "INSERT INTO results (";
+    $resultQuery .= implode(", ", array_keys($resultData));
+    $resultQuery .= ") VALUES (";
+    $resultQuery .= implode(", ", array_fill(0, count($resultData), "?"));
+    $resultQuery .= ")";
+
+    try {
+        // Begin transaction to ensure safety
+        $cainDB->beginTransaction();
+
+        // Add master result
+        $cainDB->query($masterQuery, $masterParams);
+
+        // Get the master ID
+        $masterID = $cainDB->conn->lastInsertId();
+
+        // Add the master ID to the result data
+        $resultData['master_result'] = $masterID;
+
+        // Add individual result for each result we are sent
+        foreach($results as $assayName => $resultInfo) {
+            // Add the individual result to the result data
+            $resultData['result'] = $resultInfo['result'];
+
+            // Set the product name (as for combined results, this may vary)
+            $resultData['product'] = $assayName;
+
+            // Set the CT value
+            $resultData['ct_values'] = $resultInfo['ct_values'];
+
+            // Set the overall result
+            $resultData['overall_result'] = $resultInfo['overall_result'];
+
+            // Get the results into an array
+            $resultParams = array_values($resultData);
+
+            $cainDB->query($resultQuery, $resultParams);
+            $resultCount++;
+        }
+
+        // Commit the transaction
+        $cainDB->commit();
+    } catch(PDOException $e) {
+        // Rollback the transaction on error
+        $cainDB->rollBack();
+
+        // Reset the master ID variable
         $masterID = null;
-        $resultCount = 0;
 
-        $resultQuery = "INSERT INTO results (";
-        $resultQuery .= implode(", ", array_keys($resultData));
-        $resultQuery .= ") VALUES (";
-        $resultQuery .= implode(", ", array_fill(0, count($resultData), "?"));
-        $resultQuery .= ")";
-
-        try {
-            // Begin transaction to ensure safety
-            $cainDB->beginTransaction();
-
-            // Add master result
-            $cainDB->query($masterQuery, $masterParams);
-
-            // Get the master ID
-            $masterID = $cainDB->conn->lastInsertId();
-
-            // Add the master ID to the result data
-            $resultData['master_result'] = $masterID;
-
-            // Add individual result for each result we are sent
-            foreach($results as $assayName => $resultInfo) {
-                // Add the individual result to the result data
-                $resultData['result'] = $resultInfo['result'];
-
-                // Set the product name (as for combined results, this may vary)
-                $resultData['product'] = $assayName;
-
-                // Set the CT value
-                $resultData['ct_values'] = $resultInfo['ct_values'];
-
-                // Get the results into an array
-                $resultParams = array_values($resultData);
-
-                $cainDB->query($resultQuery, $resultParams);
-                $resultCount++;
-            }
-
-            // Commit the transaction
-            $cainDB->commit();
-        } catch(PDOException $e) {
-            // Rollback the transaction on error
-            $cainDB->rollBack();
-
-            // Reset the master ID variable
-            $masterID = null;
-
-            // Log detailed information securely
-            $errorDetails = [
-                'error_message' => $e->getMessage(),
-                'stack_trace' => $e->getTraceAsString(),
-                'user_id' => $currentUser['operator_id'] ?? 'unknown',
-                'context' => 'Updating general settings'
-            ];
-            addLogEntry('API', "ERROR: /send - " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
-        }
-
-        // If the test purpose was QC, we now need to add QC information to the DMS
-        if($purpose == 2) {
-            // Add to QC
-            $success = newLotQC($lotID, $masterID, $resultData['timestamp'] !== "" ? $resultData['timestamp'] : $resultData['post_timestamp']);
-
-            if(!$success) {
-                $errors = "Something went wrong putting the QC test in the DMS. Please contact an admin.";
-                addLogEntry('API', "ERROR: /send unable to store QC test in the DMS for result $resultID.");
-            }
-        }
+        // Log detailed information securely
+        $errorDetails = [
+            'error_message' => $e->getMessage(),
+            'stack_trace' => $e->getTraceAsString(),
+            'user_id' => $currentUser['operator_id'] ?? 'unknown',
+            'context' => 'Updating general settings'
+        ];
+        addLogEntry('API', "ERROR: /send - " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
     }
 
+    // If the test purpose was QC, we now need to add QC information to the DMS
+    if($purpose == 2) {
+        // Add to QC
+        $success = newLotQC($lotID, $masterID, $resultData['timestamp'] !== "" ? $resultData['timestamp'] : $resultData['post_timestamp']);
+
+        if(!$success) {
+            $errors = "Something went wrong putting the QC test in the DMS. Please contact an admin.";
+            addLogEntry('API', "ERROR: /send unable to store QC test in the DMS for result $resultID.");
+        }
+    }
 }
 
 

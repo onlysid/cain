@@ -78,15 +78,15 @@ $fieldInfo = array_intersect_key($settings, array_flip($hospitalInfoKeys));
 
 // Define all fields
 $dataFields = [
-    new Field("Patient ID", "patient_id"),
-    new Field("NHS Number", "nhs_number"),
+    new Field("Patient ID", "patient_id", "patientId"),
+    new Field("NHS Number", "nhs_number", "nhsNumber"),
     new Field("First Name", "first_name", "patientFirstName"),
     new Field("Last Name", "last_name", "patientLastName"),
     new Field("Date of Birth", "dob", "patientDoB"),
-    new Field("Patient Age", "age"),
-    new Field("Gender", "sex"),
-    new Field("Hospital ID", "hospital_id"),
-    new Field("Patient Location", "location"),
+    new Field("Patient Age", "age", "patientAge"),
+    new Field("Gender", "sex", "patientSex"),
+    new Field("Hospital ID", "hospital_id", "hospitalId"),
+    new Field("Patient Location", "location", "patientLocation"),
     new Field("Sample Collected", "collected_time", "collectedTime"),
     new Field("Sample Received", "received_time", "receivedTime"),
     new Field("Comment 1", "comment_1", "comment1"),

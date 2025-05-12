@@ -39,5 +39,10 @@ if(!$data) {
     $data = json_decode(file_get_contents("php://input"), true);
 }
 
+// If we have verbose logging, add this
+if($verboseLogging = $cainDB->select("SELECT `value` FROM settings WHERE `name` = 'verbose_logging';")['value'] == '1') {
+    addLogEntry('API', "INFO: Received data at $path - " . json_encode($data, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+}
+
 // Include API-specific logic.
 include $route['view'];

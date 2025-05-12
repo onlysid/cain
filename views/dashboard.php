@@ -174,8 +174,10 @@ include_once BASE_DIR . "/utils/AgeGroup.php";?>
                         // We should also just check the given result summary. If there is any reference to "positive" in it, we should give the summary as "positive".
                         if(strpos(strtolower($result['result_summary'] ?? ""), "invalid") !== false) {
                             $summary = "Invalid";
+                            $summaryText = "Invalid";
                         } else {
                             $summary = strpos(strtolower($result['result_summary'] ?? ""), "positive") !== false ? "Positive" : "Negative";
+                            $summaryText = $result['result_summary'];
                         }
                     ;?>
                     <tr id="result<?= $result['master_result_id'];?>" class="result">
@@ -187,7 +189,7 @@ include_once BASE_DIR . "/utils/AgeGroup.php";?>
                                 <?php if($result['first_name'] || $result['last_name']) : ?>
                                     <?= $result['first_name'];?> <?= $result['last_name'];?>
                                 <?php else : ?>
-                                    Unknown
+                                    -
                                 <?php endif;?>
                             <?php endif;?>
                         </td>
@@ -198,7 +200,7 @@ include_once BASE_DIR . "/utils/AgeGroup.php";?>
                                 <?php if($result[$defaultIdField]) : ?>
                                     <?= $result[$defaultIdField];?>
                                 <?php else : ?>
-                                    Unknown
+                                    -
                                 <?php endif;?>
                             <?php endif;?>
                         </td>
@@ -206,7 +208,7 @@ include_once BASE_DIR . "/utils/AgeGroup.php";?>
                             <?php if($serviceEngineer) : ?>
                                 <td>-REDACTED-</td>
                             <?php else : ?>
-                                <td class="text-elipses hidden md:table-cell <?= $summary == 'Positive' ? "active" : (!$summary || $summary == 'Invalid' ? 'invalid' : "");?>"><?= $summary ?? "Invalid";?></td>
+                                <td class="text-elipses hidden md:table-cell <?= $summary == 'Positive' ? "active" : (!$summary || $summary == 'Invalid' ? 'invalid' : "");?>"><?= ucfirst($summaryText) ?? "Invalid";?></td>
                             <?php endif;?>
                         <td>
                             <div class="h-full flex items-center gap-1.5 justify-end">
@@ -286,6 +288,7 @@ if($totalPageCount > 1) : ?>
 // Results modals
 if($resultItems) {
     foreach($resultItems as $result) : ?>
+
         <?php
         if (!empty($result['dob'])) {
             try {
@@ -301,7 +304,7 @@ if($resultItems) {
         $resultInfo = sanitiseResult($result['result']);
 
         // Get the master result information
-        $resultSummary = $result['result'];
+        $resultSummary = $result['result_summary'];
         $resultAssayName = $result['assay_name'];
 
         // Get the individual result information (which may be the same!)
@@ -320,7 +323,6 @@ if($resultItems) {
         foreach($individualAssayNames as $key => $individualAssayName) {
             $individualAssayNamesProcessed[$key] = explode(', ', $individualAssayName);
         }
-
         ?>
         <div id="result<?= $result['master_result_id'];?>Modal" class="result-modal">
             <div class="result-modal-backdrop">
@@ -378,20 +380,19 @@ if($resultItems) {
                                 $ctValues = explode(",", $individualCTValues[$key] ?? "");
                                 $resultInterpretation = resultInterpretation($res);
                                 $resultClass = '';
-                                $resultString = 'Negative';
+                                $resultString = "Negative";
 
                                 switch($resultInterpretation) {
                                     case 0:
                                         $resultClass = 'invalid';
-                                        $resultString = 'Invalid';
+                                        $resultString = "Invalid";
                                         break;
                                     case 1:
                                         $resultClass = 'pos';
-                                        $resultString = 'Positive';
+                                        $resultString = "Positive";
                                         break;
                                     default:
                                         $resultClass = 'neg';
-                                        $resultString = 'Negative';
                                 }?>
 
                                 <div id="<?= $result['master_result_id'];?>Tab<?= $key;?>Content" class="result-info max-w-[20rem] relative !p-2 <?= $resultClass;?>">
@@ -451,7 +452,6 @@ if($resultItems) {
 
                             <div class="bg-gradient-to-r from-transparent via-grey/75 sm:from-grey/75 to-transparent w-full my-3 pb-0.5 rounded-full"></div>
                     <?php endif;?>
-
 
                     <table class="result-explosion">
                         <?php foreach($listableFields as $keyset => $value) :

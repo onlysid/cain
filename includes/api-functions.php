@@ -45,7 +45,7 @@ function limsRequest($data, $statusCode, $confirmationCode) {
     global $cainDB;
 
     // Check if LIMS is available
-    $limsAvailability = $cainDB->select("SELECT `value` FROM settings WHERE `name` = 'app_mode';")['value'] == 1 ? true : false;
+    $limsAvailability = $cainDB->select("SELECT `value` FROM settings WHERE `name` = 'app_mode';")['value'] == 1;
 
     // If LIMS is not available, fail instantly
     if($limsAvailability) {

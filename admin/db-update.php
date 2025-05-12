@@ -326,7 +326,7 @@ function runUpdates($version, $dbVersion, $retry = true) {
                 $softwareQueries["ALTER TABLE versions ADD software INT UNSIGNED NOT NULL DEFAULT 1;"] = [];
                 $softwareQueries["ALTER TABLE versions ADD FOREIGN KEY (software) REFERENCES software(id);"] = [];
                 $softwareQueries["INSERT INTO versions (value, software) VALUES
-                    ('3.1.004', 2), ('ER - 3.1.003', 3), ('ER - 3.1.004', 3), ('SIIIAM-0003 0 3.1.007', 4),
+                    ('3.1.0', 2), ('ER - 3.1.003', 3), ('ER - 3.1.004', 3), ('SIIIAM-0003 0 3.1.007', 4),
                     ('SIIIAM-0004 0 3.1.007', 4), ('SIIIAM-0013 0 3.1.007', 4), ('SCoV - 0.0.1', 5), ('SCoV/Flu/RSV - 0.0.2', 5);"] = [];
             }
             executeQueries($cainDB, $softwareQueries);
@@ -819,6 +819,29 @@ function runUpdates($version, $dbVersion, $retry = true) {
                 }
                 throw $e;
             }
+        }
+
+        if(compareVersions($dbVersion, "3.2.1")) {
+            // Add an overall_result field to the results table
+            $overallColExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+            WHERE table_schema = '" . DB_NAME . "'
+            AND table_name = 'results'
+            AND column_name = 'overall_result';");
+            if (empty($overallColExists) || $overallColExists['cnt'] == 0) {
+                $cainDB->query("ALTER TABLE results ADD overall_result varchar(256) DEFAULT NULL;");
+
+                // Copy all results to the overall results column
+                $cainDB->query("UPDATE results SET overall_result = result;");
+            }
+
+            // Add a verbose logging option to the settings table
+            $verboseLogging = $cainDB->select("SELECT COUNT(*) AS cnt FROM settings WHERE name = 'verbose_logging';");
+            if ($verboseLogging['cnt'] == 0) {
+                $updates["INSERT INTO settings (name, value) VALUES ('verbose_logging', '0');"] = [];
+            }
+
+            // Execute queries for 3.2.1
+            executeQueries($cainDB, $updates);
         }
 
         // =================== Version 100.0.0 Updates (Test) ===================

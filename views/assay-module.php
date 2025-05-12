@@ -21,8 +21,8 @@ $status = $qcStatus[$instrument['qc']['pass']] ?? ['color' => 'gray', 'path' => 
 // Start page content ?>
 
 <!-- Assay Module Title Area -->
-<section class="flex items-center justify-between gap-4">
-    <div class="page-title-area h-full flex items-center gap-4">
+<section class="flex items-center flex-wrap justify-between gap-x-4 gap-y-1">
+    <div class="page-title-area flex flex-wrap items-center gap-x-4 gap-y-1">
 
         <!-- Link to return to assay modules page -->
         <a class="h-12 hover:opacity-75 hover:scale-110 transition-all back-page-btn flex items-center" href="/assay-modules">
@@ -31,7 +31,7 @@ $status = $qcStatus[$instrument['qc']['pass']] ?? ['color' => 'gray', 'path' => 
             </svg>
         </a>
 
-        <h1 class="mb-0">Assay Module #<?= $instrument['id'];?></h1>
+        <h1 class="mb-0 text-xl xl:text-3xl">Assay Module #<?= mb_strimwidth($instrument['serial_number'], 0, 14, '...');?></h1>
 
         <div class="instrument-title-icons">
             <div class="tooltip" title="<?= $instrument['locked'] ? 'Locked' : 'Unlocked' ?>">

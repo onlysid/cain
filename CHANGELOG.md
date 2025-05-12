@@ -6,6 +6,31 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.2.1] - 12/04/2025
+
+Adjustments to logging verbosity and some fixes
+
+### Changed
+
+-   Results are now unopinionated and unmanipulated by the DMS for API version 3.0 and above. What the DMS is sent is law.
+-   DRW about information updated.
+-   Assay modules now only get referenced by their serial number.
+-   Removed dummy code related to instrument/tablet versions.
+-   Changed settings menu icons.
+
+### Added
+
+-   Logging is now more verbose optionally.
+
+### Fixed
+
+-   Lots QC automatically checks the master results table.
+-   DataField API now uses correct tablet fields.
+-   Instrument unlocking now shows up correctly.
+-   Better mobile responsiveness on assay module page
+
+&nbsp;
+
 ## [v3.2.0] - 19/03/2025
 
 Changing the way results work slightly and some QOL updates. Updating according to API spec 3.0.

@@ -1,7 +1,7 @@
 <?php // General Settings
 
 // Hospital Info Settings Subset
-$hospitalInfoKeys = ['hospital_name', 'office_name', 'hospital_location', 'date_format', 'visible_ct'];
+$hospitalInfoKeys = ['hospital_name', 'office_name', 'hospital_location', 'date_format', 'visible_ct', 'verbose_logging'];
 $hospitalInfo = array_intersect_key($settings, array_flip($hospitalInfoKeys));
 
 // Accepted Date Formats
@@ -65,6 +65,18 @@ $dateFormats = ["d M Y", "d F Y", "d/m/Y"];
                 <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="ctVisible"><span></span></label>
             </div>
         </label>
+        <?php if($currentUser['user_type'] >= ADMINISTRATIVE_CLINICIAN) : ?>
+            <label for="verboseLogging" class="field !flex-row toggle-field !px-6 py-2 rounded-full bg-white shadow-md">
+                <div class="flex flex-col w-full">
+                    <div class="shrink">Enable Verbose Logging</div>
+                    <div class="description !text-xs text-grey mr-4">Logs will fill up faster but will be more verbose.</div>
+                </div>
+                <div class="checkbox-wrapper">
+                    <input class="tgl" name="verboseLogging" id="verboseLogging" type="checkbox" <?= $hospitalInfo['verbose_logging'] ? "checked" : "";?>>
+                    <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="verboseLogging"><span></span></label>
+                </div>
+            </label>
+        <?php endif;?>
     </div>
     <button class="btn smaller-btn trigger-loading" type="submit">Save Settings</button>
 </form>
