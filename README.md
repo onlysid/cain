@@ -1,4 +1,4 @@
-# Cain
+# SAMBA III DMS
 
 Data Management System (DMS) for medical tests, quality control and instruments.
 
