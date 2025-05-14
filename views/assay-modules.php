@@ -14,6 +14,8 @@ $dateFormats = ["d M Y", "d F Y", "d/m/Y"];
 // Do we have any filters?
 $filters = $_GET ?? $session->get('result-filters');
 
+$expired = $filters['expired'] ?? 'off';
+
 ?>
 <h1>Assay Modules</h1>
 
@@ -24,7 +26,7 @@ $filters = $_GET ?? $session->get('result-filters');
     <p>This page is automatically updated every 5s with the latest information available about all Assay Modules in the network.</p>
 </section> -->
 
-<form class="w-full sm:w-auto">
+<form id="amFilterForm" class="w-full sm:w-auto">
     <div class="form-fields !gap-0">
         <div class="field">
             <div class="input-wrapper !py-1 !pr-1">
@@ -36,6 +38,15 @@ $filters = $_GET ?? $session->get('result-filters');
                 </button>
             </div>
         </div>
+        <label for="expired" class="tooltip !flex field ml-2 gap-2 border border-light !flex-row toggle-field pr-2 pl-4 py-2 rounded-full bg-white h-full" title="View expired Assay Modules.">
+            <div class="flex flex-col w-full">
+                <div class="shrink">Show hidden instruments</div>
+            </div>
+            <div class="checkbox-wrapper">
+                <input class="tgl" name="expired" id="expired" type="checkbox" <?= ($expired == 'on') ? "checked" : "";?>>
+                <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="expired"><span></span></label>
+            </div>
+        </label>
         <?php if($filters) : ?>
             <a href="<?= strtok($currentURL, '?');?>" id="removeFilter" class="p-2 transition-all duration-500 hover:scale-110 hover:opacity-75 tooltip" title="Clear Filters">
                 <svg class="h-7 fill-dark" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
@@ -45,8 +56,7 @@ $filters = $_GET ?? $session->get('result-filters');
         <?php endif;?>
     </div>
 </form>
-
-<table id="instrumentsTable">
+<table id="instrumentsTable" class="<?= $expired == 'off' ? 'expired' : '';?>">
     <thead>
         <th>
             <a href="<?= updateQueryString(["sp" => "serial_number", "sd" => ((($filters['sd'] ?? "desc") == "desc" && ($filters['sp'] ?? null) == "serial_number") || ($filters['sd'] ?? "empty") == "" ? "asc" : "")], true);?>" class="ignore-default flex gap-1.5 items-center">

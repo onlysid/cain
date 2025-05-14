@@ -6,6 +6,25 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.2.2] - 14/05/2025
+
+UI changes related to listing db items and list of known issues.
+
+### Changed
+
+-   AM Page doesn't show DB UID.
+-   Instrument timeout on DMS reduced from 2hrs to 5mins.
+
+### Added
+
+-   Method to toggle instrument visibility on instrument timeout.
+
+### Known Issues
+
+-   AM will provide a friendly name so this requires an API specification upgrade.
+-   Lot QC may need tweaking to account for results which are "Some Positive".
+-   May need to revert 3.2.1 change where DMS no longer parses "Some Positive" for combined multiplex tests.
+
 ## [v3.2.1] - 12/04/2025
 
 Adjustments to logging verbosity and some fixes

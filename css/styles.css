@@ -490,6 +490,10 @@ td .details svg {
     @apply pointer-events-auto scale-100 opacity-100;
 }
 
+.expired .instrument {
+    @apply hidden;
+}
+
 .instrument-modal-header {
     @apply flex gap-2 -mb-3 items-center;
 }

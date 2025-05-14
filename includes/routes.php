@@ -41,7 +41,9 @@ function route($routes, $apiRoutes) {
     if(preg_match('#^/assay-modules/(\d+)$#', $path, $matches)) {
         // Handle individual Assay Module pages
         $id = $matches[1];
-        $route = new PageRoute('views/assay-module.php', 'Assay Module #' . $id);
+
+        // TODO: Get the AM friendly name and try to display that as the title
+        $route = new PageRoute('views/assay-module.php', 'Assay Module');
     } elseif(preg_match('#^/assay-modules/edit-qc$#', $path) && isset($_GET['qc'])) {
         // Handle individual QC Test pages
         $qcId = $_GET['qc'];

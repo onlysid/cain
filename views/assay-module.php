@@ -31,6 +31,7 @@ $status = $qcStatus[$instrument['qc']['pass']] ?? ['color' => 'gray', 'path' => 
             </svg>
         </a>
 
+        <?php // TODO: Get the friendly name from the tablet and display this instead if available ?>
         <h1 class="mb-0 text-xl xl:text-3xl">Assay Module #<?= mb_strimwidth($instrument['serial_number'], 0, 14, '...');?></h1>
 
         <div class="instrument-title-icons">

@@ -30,6 +30,7 @@ function getInstrumentDetails() {
                 const sortParam = urlParams.get('sp');
                 const sortDirection = urlParams.get('sd');
                 const searchParam = urlParams.get('s');
+                const expired = urlParams.get('expired');
 
                 // Sort the instruments
                 sortInstruments(data, sortParam, sortDirection);
@@ -37,7 +38,7 @@ function getInstrumentDetails() {
                 // Filter instruments based on fuzzy search
                 const filteredData = searchInstruments(data, searchParam);
 
-                updateTable(filteredData);
+                updateTable(filteredData, expired);
             } else {
                 // Handle error
                 statusSpan.innerHTML = 'Error updating. Please refresh and try again.';
@@ -87,17 +88,21 @@ function sortInstruments(instruments, sortParam, sortDirection) {
 }
 
 // Function to update table rows with JSON data
-function updateTable(data) {
+function updateTable(data, expired) {
     const table = document.getElementById("instrumentsTable");
     const tableBody = document.getElementById("instrumentsTableBody");
     const tableHead = table.querySelector("thead");
     const modalWrapper = document.getElementById("instrumentModalWrapper");
 
-    // How long until we want to assume the instruments are lost?
-    const instrumentTimeout = 7200;
+    // How long until we want to assume the instruments are lost? (5 minutes)
+    const instrumentTimeout = 600;
+
+    const showHiddenInstruments = expired;
+    console.log(showHiddenInstruments);
 
     tableBody.innerHTML = ""; // Clear existing rows
     var legitInstruments = 0;
+    var unexpiredInstruments = 0;
 
     data.forEach((item) => {
         var date = new Date();
@@ -117,6 +122,7 @@ function updateTable(data) {
 
         if(item.status != null) {
             legitInstruments++;
+
             // Create the table row
             const row = document.createElement("tr");
             row.setAttribute("id", `instrument${item.serial_number}`);
@@ -127,6 +133,8 @@ function updateTable(data) {
             var lost = now - (item.last_connected ?? 0) > instrumentTimeout;
             if(lost) {
                 row.classList.add("lost");
+            } else {
+                unexpiredInstruments++;
             }
 
             // Add a class if the instrument is locked
@@ -181,7 +189,7 @@ function updateTable(data) {
             row.innerHTML = `
                 <td>${item.serial_number}</td>
                 <td>${item.front_panel_id}</td>
-                <td>${getProcessText(item.status, timeRemaining, item.fault_condition)}</td>
+                <td>${lost ? "" :getProcessText(item.status, timeRemaining, item.fault_condition)}</td>
                 <td class="end">
                     <div class="table-controls">
                         ${qcIcon}
@@ -262,9 +270,9 @@ function updateTable(data) {
         }
     });
 
-    if(!data.length || !legitInstruments) {
+    if(!data.length || !legitInstruments || (!unexpiredInstruments && !showHiddenInstruments)) {
         tableHead.classList.add('hidden');
-        tableBody.innerHTML = `<td>There are no instruments in the database. Please add some by connecting with the tablet or refine your search.</td>`;
+        tableBody.innerHTML = `<td>There are no` + (showHiddenInstruments || unexpiredInstruments ? `` : ` active`) + ` instruments in the database. Please add some by connecting with the tablet or refine your search.</td>`;
     } else {
         tableHead.classList.remove('hidden');
     }

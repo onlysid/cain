@@ -457,6 +457,15 @@ if(priorityBox) {
     })
 }
 
+// Within the assay modules page, if the hidden box is checked, submit the parent form
+let expiredHidden = document.getElementById('expired');
+if(expiredHidden) {
+    expiredHidden.addEventListener('change', () => {
+        // Submit the parent form
+        document.getElementById('amFilterForm').submit();
+    })
+}
+
 // Check the QC Policy submission and pop up a warning if the QC policy is being switched to automatic
 let qcForm = document.getElementById('qcPolicyForm');
 if(qcForm) {
