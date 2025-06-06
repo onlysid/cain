@@ -1769,3 +1769,17 @@ function getSetting($setting) {
 
     return $settingValue['value'] ?? null;
 }
+
+// Put a particular setting into the db
+function patchSetting($settingArr) {
+    global $cainDB;
+    $settingField = $settingArr['settingField'] ?? null;
+    $settingValue = $settingArr['settingValue'] ?? null;
+    $updateSetting = null;
+
+    if($settingField !== null && $settingValue !== null) {
+        $updateSetting = $cainDB->query("UPDATE settings SET `value` = ? WHERE `name` = ?;", [$settingValue, $settingField]);
+    }
+
+    return $updateSetting;
+}

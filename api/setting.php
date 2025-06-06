@@ -5,19 +5,26 @@ Get settingItem
 Return setting
 */
 
-// Get moduleSerialNumber from "sn" URL parameter (if we have no data, quit)
-if(!($setting = ($_GET['s'] ?? null))) {
-    // Throw error and stop processing things.
-    echo(json_encode(["Error" => "No data available."]));
+$setting = $_GET['s'] ?? $data ?? null;
+
+if ($setting === null) {
+    echo json_encode(["Error" => "No data available."]);
     addLogEntry('API', "ERROR: /settings endpoint hit with insufficient params.");
     exit;
 }
 
-// Get setting information
-$response = getSetting($setting);
+if ($_SERVER['REQUEST_METHOD'] === 'POST' || $_SERVER['REQUEST_METHOD'] === 'PATCH') {
+    $response = patchSetting($data);
 
-// Provide the response
-echo json_encode([
-    "res" => $response ? 1 : 0,
-    "setting" => $response ?? "No setting found with this name.",
-]);
+    echo json_encode([
+        "res" => $response == null ? 0 : 1,
+        "message" => $response == 0 ? 'Nothing was changed' : "Successfully updated setting.",
+    ]);
+} else {
+    $response = getSetting($setting);
+
+    echo json_encode([
+        "res" => $response ? 1 : 0,
+        "setting" => $response ?? "No setting with this name.",
+    ]);
+}
