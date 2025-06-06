@@ -424,6 +424,7 @@ function enrichInstrumentWithQC($instrument) {
         $instrument['qc']['res'][$qcType['id']] = $latestTest;
 
         if($latestTest) {
+            // TODO: unused?!
             $formattedTimestamp = date("Y-m-d H:i", $latestTest['timestamp']);
         }
 
@@ -1759,4 +1760,12 @@ function resultInterpretation($result) {
     }
 
     return 2;
+}
+
+// Get a particular setting from the db
+function getSetting($setting) {
+    global $cainDB;
+    $settingValue = $cainDB->select("SELECT `value` FROM settings WHERE `name` = ?;", [$setting]);
+
+    return $settingValue['value'] ?? null;
 }

@@ -6,6 +6,7 @@ $getAllowedAPIs = [
     'datafields',
     'cartridgeqccheck',
     'instrumentqccheck',
+    'setting',
 ];
 
 // If we aren't posting to this page, we aren't allowed to see it (except if it's listed above).

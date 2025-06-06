@@ -20,3 +20,6 @@ includes/db-config.php
 
 # Ignore data files
 curves/*
+
+# MacOS
+.DS_Store

@@ -6,6 +6,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.3.0] - ../06/2025
+
+LIMS API updates
+
+### Added
+-   /settings endpoint and functionality to retreive a specific setting's value.
+
 ## [v3.2.2] - 14/05/2025
 
 UI changes related to listing db items and list of known issues.
