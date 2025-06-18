@@ -82,6 +82,18 @@ if (!class_exists('Process')) {
                     case('edit-lot'):
                         $this->editLot();
                         break;
+                    case('delete-simulator-operator'):
+                        $this->deleteSimulatorOperator();
+                        break;
+                    case('delete-simulator-patient'):
+                        $this->deleteSimulatorPatient();
+                        break;
+                    case('add-simulator-operator'):
+                        $this->addSimulatorOperator();
+                        break;
+                    case('add-simulator-patient'):
+                        $this->addSimulatorPatient();
+                        break;
                     default:
                         // Silence. This post has not been accounted for.
                         break;
@@ -150,6 +162,8 @@ if (!class_exists('Process')) {
 
         // Log the user out
         function logout() {
+            global $form;
+
             try {
                 Session::logout();
                 if($operatorId = $this->currentUser['operator_id']) {
@@ -356,7 +370,7 @@ if (!class_exists('Process')) {
                 addLogEntry('events', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
 
                 // Handle exceptions if any
-                echo "An error occurred: " . $err;
+                echo "An error occurred: " . $errorDetails;
                 Session::setNotice("Something went wrong.", 2);
             }
         }
@@ -934,6 +948,8 @@ if (!class_exists('Process')) {
         function updateNetworkSettings() {
             global $cainDB, $session;
 
+            $change = false;
+
             if($session->getUserType() < ADMINISTRATIVE_CLINICIAN) {
                 Session::setNotice("You do not have permission to do this.", 2);
                 addLogEntry('events', "{$this->currentUser['operator_id']} tried updating network settings when they are not permitted.");
@@ -941,15 +957,32 @@ if (!class_exists('Process')) {
             }
 
             // Retrieve form data
-            $protocol = $_POST['protocol'] == 0 ? "Cain" : "HL7";
-            $cainIP = $_POST['cainIP'];
-            $cainPort = $_POST['cainPort'];
-            $hl7IP = $_POST['hl7IP'];
-            $hl7Port = $_POST['hl7Port'];
-            $hl7ServerName = $_POST['hl7ServerName'];
-            $patientId = ($_POST['patientId'] ?? null) == "on" ? 1 : 0;
-            $testMode = $_POST['testMode'] == "on" ? 1 : 0;
-            $appMode = $_POST['appMode'] == "on" ? 1 : 0;
+            $protocol = ($_POST['protocol'] ?? '0') == '0' ? "Cain" : "HL7";
+            $cainIP = $_POST['cainIP'] ?? '';
+            $cainPort = $_POST['cainPort'] ?? '';
+            $hl7IP = $_POST['hl7IP'] ?? '';
+            $hl7Port = $_POST['hl7Port'] ?? '';
+            $hl7ServerName = $_POST['hl7ServerName'] ?? '';
+            $patientId = ($_POST['patientId'] ?? null) === "on" ? 1 : 0;
+            $testMode = ($_POST['testMode'] ?? null) === "on" ? 1 : 0;
+            $appMode = ($_POST['appMode'] ?? null) === "on" ? 1 : 0;
+            $limsSim = ($_POST['limsSim'] ?? null) === "on" ? 1 : 0;
+
+            // If LIMS simulator is on, turn on the lims simulator!
+            if($limsSim) {
+                if(!isLimsSimulatorOn()) {
+                    turnOnLimsSimulator();
+                    $change = true;
+                }
+                $protocol = LIMS_SIMULATOR_PROTOCOL;
+                $cainIP = LIMS_SIMULATOR_IP;
+                $cainPort = LIMS_SIMULATOR_PORT;
+            } else {
+                if(isLimsSimulatorOn()) {
+                    turnOffLimsSimulator();
+                    $change = true;
+                }
+            }
 
             // Prepare and execute the query to update all settings in one go
             try {
@@ -984,7 +1017,7 @@ if (!class_exists('Process')) {
                 $rowCount = $cainDB->query($query, $params);
 
                 // Check if the update was successful
-                if ($rowCount > 0) {
+                if ($rowCount > 0 || $change) {
                     Session::setNotice("Successfully updated settings.");
                     addLogEntry('events', "{$this->currentUser['operator_id']} updated network settings.");
                     return;
@@ -1435,6 +1468,105 @@ if (!class_exists('Process')) {
                 addLogEntry('events', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
             }
         }
+
+        function deleteSimulatorOperator() {
+            global $cainDB;
+
+            $id = $_POST['id'];
+
+            try {
+                $cainDB->query("DELETE FROM simulator_operators WHERE id = ?;", [$id]);
+                Session::setNotice("Successfully removed operator.", 0);
+            } catch(Exception $e) {
+                $errorDetails = [
+                    'error_message' => $e->getMessage(),
+                    'stack_trace' => $e->getTraceAsString(),
+                    'user_id' => $this->currentUser['operator_id'] ?? 'unknown',
+                    'context' => "Edit Lot"
+                ];
+                addLogEntry('events', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+            }
+        }
+
+        function deleteSimulatorPatient() {
+            global $cainDB;
+
+            $id = $_POST['id'];
+
+            try {
+                $cainDB->query("DELETE FROM simulator_patients WHERE id = ?;", [$id]);
+                Session::setNotice("Successfully removed patient.", 0);
+            } catch(Exception $e) {
+                $errorDetails = [
+                    'error_message' => $e->getMessage(),
+                    'stack_trace' => $e->getTraceAsString(),
+                    'user_id' => $this->currentUser['operator_id'] ?? 'unknown',
+                    'context' => "Edit Lot"
+                ];
+                addLogEntry('events', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+            }
+        }
+
+        function addSimulatorOperator() {
+            global $cainDB;
+
+            $operatorId = trim($_POST['operator_id'] ?? '');
+
+            if (!$operatorId) {
+                Session::setNotice("Operator ID is required.", 2);
+                return;
+            }
+
+            try {
+                $cainDB->query("INSERT INTO simulator_operators (operator_id) VALUES (?);", [$operatorId]);
+                Session::setNotice("Successfully added operator.", 0);
+            } catch (Exception $e) {
+                $errorDetails = [
+                    'error_message' => $e->getMessage(),
+                    'stack_trace' => $e->getTraceAsString(),
+                    'user_id' => $this->currentUser['operator_id'] ?? 'unknown',
+                    'context' => "Add Operator"
+                ];
+                addLogEntry('events', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+            }
+        }
+
+        function addSimulatorPatient() {
+            global $cainDB;
+
+            $data = [
+                'patientId'   => $_POST['patientId'] ?? '',
+                'hospitalId'  => $_POST['hospitalId'] ?? '',
+                'nhsNumber'   => $_POST['nhsNumber'] ?? '',
+                'firstName'   => $_POST['firstName'] ?? '',
+                'lastName'    => $_POST['lastName'] ?? '',
+                'dob'         => $_POST['dob'] ?? '',
+                'patientSex'  => $_POST['patientSex'] ?? '',
+            ];
+
+            if (trim($data['patientId']) === '') {
+                Session::setNotice("Patient ID is required.", 2);
+                return;
+            }
+
+            try {
+                $cainDB->query(
+                    "INSERT INTO simulator_patients (patientId, hospitalId, nhsNumber, firstName, lastName, dob, patientSex)
+                    VALUES (?, ?, ?, ?, ?, ?, ?);",
+                    array_values($data)
+                );
+                Session::setNotice("Successfully added patient.", 0);
+            } catch (Exception $e) {
+                $errorDetails = [
+                    'error_message' => $e->getMessage(),
+                    'stack_trace' => $e->getTraceAsString(),
+                    'user_id' => $this->currentUser['operator_id'] ?? 'unknown',
+                    'context' => "Add Patient"
+                ];
+                addLogEntry('events', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+            }
+        }
+
     }
 }
 

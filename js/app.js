@@ -111,21 +111,74 @@ loadingBtns.forEach((btn) => {
 });
 
 // In the settings menu, choose whether to show LIMS options
-var protocolDropdown = document.getElementById("protocol");
-var hl7Section = document.getElementById("hl7Options");
-var cainSection = document.getElementById("cainOptions");
+const protocolDropdown = document.getElementById("protocol");
+const hl7Section = document.getElementById("hl7Options");
+const cainSection = document.getElementById("cainOptions");
+const limsSimToggle = document.getElementById("limsSim");
 
-if(protocolDropdown && hl7Section && cainSection) {
-    protocolDropdown.addEventListener('change', () => {
-        if(protocolDropdown.value == 1) {
-            // If the selected protocol is HL7, no need to show or require the LIMS settings
-            hl7Section.classList.add("active");
-            cainSection.classList.remove("active");
-        } else {
-            hl7Section.classList.remove("active");
-            cainSection.classList.add("active");
-        }
-    });
+const cainIPField = document.getElementById("cainIP");
+const cainPortField = document.getElementById("cainPort");
+
+function handleProtocolChange() {
+    if (protocolDropdown.value == 1) {
+        hl7Section.classList.add("active");
+        cainSection.classList.remove("active");
+    } else {
+        hl7Section.classList.remove("active");
+        cainSection.classList.add("active");
+    }
+}
+
+function handleLimsSimToggle() {
+    const enabled = limsSimToggle.checked;
+
+    if (enabled) {
+        // Set to simulator values
+        cainIPField.value = limsSimulatorSettings.ip;
+        cainPortField.value = limsSimulatorSettings.port;
+
+        // Force protocol to Proprietary and disable it
+        protocolDropdown.value = 0;
+        protocolDropdown.disabled = true;
+        handleProtocolChange();
+
+        // Disable Cain IP/Port inputs
+        cainIPField.disabled = true;
+        cainPortField.disabled = true;
+
+        cainIPField.classList.add("cursor-not-allowed");
+        cainPortField.classList.add("cursor-not-allowed");
+        cainIPField.parentElement.classList.add("disabled");
+        cainPortField.parentElement.classList.add("disabled");
+    } else {
+        // Restore original values from backup
+        cainIPField.value = backupSettings.ip;
+        cainPortField.value = backupSettings.port;
+
+        // Enable protocol selection
+        protocolDropdown.disabled = false;
+        handleProtocolChange();
+
+        // Enable Cain IP/Port inputs
+        cainIPField.disabled = false;
+        cainPortField.disabled = false;
+
+        cainIPField.classList.remove("cursor-not-allowed");
+        cainPortField.classList.remove("cursor-not-allowed");
+        cainIPField.parentElement.classList.remove("disabled");
+        cainPortField.parentElement.classList.remove("disabled");
+    }
+}
+
+if (protocolDropdown && hl7Section && cainSection) {
+    protocolDropdown.addEventListener("change", handleProtocolChange);
+}
+
+if (limsSimToggle) {
+    limsSimToggle.addEventListener("change", handleLimsSimToggle);
+
+    // Run on page load to ensure correct state
+    handleLimsSimToggle();
 }
 
 // We need to be able to pop open test resuults and display all the results details

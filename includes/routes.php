@@ -113,6 +113,16 @@ $settingsRoutes = [
     '/settings/logs' => new PageRoute('views/settings/logs.php', 'Logs', false, ADMINISTRATIVE_CLINICIAN),
 ];
 
+// Conditionally include LIMS Simulator route
+if (isLimsSimulatorOn()) {
+    $settingsRoutes['/settings/lims-simulator'] = new PageRoute(
+        'views/settings/lims-simulator.php',
+        'LIMS Simulator',
+        false,
+        ADMINISTRATIVE_CLINICIAN
+    );
+}
+
 // Add settings routes to general routes to combine logic
 $routes += $settingsRoutes;
 

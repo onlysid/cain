@@ -1,7 +1,7 @@
 <?php // Send information about an instrument (Assay Module).
 
 /*
-Get tabletId, tableData => {frontPanelId, status, progress, timeRemaining, faultCode, versionNumber} for each instrument
+Get tabletId, tableData => {frontPanelId, status, progress, timeRemaining, faultCode, versionNumber, moduleName} for each instrument
 Codes:
     Status:
     - 0: Unknown

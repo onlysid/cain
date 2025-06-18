@@ -8,10 +8,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [v3.3.0] - ../06/2025
 
-LIMS API updates
+LIMS updates and UI adjustments.
 
 ### Added
 -   /settings endpoint and functionality to retreive a specific setting's value.
+-   DMS Ethernet IP addr to the network settings.
+-   LIMS middleware app version to the versions page.
+-   LIMS simulator toggle to automatically adjust network settings for LIMS simulation.
+-   LIMS simulator tab in settings area which allows admins to view logs for LIMS simulation.
+-   Ability to clear LIMS simulator logs.
+-   LIMS simulator database and methods to create, read and delete said data.
+
+### Changed
+-   Assay modules now use the module's friendly name where possible.
 
 ## [v3.2.2] - 14/05/2025
 

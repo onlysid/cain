@@ -844,6 +844,54 @@ function runUpdates($version, $dbVersion, $retry = true) {
             executeQueries($cainDB, $updates);
         }
 
+        if(compareVersions($dbVersion, "3.3.0")) {
+            // Add a moduleName field to capture an instrument's friendly name (or null if it does not exist)
+            $moduleNameColExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+            WHERE table_schema = '" . DB_NAME . "'
+            AND table_name = 'instruments'
+            AND column_name = 'module_name';");
+            if(empty($moduleNameColExists) || $moduleNameColExists['cnt'] == 0) {
+                $cainDB->query("ALTER TABLE instruments ADD module_name varchar(256) DEFAULT NULL;");
+            }
+
+            // Add backup settings for LIMS simulator support
+            $backupSettingNames = [
+                'cain_server_ip_backup',
+                'cain_server_port_backup',
+                'selected_protocol_backup'
+            ];
+
+            foreach ($backupSettingNames as $backupName) {
+                $rowExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM settings WHERE `name` = ?;", [$backupName]);
+                if (empty($rowExists) || $rowExists['cnt'] == 0) {
+                    $cainDB->query("INSERT INTO settings (`name`, `value`) VALUES (?, 0);", [$backupName]);
+                }
+            }
+
+            // Add simulator tables
+            if (!$cainDB->select("SHOW TABLES LIKE 'simulator_operators';")) {
+                $updates["CREATE TABLE simulator_operators (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    operator_id VARCHAR(50) NOT NULL
+                );"] = [];
+            }
+
+            if (!$cainDB->select("SHOW TABLES LIKE 'simulator_patients';")) {
+                $updates["CREATE TABLE simulator_patients (
+                    id INT PRIMARY KEY AUTO_INCREMENT,
+                    patientId VARCHAR(50),
+                    hospitalId VARCHAR(50),
+                    nhsNumber VARCHAR(50),
+                    firstName VARCHAR(50),
+                    lastName VARCHAR(50),
+                    dob VARCHAR(50),
+                    patientSex VARCHAR(5)
+                );"] = [];
+            }
+            
+            executeQueries($cainDB, $updates);
+        }
+
         // =================== Version 100.0.0 Updates (Test) ===================
         if (compareVersions($dbVersion, "100.0.0")) {
             sleep(2);

@@ -284,6 +284,7 @@ function updateInstruments($tabletData) {
 
             // We know all the new data for instruments connected to the tablet (tabletData). Loop through them and update the ones still connected.
             $instrumentData['module_version'] = $tabletData['moduleVersion'] ?? null;
+            $instrumentData['module_name'] = $tabletData['moduleName'] ?? null;
             $instrumentData['front_panel_id'] = $tabletData['frontPanelId'] ?? null;
             $instrumentData['status'] = $tabletData['moduleStatus'] ?? null;
             $instrumentData['current_assay'] = $tabletData['runningAssay'] ?? null;
@@ -1782,4 +1783,104 @@ function patchSetting($settingArr) {
     }
 
     return $updateSetting;
+}
+
+// Set the DMS LIMS settings to point to the LIMS simulator and store old details elsewhere
+function turnOnLimsSimulator() {
+    global $cainDB;
+
+    // Store relevant fields from DB (only happens if these values aren't already set to LIMS constants)
+    $cainDB->query("
+        UPDATE settings AS s_backup
+        JOIN settings AS s_original
+        ON s_backup.name = CONCAT(s_original.name, '_backup')
+        SET s_backup.value = s_original.value
+        WHERE s_original.name IN ('cain_server_ip', 'cain_server_port', 'selected_protocol')
+        AND (
+            (s_original.name = 'cain_server_ip' AND s_original.value != ?)
+            OR (s_original.name = 'cain_server_port' AND s_original.value != ?)
+        );
+    ", [LIMS_SIMULATOR_IP, LIMS_SIMULATOR_PORT]);
+
+    // Set relevant fields to LIMS values
+    $cainDB->query("
+        UPDATE settings
+        SET value = CASE name
+            WHEN 'cain_server_ip' THEN ?
+            WHEN 'cain_server_port' THEN ?
+            WHEN 'selected_protocol' THEN ?
+            ELSE value
+        END
+        WHERE name IN ('cain_server_ip', 'cain_server_port', 'selected_protocol');
+    ", [LIMS_SIMULATOR_IP, LIMS_SIMULATOR_PORT, LIMS_SIMULATOR_PROTOCOL]);
+}
+
+// Set the DMS to point to the original values
+function turnOffLimsSimulator() {
+    global $cainDB;
+
+    // Restore original values from *_backup rows
+    $cainDB->query("
+        UPDATE settings AS s_original
+        JOIN settings AS s_backup
+          ON s_backup.name = CONCAT(s_original.name, '_backup')
+        SET s_original.value = s_backup.value
+        WHERE s_original.name IN ('cain_server_ip', 'cain_server_port', 'selected_protocol');
+    ");
+}
+
+// Check to see if LIMS simulator is on
+function isLimsSimulatorOn(): bool {
+    global $cainDB;
+
+    $result = $cainDB->select("
+        SELECT `value` FROM settings
+        WHERE `name` = 'cain_server_ip'
+        LIMIT 1;
+    ");
+
+    return !empty($result) && $result['value'] === LIMS_SIMULATOR_IP;
+}
+
+// Move simulator data from sumulator db to txt file
+function exportSimulatorDataToCSV() {
+    global $cainDB;
+
+    $outputFile = __DIR__ . '/../simdata/siminput.txt';
+    $lines = [];
+
+    // Export simulator_operators
+    $operators = $cainDB->selectAll("SELECT operator_id FROM simulator_operators");
+    if($operators) {
+        foreach ($operators as $row) {
+            $lines[] = '1,' . $row['operator_id'] . ',';
+        }
+    }
+
+    // Export simulator_patients
+    $patients = $cainDB->selectAll("SELECT patientId, hospitalId, nhsNumber, firstName, lastName, dob, patientSex FROM simulator_patients");
+
+    if($patients) {
+        foreach ($patients as $row) {
+            // Calculate age if dob is valid
+            $age = '';
+            if (!empty($row['dob']) && strtotime($row['dob'])) {
+                $dob = new DateTime($row['dob']);
+                $now = new DateTime();
+                $age = $dob->diff($now)->y;
+            }
+    
+            $lines[] = '2,' .
+                $row['patientId'] . ',' .
+                $row['hospitalId'] . ',' .
+                $row['nhsNumber'] . ',' .
+                $row['firstName'] . ',' .
+                $row['lastName'] . ',' .
+                $row['dob'] . ',' .
+                $row['patientSex'] . ',' .
+                $age . ',';
+        }
+    }
+
+    file_put_contents($outputFile, implode(PHP_EOL, $lines) . PHP_EOL);
 }

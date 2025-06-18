@@ -1,0 +1,12 @@
+{
+  "moduleSerialNumber": "89674523",
+  "moduleVersion": "0.6.0",
+  "frontPanelId": "8",
+  "moduleStatus": 2,
+  "moduleName": "Module McModule Face",
+  "runningAssay": "SARS CoV-2",
+  "assayStartTime": 20240806104023,
+  "assayDuration": 28,
+  "deviceError": "User opened lid",
+  "tabletVersion": "0.0.9"
+}

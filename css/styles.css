@@ -220,6 +220,10 @@ a.ignore-default {
     @apply bg-gradient-to-r from-[#0a3118] to-green-700 hover:text-white shadow-md shadow-black/40 transition-all duration-500 hover:opacity-80 hover:scale-95 hover:shadow-lg hover:shadow-black/60;
 }
 
+.truncate-text {
+    @apply inline-block max-w-96 text-nowrap overflow-hidden overflow-ellipsis align-bottom;
+}
+
 #menu .btn {
     @apply justify-start;
 }
@@ -267,6 +271,18 @@ a.ignore-default {
 }
 
 /* Table Styles */
+table.no-shadow {
+    tr {
+        @apply !shadow-none;
+    }
+}
+
+table.reduced-padding {
+    td, th {
+        @apply !p-3.5;
+    }
+}
+
 table {
     @apply w-full text-left rtl:text-right border-separate border-spacing-y-1 border-spacing-x-0 table;
 }

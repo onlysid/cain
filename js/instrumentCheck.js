@@ -187,7 +187,7 @@ function updateTable(data, expired) {
             }
 
             row.innerHTML = `
-                <td>${item.serial_number}</td>
+                <td>${item.module_name ?? item.serial_number}</td>
                 <td>${item.front_panel_id}</td>
                 <td>${lost ? "" :getProcessText(item.status, timeRemaining, item.fault_condition)}</td>
                 <td class="end">
@@ -240,7 +240,7 @@ function updateTable(data, expired) {
                     </div>
                 </div>
                 <div class="instrument-modal-header">
-                    <h2>Serial: ${item.serial_number}</h2>
+                    <h2 class="truncate-text">${item.module_name ?? item.serial_number}</h2>
                     |
                     ${item.locked ? `
                         <div class="tooltip" title="Locked">
@@ -260,8 +260,10 @@ function updateTable(data, expired) {
                 </div>
                 <div class="divider"></div>
                 ${item.front_panel_id !== null ? `<p><span class="font-black">Module ID:</span> ${item.front_panel_id}</p>` : ''}
+                ${item.module_name !== null ? `<p><span class="font-black">Module Name:</span> ${item.module_name ?? '-'}</p>` : ''}
+                ${item.serial_number !== null ? `<p><span class="font-black">Serial Number:</span> ${item.serial_number}</p>` : ''}
                 ${item.status !== null ? `<p><span class="font-black">Status:</span> ${getProcessText(item.status, timeRemaining, item.fault_condition)}</p>` : ''}
-                ${item.current_assay !== null ? `<p><span class="font-black">Current Assay:</span> ${item.current_assay}</p>` : 'No Assay Running'}
+                ${item.current_assay !== null ? `<p><span class="font-black">Current Assay:</span> ${item.current_assay ?? 'No assay running'}</p>` : ''}
                 ${item.device_error !== null ? `<p><span class="font-black">Error:</span> ${item.device_error}</p>` : ''}
                 ${item.last_connected !== null && item.last_connected !== 0 ? `<p><span class="font-black">Last Connected:</span> ${(new Date(item.last_connected * 1000).toLocaleString('en-GB'))}</p>` : ''}
                 <div class="divider"></div>

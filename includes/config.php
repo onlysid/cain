@@ -35,3 +35,12 @@ define("LIMS_TIMEOUT", 25);
 
 // Some constants
 define("MAX_RESULTS", 100000);
+
+
+/*
+LIMS Simulator constants 
+ */
+
+ define("LIMS_SIMULATOR_IP", '127.0.0.1');
+ define("LIMS_SIMULATOR_PORT", '12000');
+ define("LIMS_SIMULATOR_PROTOCOL", 'Cain');

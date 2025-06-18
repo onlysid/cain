@@ -4,7 +4,27 @@
 $networkInfoKeys = ['selected_protocol', 'cain_server_ip', 'cain_server_port', 'hl7_server_ip', 'hl7_server_port', 'hl7_server_dest', 'patient_id', 'test_mode', 'app_mode'];
 $networkInfo = array_intersect_key($settings, array_flip($networkInfoKeys));
 $macAddress = exec('ifconfig | grep -o -E \'([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}\'');
+
+// Get IP address of eth0
+$eth0IP = ($ip = trim(shell_exec("ip -4 addr show eth0 | grep -oP '(?<=inet\\s)\\d+(\\.\\d+){3}'"))) !== '' ? $ip : null;
+
+// Determine if LIMS simulator is on
+$limsOn = isLimsSimulatorOn();
 ?>
+
+<script>
+const limsSimulatorSettings = {
+    ip: <?= json_encode(LIMS_SIMULATOR_IP); ?>,
+    port: <?= json_encode(LIMS_SIMULATOR_PORT); ?>,
+    protocol: 0
+};
+
+const backupSettings = {
+    ip: <?= !$limsOn ? json_encode($settings['cain_server_ip']) : json_encode($settings['cain_server_ip_backup'] ?? ''); ?>,
+    port: <?= !$limsOn ? json_encode($settings['cain_server_port']) : json_encode($settings['cain_server_port_backup'] ?? ''); ?>,
+    protocol: <?= json_encode($settings['selected_protocol_backup'] == 'Cain' ? '1' : '0'); ?>
+};
+</script>
 
 <section class="notice">
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
@@ -36,9 +56,15 @@ $macAddress = exec('ifconfig | grep -o -E \'([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{
         </div>
         <div class="form-fields">
             <div class="field">
-                <label for="dmsIp">DMS IP Address/Hostname</label>
+                <label for="dmsIp">DMS IP/Hostname</label>
                 <div class="input-wrapper disabled">
                     <input disabled required class="cursor-not-allowed" id="dmsIp" type="text" name="dmsIp" value="<?= gethostbyname($_SERVER['SERVER_NAME']);?>">
+                </div>
+            </div>
+            <div class="field">
+                <label for="dmsEthIp">DMS Ethernet IP</label>
+                <div class="input-wrapper disabled">
+                    <input disabled required class="cursor-not-allowed" id="dmsEthIp" type="text" name="dmsEthIp" value="<?= $eth0IP ?? "Not found.";?>">
                 </div>
             </div>
             <div class="field">
@@ -50,7 +76,7 @@ $macAddress = exec('ifconfig | grep -o -E \'([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{
         </div>
     </div>
     <div class="form-fields">
-        <label for="appMode" class="field !flex-row toggle-field !px-6 py-2 rounded-full bg-white shadow-md">
+        <label for="appMode" class="field !flex-row toggle-field !shrink !px-6 py-2 rounded-full bg-white shadow-md">
             <div class="flex flex-col w-full">
                 <div class="shrink">Enable LIMS</div>
                 <div class="description !text-xs text-grey mr-4">Turn LIMS internal application on/off.</div>
@@ -58,6 +84,16 @@ $macAddress = exec('ifconfig | grep -o -E \'([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{
             <div class="checkbox-wrapper">
                 <input class="tgl" name="appMode" id="appMode" type="checkbox" <?= $networkInfo['app_mode'] ? "checked" : "";?>>
                 <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="appMode"><span></span></label>
+            </div>
+        </label>
+        <label for="limsSim" class="field !flex-row toggle-field !shrink !px-6 py-2 rounded-full bg-white shadow-md">
+            <div class="flex flex-col w-full">
+                <div class="shrink">LIMS Simulator</div>
+                <div class="description !text-xs text-grey mr-4">Turn on LIMS simulator.</div>
+            </div>
+            <div class="checkbox-wrapper">
+                <input class="tgl" name="limsSim" id="limsSim" type="checkbox" <?= $limsOn ? "checked" : "";?>>
+                <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="limsSim"><span></span></label>
             </div>
         </label>
     </div>
@@ -83,20 +119,8 @@ $macAddress = exec('ifconfig | grep -o -E \'([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{
                 </div>
             </div>
         </div>
-        <div class="form-fields">
-            <label for="patientId" class="field !flex-row toggle-field !px-6 py-2 rounded-full bg-white shadow-md">
-                <div class="flex flex-col w-full">
-                    <div class="shrink">Positive Patient ID</div>
-                    <div class="description !text-xs text-grey mr-4">Are we able to download patient data from LIMS?</div>
-                </div>
-                <div class="checkbox-wrapper">
-                    <input class="tgl" name="patientId" id="patientId" type="checkbox" <?= $networkInfo['patient_id'] ? "checked" : "";?>>
-                    <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="patientId"><span></span></label>
-                </div>
-            </label>
-        </div>
     </div>
-    <div id="cainOptions" class="form-fields <?= $networkInfo['selected_protocol'] == "Cain" ? "active" : "";?>">
+    <div id="cainOptions" class="form-fields mb-4 -mt-4 <?= $networkInfo['selected_protocol'] == "Cain" ? "active" : "";?>">
         <div class="form-fields">
             <div class="field">
                 <label for="cainIP">IP Address</label>
@@ -111,18 +135,18 @@ $macAddress = exec('ifconfig | grep -o -E \'([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{
                 </div>
             </div>
         </div>
-        <div class="form-fields">
-            <label for="patientId" class="field !flex-row toggle-field !px-6 py-2 rounded-full bg-white shadow-md">
-                <div class="flex flex-col w-full">
-                    <div class="shrink">Positive Patient ID</div>
-                    <div class="description !text-xs text-grey mr-4">Are we able to download patient data from LIMS?</div>
-                </div>
-                <div class="checkbox-wrapper">
-                    <input class="tgl" name="patientId" id="patientId" type="checkbox" <?= $networkInfo['patient_id'] ? "checked" : "";?>>
-                    <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="patientId"><span></span></label>
-                </div>
-            </label>
-        </div>
+    </div>
+    <div class="form-fields -mt-4">
+        <label for="patientId" class="field !flex-row toggle-field !px-6 py-2 rounded-full bg-white shadow-md">
+            <div class="flex flex-col w-full">
+                <div class="shrink">Positive Patient ID</div>
+                <div class="description !text-xs text-grey mr-4">Are we able to download patient data from LIMS?</div>
+            </div>
+            <div class="checkbox-wrapper">
+                <input class="tgl" name="patientId" id="patientId" type="checkbox" <?= $networkInfo['patient_id'] ? "checked" : "";?>>
+                <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="patientId"><span></span></label>
+            </div>
+        </label>
     </div>
     <button class="btn smaller-btn trigger-loading" type="submit">Save Settings</button>
 </form>
