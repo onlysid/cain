@@ -885,7 +885,8 @@ function runUpdates($version, $dbVersion, $retry = true) {
                     firstName VARCHAR(50),
                     lastName VARCHAR(50),
                     dob VARCHAR(50),
-                    patientSex VARCHAR(5)
+                    patientSex VARCHAR(5),
+                    patientAge VARCHAR(5)
                 );"] = [];
             }
             

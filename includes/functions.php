@@ -1858,18 +1858,10 @@ function exportSimulatorDataToCSV() {
     }
 
     // Export simulator_patients
-    $patients = $cainDB->selectAll("SELECT patientId, hospitalId, nhsNumber, firstName, lastName, dob, patientSex FROM simulator_patients");
+    $patients = $cainDB->selectAll("SELECT patientId, hospitalId, nhsNumber, firstName, lastName, dob, patientSex, patientAge FROM simulator_patients");
 
     if($patients) {
         foreach ($patients as $row) {
-            // Calculate age if dob is valid
-            $age = '';
-            if (!empty($row['dob']) && strtotime($row['dob'])) {
-                $dob = new DateTime($row['dob']);
-                $now = new DateTime();
-                $age = $dob->diff($now)->y;
-            }
-    
             $lines[] = '2,' .
                 $row['patientId'] . ',' .
                 $row['hospitalId'] . ',' .
@@ -1878,7 +1870,7 @@ function exportSimulatorDataToCSV() {
                 $row['lastName'] . ',' .
                 $row['dob'] . ',' .
                 $row['patientSex'] . ',' .
-                $age . ',';
+                $row['patientAge'] . ',';
         }
     }
 

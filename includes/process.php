@@ -1542,6 +1542,7 @@ if (!class_exists('Process')) {
                 'lastName'    => $_POST['lastName'] ?? '',
                 'dob'         => $_POST['dob'] ?? '',
                 'patientSex'  => $_POST['patientSex'] ?? '',
+                'patientAge'  => $_POST['patientAge'] ?? '',
             ];
 
             if (trim($data['patientId']) === '') {
@@ -1551,8 +1552,8 @@ if (!class_exists('Process')) {
 
             try {
                 $cainDB->query(
-                    "INSERT INTO simulator_patients (patientId, hospitalId, nhsNumber, firstName, lastName, dob, patientSex)
-                    VALUES (?, ?, ?, ?, ?, ?, ?);",
+                    "INSERT INTO simulator_patients (patientId, hospitalId, nhsNumber, firstName, lastName, dob, patientSex, patientAge)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?);",
                     array_values($data)
                 );
                 Session::setNotice("Successfully added patient.", 0);

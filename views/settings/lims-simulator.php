@@ -70,6 +70,7 @@ if($dataUpdate) : ?>
                 <th>Last Name</th>
                 <th>DOB</th>
                 <th>Sex</th>
+                <th>Age</th>
                 <th></th>
             </thead>
             <tbody>
@@ -82,6 +83,7 @@ if($dataUpdate) : ?>
                         <td><?= $patient['lastName'];?></td>
                         <td><?= $patient['dob'];?></td>
                         <td><?= $patient['patientSex'];?></td>
+                        <td><?= $patient['patientAge'];?></td>
                         <td class="text-end">
                             <form method="POST" action="/process" class="items-end">
                                 <input type="hidden" name="id" value="<?= $patient['id']; ?>">
@@ -107,6 +109,7 @@ if($dataUpdate) : ?>
                         <td><input name="lastName" placeholder="Last" class="input w-full rounded-lg p-1.5"></td>
                         <td><input name="dob" placeholder="DOB" class="input w-full rounded-lg p-1.5"></td>
                         <td><input name="patientSex" placeholder="Sex" class="input w-full rounded-lg p-1.5"></td>
+                        <td><input name="patientAge" placeholder="Age" class="input w-full rounded-lg p-1.5"></td>
                         <td class="text-end">
                             <button type="submit" class="w-4 align-middle tooltip" title="Add new operator">
                                 <svg class="fill-green-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
