@@ -23,5 +23,3 @@ curves/*
 
 # MacOS
 .DS_Store
-
-/simdata/*.txt
