@@ -19,3 +19,8 @@ If something isn't working as it seems, please follow these steps:
 1. Check the logs (found within the settings page when using an admin clinician account). If any logs are found, back them up and send the files to a service engineer for inspection.
 2. Attempt a database repair (option found within the settings page under the versions tab when using an admin clinician account).
 3. Contact DRW/Cain Medical for further support.
+
+If /login does not work but /index.php does (albeit with an error), you probably need to AllowOverride All in the vhost in sites-available and enable a2enmod. An apache restart will then fix things!
+
+## TODO:
+- Make simdata files untracked and auto-generate when they're first needed.

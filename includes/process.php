@@ -982,6 +982,11 @@ if (!class_exists('Process')) {
                     turnOffLimsSimulator();
                     $change = true;
                 }
+
+                // We should check if the details they have entered represent the simulator settings and warn the user if they have set them unknowingly
+                if($cainIP == LIMS_SIMULATOR_IP && $cainPort == LIMS_SIMULATOR_PORT && $protocol == LIMS_SIMULATOR_PROTOCOL) {
+                    Session::setNotice("LIMS simulator information entered. Enabled LIMS simulator.", 1);
+                }
             }
 
             // Prepare and execute the query to update all settings in one go

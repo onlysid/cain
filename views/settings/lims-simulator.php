@@ -135,7 +135,11 @@ if($dataUpdate) : ?>
         $lines = file($logFile, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
         $lastLines = array_slice($lines, -$numLines);
         $logData = array_reverse($lastLines);
-    }?>
+    } else {
+        file_put_contents($logFile, implode(PHP_EOL, []) . PHP_EOL);
+    }
+    
+    ?>
 
     <section class="notice">
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">

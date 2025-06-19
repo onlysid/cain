@@ -20,6 +20,8 @@ if($currentUser['user_type'] == ADMINISTRATIVE_CLINICIAN) {
 } elseif($currentUser['user_type'] == SERVICE_ENGINEER) {
     $userTypeTitle = "Service Engineer";
 }
+
+$limsSim = isLimsSimulatorOn();
 ?>
 
 <div id="footerWrapper">
@@ -69,7 +71,7 @@ if($currentUser['user_type'] == ADMINISTRATIVE_CLINICIAN) {
 
         <div class="md:flex items-center gap-4 hidden">
             <div class="bg-primary rounded-xl flex justify-center items-center gap-4 py-3 pl-6 pr-8">
-                <p class="text-lg">LIMS:</p>
+                <p class="text-lg text-nowrap">LIMS<?= $limsSim ? ' (Simulator)' : '';?>:</p>
                 <div id="limsStatus">
                     <div class="icon animated-icon"></div>
                     <div class="icon tooltip tooltip-alt" title="Connected"></div>

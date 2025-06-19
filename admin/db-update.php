@@ -242,7 +242,7 @@ function runUpdates($version, $dbVersion, $retry = true) {
                         WHERE table_schema = '" . DB_NAME . "'
                         AND table_name = 'results'
                         AND column_name = '$col';");
-                    if ($exists['cnt'] == 0) {
+                    if (empty($exists) || $exists['cnt'] == 0) {
                         $resultsAlter[$sql] = [];
                     }
                 }
@@ -417,7 +417,7 @@ function runUpdates($version, $dbVersion, $retry = true) {
                 $name = $entry[0];
                 $value = $entry[1];
                 $exists = $cainDB->select("SELECT COUNT(*) AS count FROM settings WHERE name = ?;", [$name]);
-                if ($exists['count'] == 0) {
+                if (empty($exists) || $exists['count'] == 0) {
                     $settingsQueries["INSERT INTO settings (name, value) VALUES ('$name', '$value');"] = [];
                 }
             }
@@ -559,7 +559,7 @@ function runUpdates($version, $dbVersion, $retry = true) {
                 $updates["ALTER TABLE lots ADD COLUMN reference TEXT;"] = [];
             }
             $defaultIdExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM settings WHERE name = 'default_id';");
-            if ($defaultIdExists['cnt'] == 0) {
+            if (empty($defaultIdExists) || $defaultIdExists['cnt'] == 0) {
                 $updates["INSERT INTO settings (name, value) VALUES ('default_id', 'patientId');"] = [];
             }
             executeQueries($cainDB, $updates);
@@ -770,7 +770,7 @@ function runUpdates($version, $dbVersion, $retry = true) {
             // Add a ct flag to the database
             $updates = [];
             $defaultIdExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM settings WHERE name = 'visible_ct';");
-            if ($defaultIdExists['cnt'] == 0) {
+            if (empty($defaultIdExists) || $defaultIdExists['cnt'] == 0) {
                 $updates["INSERT INTO settings (name, value) VALUES ('visible_ct', '0');"] = [];
             }
             executeQueries($cainDB, $updates);
@@ -836,7 +836,7 @@ function runUpdates($version, $dbVersion, $retry = true) {
 
             // Add a verbose logging option to the settings table
             $verboseLogging = $cainDB->select("SELECT COUNT(*) AS cnt FROM settings WHERE name = 'verbose_logging';");
-            if ($verboseLogging['cnt'] == 0) {
+            if (empty($verboseLogging) || $verboseLogging['cnt'] == 0) {
                 $updates["INSERT INTO settings (name, value) VALUES ('verbose_logging', '0');"] = [];
             }
 

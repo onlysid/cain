@@ -1874,5 +1874,12 @@ function exportSimulatorDataToCSV() {
         }
     }
 
-    file_put_contents($outputFile, implode(PHP_EOL, $lines) . PHP_EOL);
+    // TODO: CHECK: This should create the file if it does not exist
+    try {
+        file_put_contents($outputFile, implode(PHP_EOL, $lines) . PHP_EOL);
+    } catch(Exception $e) {
+        // Most failures are permissions issues. Make sure to log as such.
+        $err = $e->getMessage();
+        addLogEntry('system', "Error in writing to the simulator datafile. $err");
+    }
 }

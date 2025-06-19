@@ -152,8 +152,8 @@ function handleLimsSimToggle() {
         cainPortField.parentElement.classList.add("disabled");
     } else {
         // Restore original values from backup
-        cainIPField.value = backupSettings.ip;
-        cainPortField.value = backupSettings.port;
+        cainIPField.value = backupSettings.ip ? backupSettings.ip : limsSimulatorSettings.ip;
+        cainPortField.value = backupSettings.port ? backupSettings.port : limsSimulatorSettings.port;
 
         // Enable protocol selection
         protocolDropdown.disabled = false;
