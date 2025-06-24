@@ -6,7 +6,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
-## [v3.3.0] - ../06/2025
+## [v3.3.0] - 18/06/2025
 
 LIMS updates and UI adjustments.
 
@@ -18,6 +18,7 @@ LIMS updates and UI adjustments.
 -   LIMS simulator tab in settings area which allows admins to view logs for LIMS simulation.
 -   Ability to clear LIMS simulator logs.
 -   LIMS simulator database and methods to create, read and delete said data.
+-   Example htaccess file in case it needs to be rebuilt.
 
 ### Changed
 -   Assay modules now use the module's friendly name where possible.

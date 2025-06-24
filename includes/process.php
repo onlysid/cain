@@ -348,8 +348,6 @@ if (!class_exists('Process')) {
                 // Execute the query
                 $rowCount = $cainDB->query($query, $params);
 
-                var_dump($rowCount);
-
                 // Check if the update was successful
                 if ($rowCount > 0) {
                     Session::setNotice("Successfully updated settings.");
