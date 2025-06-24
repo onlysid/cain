@@ -1799,6 +1799,7 @@ function turnOnLimsSimulator() {
         AND (
             (s_original.name = 'cain_server_ip' AND s_original.value != ?)
             OR (s_original.name = 'cain_server_port' AND s_original.value != ?)
+            OR (s_original.name = 'selected_protocol')
         );
     ", [LIMS_SIMULATOR_IP, LIMS_SIMULATOR_PORT]);
 
@@ -1819,15 +1820,22 @@ function turnOnLimsSimulator() {
 function turnOffLimsSimulator() {
     global $cainDB;
 
-    // Restore original values from *_backup rows
+    // Restore original values from *_backup rows, falling back to sensible defaults if empty
     $cainDB->query("
         UPDATE settings AS s_original
         JOIN settings AS s_backup
           ON s_backup.name = CONCAT(s_original.name, '_backup')
-        SET s_original.value = s_backup.value
+        SET s_original.value = 
+            CASE s_original.name
+                WHEN 'cain_server_ip' THEN IFNULL(NULLIF(s_backup.value, ''), '192.168.0.1')
+                WHEN 'cain_server_port' THEN IFNULL(NULLIF(s_backup.value, ''), '15000')
+                WHEN 'selected_protocol' THEN IFNULL(NULLIF(s_backup.value, ''), 'Cain')
+                ELSE s_original.value
+            END
         WHERE s_original.name IN ('cain_server_ip', 'cain_server_port', 'selected_protocol');
     ");
 }
+
 
 // Check to see if LIMS simulator is on
 function isLimsSimulatorOn(): bool {

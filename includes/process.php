@@ -982,8 +982,17 @@ if (!class_exists('Process')) {
                 }
 
                 // We should check if the details they have entered represent the simulator settings and warn the user if they have set them unknowingly
-                if($cainIP == LIMS_SIMULATOR_IP && $cainPort == LIMS_SIMULATOR_PORT && $protocol == LIMS_SIMULATOR_PROTOCOL) {
-                    Session::setNotice("LIMS simulator information entered. Enabled LIMS simulator.", 1);
+                if(($cainIP == LIMS_SIMULATOR_IP || $cainIP == 'localhost') && $cainPort == LIMS_SIMULATOR_PORT && $protocol == LIMS_SIMULATOR_PROTOCOL) {
+                    $serviceEngineer = (int)$this->currentUser['user_type'] >= SERVICE_ENGINEER;
+                    if($serviceEngineer) {
+                        Session::setNotice("LIMS simulator information entered. Enabled LIMS simulator.", 1);
+                    } else {
+                        Session::setNotice("Only service engineers can set up the LIMS simulator.", 2);
+                        addLogEntry('system', "{$this->currentUser['operator_id']} tried to activate the LIMS simulator.");
+
+                        // Prevent any further changes from taking place
+                        return;
+                    }
                 }
             }
 
