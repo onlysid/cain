@@ -30,7 +30,7 @@ function getInstrumentDetails() {
                 const sortParam = urlParams.get('sp');
                 const sortDirection = urlParams.get('sd');
                 const searchParam = urlParams.get('s');
-                const expired = urlParams.get('expired');
+                const expired = urlParams.get('expired') ? true : false;
 
                 // Sort the instruments
                 sortInstruments(data, sortParam, sortDirection);
@@ -93,12 +93,12 @@ function updateTable(data, expired) {
     const tableBody = document.getElementById("instrumentsTableBody");
     const tableHead = table.querySelector("thead");
     const modalWrapper = document.getElementById("instrumentModalWrapper");
+    const existingInstrumentIds = new Set();
 
     // How long until we want to assume the instruments are lost? (5 minutes)
-    const instrumentTimeout = 600;
+    const instrumentTimeout = 300;
 
     const showHiddenInstruments = expired;
-    console.log(showHiddenInstruments);
 
     tableBody.innerHTML = ""; // Clear existing rows
     var legitInstruments = 0;
@@ -108,7 +108,8 @@ function updateTable(data, expired) {
         var date = new Date();
 
         // Get current unix timestamp
-        var now = Math.floor(date / 1000) - (date.getTimezoneOffset() * 60);
+        // var now = Math.floor(date / 1000) - (date.getTimezoneOffset() * 60); // We don't actually need a timezone offset as it's comparing like for like
+        var now = Math.floor(date/1000);
 
         // Get time remaining
         var timeRemaining = Math.floor(((item.assay_start_time + item.duration) - now) / 60);
@@ -152,7 +153,7 @@ function updateTable(data, expired) {
                 </div>
             `;
 
-            switch(item.qc.pass) {
+            switch(item.qc?.pass) {
                 case 1:
                     qcIcon = `
                         <div class="wrapper tooltip qc w-[2.5rem] !flex gap-1 items-center" title="QC Passed">
@@ -182,6 +183,7 @@ function updateTable(data, expired) {
                             </svg>
                         </div>
                     `;
+                    break;
                 default:
                     break;
             }
@@ -219,8 +221,11 @@ function updateTable(data, expired) {
             `;
             tableBody.appendChild(row);
 
-            // Check if the modal exists
-            var modal = document.getElementById(`instrument${item.serial_number}Modal`);
+            const modalId = `instrument${item.id}`;
+            existingInstrumentIds.add(modalId);
+
+            // Check if modal exists
+            let modal = document.getElementById(modalId);
 
             if(!modal) {
                 // Create the modal
@@ -269,6 +274,14 @@ function updateTable(data, expired) {
                 <div class="divider"></div>
                 <a href="/assay-modules/${item.id}" class="btn smaller-btn">View More Details</a>
             `;
+        }
+    });
+
+    const allModals = modalWrapper.querySelectorAll('.generic-modal');
+    allModals.forEach(modal => {
+        if (!existingInstrumentIds.has(modal.id)) {
+            // Remove modals for instruments no longer returned
+            modal.remove(); 
         }
     });
 

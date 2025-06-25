@@ -56,7 +56,7 @@ $expired = $filters['expired'] ?? 'off';
         <?php endif;?>
     </div>
 </form>
-<table id="instrumentsTable" class="<?= $expired == 'off' ? 'expired' : '';?>">
+<table id="instrumentsTable" class="<?= $expired == 'off' || !$expired ? 'expired' : '';?>">
     <thead>
         <th>
             <a href="<?= updateQueryString(["sp" => "serial_number", "sd" => ((($filters['sd'] ?? "desc") == "desc" && ($filters['sp'] ?? null) == "serial_number") || ($filters['sd'] ?? "empty") == "" ? "asc" : "")], true);?>" class="ignore-default flex gap-1.5 items-center">

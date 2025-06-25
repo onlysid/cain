@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.3.2] - 25/06/2025
+
+Instrument bug fixes.
+
+### Fixed
+-   Active instruments always show up in the active instruments tab.
+-   Active instruments continue to show up in the "show hidden instruments" tab.
+-   Instrument refresh does not add additional unnecessary modals.
+
+&nbsp;
+
 ## [v3.3.1] - 24/06/2025
 
 LIMS simulator permissions.
