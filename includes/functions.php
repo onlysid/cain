@@ -1922,5 +1922,3 @@ function getPrimaryIPv4() {
 
     return "Not connected";
 }
-
-$eth0IP = getPrimaryIPv4();
