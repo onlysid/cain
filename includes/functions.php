@@ -1891,3 +1891,36 @@ function exportSimulatorDataToCSV() {
         addLogEntry('system', "Error in writing to the simulator datafile. $err");
     }
 }
+
+// Get primary IPV4 address of ethernet port
+function getPrimaryIPv4() {
+    $interfaces = [];
+    $output = shell_exec("ip -o -4 addr show | awk '{print $2, $4}'");
+
+    if ($output) {
+        $lines = explode("\n", trim($output));
+        foreach ($lines as $line) {
+            if (preg_match('/^(\S+)\s+(\d+\.\d+\.\d+\.\d+)/', $line, $matches)) {
+                $iface = $matches[1];
+                $ip = $matches[2];
+
+                // Prioritize common wired interfaces
+                if (preg_match('/^(eth0|ens\d+|enp\d+s\d+)$/', $iface)) {
+                    return $ip;
+                }
+
+                // Save other interfaces for fallback
+                $interfaces[] = $ip;
+            }
+        }
+
+        // Fallback to any found IP if no match from priority list
+        if (!empty($interfaces)) {
+            return $interfaces[0];
+        }
+    }
+
+    return "Not connected";
+}
+
+$eth0IP = getPrimaryIPv4();

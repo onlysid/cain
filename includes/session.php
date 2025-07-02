@@ -159,7 +159,6 @@ class Session {
                 return false;
             }
 
-
             // Otherwise, Authenticate username and password
             if(password_verify($password, $operatorInfo['password'])) {
                 // Update the user's password with a new salty hash (salt auto-generated)
@@ -179,7 +178,8 @@ class Session {
         // The operator doesn't exist locally. Check externally (if an option).
         if(limsConnectivity()) {
             $limsResponse = limsRequest(["operatorId" => $operatorId], 40, 42);
-            if(isset($limsResponse['operatorResult']) ? $limsResponse['operatorResult'] == 'true' : false) {
+
+            if(isset($limsResponse['operatorResult']) ? strtolower($limsResponse['operatorResult'] == 'true') : false) {
                 // If the operator exists externally, create a clinician and log them in.
                 $cainDB->query("INSERT INTO `users` (`operator_id`, `user_type`) VALUES (:operatorId, 1);", [':operatorId' => $operatorId]);
 

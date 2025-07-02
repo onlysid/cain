@@ -6,6 +6,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.3.3] - 02/07/2025
+
+Lookup/Operator bug fixes.
+
+### Fixed
+-   When an operator is found in LIMS, DMS now correctly confirms regardless of casing of response.
+-   Network tab now accounts for non-eth0-named primary ethernet services returned from ifconfig.
+
+&nbsp;
+
 ## [v3.3.2] - 25/06/2025
 
 Instrument bug fixes.

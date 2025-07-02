@@ -6,7 +6,7 @@ $networkInfo = array_intersect_key($settings, array_flip($networkInfoKeys));
 $macAddress = exec('ifconfig | grep -o -E \'([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}\'');
 
 // Get IP address of eth0
-$eth0IP = ($ip = trim(shell_exec("ip -4 addr show eth0 | grep -oP '(?<=inet\\s)\\d+(\\.\\d+){3}'"))) !== '' ? $ip : null;
+$eth0IP = getPrimaryIPv4();
 
 // Check if current user is service engineer or higher
 $serviceEngineer = (int)$currentUser['user_type'] >= SERVICE_ENGINEER;

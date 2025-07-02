@@ -63,7 +63,8 @@ try {
         if(!$operatorExists) {
             // If we have a successful result in the auth value, then LIMS has found the operator. Otherwise, no operator exists.
             $limsResponse = limsRequest(["operatorId" => $operatorId], 40, 42);
-            if(isset($limsResponse['operatorResult']) ? $limsResponse['operatorResult'] == 'true' : false) {
+
+            if(isset($limsResponse['operatorResult']) ? strtolower($limsResponse['operatorResult']) == 'true' : false) {
                 // Add the operator to the database
                 $cainDB->query("INSERT INTO `users` (`operator_id`, `user_type`) VALUES (:operatorId, 1);", [':operatorId' => $operatorId]);
             } else {
