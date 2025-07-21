@@ -8,7 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [v3.3.4] - 21/07/2025
 
-Setup script fixes.
+Setup script fixes and SETUP.md added.
 
 &nbsp;
 
