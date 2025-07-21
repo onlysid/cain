@@ -42,7 +42,7 @@ CREATE TABLE `results` (
   `post_timestamp` bigint(20) DEFAULT NULL,
   `assayStepNumber` varchar(256) NOT NULL DEFAULT '""',
   `cameraReadings` varchar(256) NOT NULL DEFAULT '""',
-  `bits` int(11) NOT NULL DEFAULT 0,
+  `bits` int(11) NOT NULL DEFAULT 0
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- --------------------------------------------------------
@@ -81,7 +81,7 @@ CREATE TABLE `users` (
 -- Indexes for table `results`
 --
 ALTER TABLE `results`
-  ADD PRIMARY KEY (`id`),
+  ADD PRIMARY KEY (`id`);
 
 --
 -- Indexes for table `settings`

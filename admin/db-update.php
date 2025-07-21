@@ -99,7 +99,7 @@ function autoUpdate($version) {
                 id INT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
                 info VARCHAR(50) UNIQUE,
                 value VARCHAR(50)
-            );"
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"
         );
         // Insert initial version as 0.0.0.
         $cainDB->query(
@@ -206,7 +206,7 @@ function runUpdates($version, $dbVersion, $retry = true) {
                         expiration_date TIMESTAMP,
                         qc_pass TINYINT DEFAULT 0,
                         last_updated TIMESTAMP
-                    )" => []
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;" => []
                 ]);
             }
 
@@ -269,7 +269,7 @@ function runUpdates($version, $dbVersion, $retry = true) {
                         user_type TINYINT DEFAULT 1,
                         last_active INT,
                         status TINYINT DEFAULT 1
-                    );"] = [];
+                    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"] = [];
                     $usersAlter["INSERT INTO users (operator_id, password, user_id, first_name, user_type, last_active, status)
                         SELECT email, NULL, userid, name,
                         CASE WHEN userlevel = 9 THEN 3 WHEN userlevel = 1 THEN 1 ELSE 2 END,
@@ -309,7 +309,7 @@ function runUpdates($version, $dbVersion, $retry = true) {
             }
             executeQueries($cainDB, $limsQueries);
 
-            // Create the software table and update the versions table if necessary.
+            // Create the software 'table' and update the versions 'table' if necessary.
             $softwareQueries = [];
             if (!$cainDB->select("SHOW TABLES LIKE 'software';")) {
                 $softwareQueries["CREATE TABLE software (
@@ -339,7 +339,7 @@ function runUpdates($version, $dbVersion, $retry = true) {
                     name VARCHAR(255) NOT NULL UNIQUE,
                     value VARCHAR(255),
                     flags INT DEFAULT 0 NOT NULL
-                );"] = [];
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"] = [];
             } else {
                 // Ensure the 'id' column is AUTO_INCREMENT and primary key.
                 $idCol = $cainDB->select("SELECT COLUMN_KEY FROM information_schema.columns
@@ -430,7 +430,7 @@ function runUpdates($version, $dbVersion, $retry = true) {
                     id INT PRIMARY KEY AUTO_INCREMENT,
                     tablet_id VARCHAR(100) UNIQUE,
                     app_version VARCHAR(100)
-                );"] = [];
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"] = [];
             }
             if (!$cainDB->select("SHOW TABLES LIKE 'instruments';")) {
                 $otherTablesQueries["CREATE TABLE instruments (
@@ -447,7 +447,7 @@ function runUpdates($version, $dbVersion, $retry = true) {
                     enforcement TINYINT,
                     last_connected BIGINT,
                     locked TINYINT
-                );"] = [];
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"] = [];
             }
             if (!$cainDB->select("SHOW TABLES LIKE 'instrument_test_types';")) {
                 $otherTablesQueries["CREATE TABLE instrument_test_types (
@@ -455,7 +455,7 @@ function runUpdates($version, $dbVersion, $retry = true) {
                     name VARCHAR(100) UNIQUE NOT NULL,
                     time_intervals INT,
                     result_intervals INT
-                );"] = [];
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"] = [];
             }
             executeQueries($cainDB, $otherTablesQueries);
 
@@ -474,7 +474,7 @@ function runUpdates($version, $dbVersion, $retry = true) {
                     FOREIGN KEY (instrument) REFERENCES instruments(id) ON DELETE SET NULL,
                     FOREIGN KEY (user) REFERENCES users(id) ON DELETE SET NULL,
                     FOREIGN KEY (type) REFERENCES instrument_test_types(id) ON DELETE SET NULL
-                );"] = [];
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"] = [];
             }
             if (!$cainDB->select("SHOW TABLES LIKE 'lots_qc_results';")) {
                 $qcTablesQueries["CREATE TABLE lots_qc_results (
@@ -487,7 +487,7 @@ function runUpdates($version, $dbVersion, $retry = true) {
                     test_result INT,
                     FOREIGN KEY (lot) REFERENCES lots(id),
                     FOREIGN KEY (test_result) REFERENCES results(id) ON DELETE SET NULL
-                );"] = [];
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"] = [];
             }
             executeQueries($cainDB, $qcTablesQueries);
 
@@ -605,7 +605,7 @@ function runUpdates($version, $dbVersion, $retry = true) {
                         test_purpose VARCHAR(256) DEFAULT NULL,
                         device_error VARCHAR(256) DEFAULT NULL,
                         module_serial_number VARCHAR(256) DEFAULT NULL,
-                        lot_number VARCHAR(256) DEFAULT NULL,
+                        lot_number VARCHAR(100) DEFAULT NULL,
                         assay_id VARCHAR(256) DEFAULT NULL,
                         assay_name VARCHAR(256) DEFAULT NULL,
                         assay_type VARCHAR(256) DEFAULT NULL,
@@ -822,6 +822,8 @@ function runUpdates($version, $dbVersion, $retry = true) {
         }
 
         if(compareVersions($dbVersion, "3.2.1")) {
+            $updates = [];
+
             // Add an overall_result field to the results table
             $overallColExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
             WHERE table_schema = '" . DB_NAME . "'
@@ -845,6 +847,8 @@ function runUpdates($version, $dbVersion, $retry = true) {
         }
 
         if(compareVersions($dbVersion, "3.3.0")) {
+            $updates = [];
+
             // Add a moduleName field to capture an instrument's friendly name (or null if it does not exist)
             $moduleNameColExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
             WHERE table_schema = '" . DB_NAME . "'
@@ -873,7 +877,7 @@ function runUpdates($version, $dbVersion, $retry = true) {
                 $updates["CREATE TABLE simulator_operators (
                     id INT PRIMARY KEY AUTO_INCREMENT,
                     operator_id VARCHAR(50) NOT NULL
-                );"] = [];
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"] = [];
             }
 
             if (!$cainDB->select("SHOW TABLES LIKE 'simulator_patients';")) {
@@ -887,7 +891,7 @@ function runUpdates($version, $dbVersion, $retry = true) {
                     dob VARCHAR(50),
                     patientSex VARCHAR(5),
                     patientAge VARCHAR(5)
-                );"] = [];
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;"] = [];
             }
             
             executeQueries($cainDB, $updates);

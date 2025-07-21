@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.3.4] - 21/07/2025
+
+Setup script fixes.
+
+&nbsp;
+
 ## [v3.3.3] - 02/07/2025
 
 Lookup/Operator bug fixes.
