@@ -690,10 +690,14 @@ function getResults($params, $itemsPerPage) {
         }
     }
 
+    // Remove all results not on 3.0
+    $query .= "WHERE r.version != 'D' ";
+    $countQuery .= "WHERE r.version != 'D' ";
+
     // Append the WHERE clause to the queries if conditions exist
     if (!empty($searchConditions)) {
-        $query .= "WHERE $searchConditions ";
-        $countQuery .= "WHERE $searchConditions ";
+        $query .= "AND $searchConditions ";
+        $countQuery .= "AND $searchConditions ";
     }
 
     $query .= "GROUP BY r.id ";

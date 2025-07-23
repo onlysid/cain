@@ -479,14 +479,14 @@ if (!class_exists('Process')) {
                 $dateRangeArr = explode(' - ', $dateRange);
 
                 if($dateRangeArr[0]) {
-                    $query .= 'STR_TO_DATE(testcompletetimestamp, "%Y-%m-%d %H:%i") >= ?';
+                    $query .= 'STR_TO_DATE(end_time, "%Y-%m-%d %H:%i") >= ?';
                     $params[] = $dateRangeArr[0] . " 00:00";
                 }
                 if(isset($dateRangeArr[1])) {
-                    $query .= ' AND STR_TO_DATE(testcompletetimestamp, "%Y-%m-%d %H:%i") <= ?';
+                    $query .= ' AND STR_TO_DATE(end_time, "%Y-%m-%d %H:%i") <= ?';
                     $params[] = $dateRangeArr[1] . " 00:00";
                 } else {
-                    $query .= ' AND STR_TO_DATE(testcompletetimestamp, "%Y-%m-%d %H:%i") <= ?';
+                    $query .= ' AND STR_TO_DATE(end_time, "%Y-%m-%d %H:%i") <= ?';
                     $params[] = $dateRangeArr[0] . " 23:59";
                 }
             } else {

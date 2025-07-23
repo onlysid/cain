@@ -14,9 +14,11 @@ Changing SAMBA II parsing logic
 -   If a message is sent using API 'D', historically the DMS has appended an index to the result ie, 
 "Covid: 1Positive, SARS: 2Negative". This was to help LIMS associate the result with the target but
 is no longer needed.
+-   Results sent via API versions lower than 3.0 (ie, D) are ommitted from the results screen.
 
 ### Fixed
 -   Strictly intval timestamps (not actual timestamps) in the database for /send.
+-   Timestamps now considered correctly for newer API versions when deleting results in backup/delete tab.
 
 &nbsp;
 
