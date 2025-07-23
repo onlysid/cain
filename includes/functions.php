@@ -1204,7 +1204,7 @@ function newLotQC($lotID, $resultID, $timestamp) {
     }
 
     // Convert timestamp strictly to int
-    $timestamp = strtotime($timestamp);
+    $timestamp = intval($timestamp);
 
     // Add the result QC
     if($cainDB->query("INSERT INTO lots_qc_results (`lot`, `test_result`, `timestamp`) VALUES (?, ?, ?);", [$lotID, $resultID, $timestamp])) {
@@ -1425,7 +1425,8 @@ function resultStringify($result) {
         // Multiplex
         if(is_array($result)) {
             foreach ($result as $target => $isPositive) {
-                $targetName = str_replace(['-', ' '], '', ucwords(strtolower($target))); // Normalize the target name
+                // No longer needed as of v3.4.0
+                // $targetName = str_replace(['-', ' '], '', ucwords(strtolower($target))); // Normalize the target name
                 if($isPositive === null) {
                     $status = 'Invalid';
                 } else {
@@ -1433,7 +1434,9 @@ function resultStringify($result) {
                 }
 
                 // Append the formatted target and result status to the string
-                $stringifiedResult .= "{$targetName}: {$index}{$status}, ";
+                $stringifiedResult .= "{$target}: {$status}, ";
+                // No longer needed from version 3.4.0
+                // $stringifiedResult .= "{$targetName}: {$index}{$status}, ";
                 $index++;
             }
         } else {

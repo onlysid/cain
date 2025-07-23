@@ -6,6 +6,20 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.4.0] - 23/07/2025
+
+Changing SAMBA II parsing logic
+
+### Changed
+-   If a message is sent using API 'D', historically the DMS has appended an index to the result ie, 
+"Covid: 1Positive, SARS: 2Negative". This was to help LIMS associate the result with the target but
+is no longer needed.
+
+### Fixed
+-   Strictly intval timestamps (not actual timestamps) in the database for /send.
+
+&nbsp;
+
 ## [v3.3.4] - 21/07/2025
 
 Setup script fixes and SETUP.md added.
