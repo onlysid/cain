@@ -432,6 +432,10 @@ Codes:
     - 7: Send is being processed
     - 8: Send completed successfully.
 
+	These codes are important as any result sent via SAMBA II may need to be sent again. If it's sent again via this protocol, we should check the database. If there's
+	a match based on the fields, we should ignore and return 6 if the flag is 100. If the flag is 101, we should actually delete this result from the database and return "8".
+	FOR NOW, this API endpoint will just ALWAYS return 8. The DMS IS LIMS as far as tablets are concerned. We separate these concerns with SAMBA III.
+
 Steps:
 - Collect data from the API POST
 - Add data to the database (everything but the curve info), set "flag" to 100, ignore bits. Al will process this then change it to 101. (101 === SENT TO LIMS)
@@ -929,8 +933,9 @@ if($errors) {
         }
     }
 
-    // Let the user know it's being processed
-    $response["status"] = 7;
+    // Let the user know it's complete (we are no longer processing things so status 8 is now skipped)
+    // $response["status"] = 7;
+    $response["status"] = 8;
 
     // Give the user the unique ID of the result because why not
     $response["resultID"] = $masterID;

@@ -6,6 +6,24 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## KNOWN ISSUES:
+-   Memory error on /lims-simulator.php line 135 when logs (presumably) get too large (LIMS LOG)
+
+## [v3.4.1] - 03/09/2025
+
+Adjusting LIMS simulator, SAMBA II default responses and noting SSL cert allocation adjustments.
+
+### Changed
+-   LIMS Simulator now checks ALL matched fields. ALL provided must match an entry, as opposed to first match.
+-   SAMBA II worked on a polling system. We now just respond with success always as the polling now technically occurs on the DMS.
+This is a backwards combatibility consideration, not a technical enhancement.
+
+### Notes
+-   Retreive the SSL cert from /etc/ssl/certs/apache-selfsigned.crt, place onto a USB stick and install it onto the client using browser/client specific instructions.
+-   Installation on the tablet: 
+    -   Go to settings > network preferences > install certificates and navigate to the USB stick.
+    -   Click on the cert, wait for confirmation toast, restart browser, good to go.
+
 ## [v3.4.0] - 23/07/2025
 
 Changing SAMBA II parsing logic
