@@ -794,6 +794,9 @@ if(empty($results)) {
 
         // Also dynamically added
         "overall_result"        => null,
+
+        // Legacy: we still may need a tracking code
+        "trackingCode"          => $data['trackingCode'] ?? "",
     ];
 
     // We need a query for adding things to the master result table
