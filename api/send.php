@@ -769,8 +769,8 @@ if(empty($results)) {
         "reserve1"              => $data['comment1'] ?? "",
         "reserve2"              => $data['comment2'] ?? "",
         "flag"                  => $data['flag'] ?? 100,
-        "timestamp"             => $data['startTime'] ?? "",
-        "testcompletetimestamp" => $data['endTime'] ?? "",
+        "timestamp"             => enforceSecondResolution($data['startTime'] ?? ""),
+        "testcompletetimestamp" => enforceSecondResolution($data['endTime'] ?? ""),
         "testPurpose"           => $purpose,
         "abortErrorCode"        => $data['deviceError'] ?? "",
         "clinicId"              => $data['clinicId'] ?? "",
@@ -828,6 +828,12 @@ if(empty($results)) {
         // Add the master ID to the result data
         $resultData['master_result'] = $masterID;
 
+        $masterId = $masterData['id'] ?? 'batch';
+
+        // Empty array of timestamps to understand how to increment
+        $usedTs  = [];
+        $usedTct = [];
+
         // Add individual result for each result we are sent
         foreach($results as $assayTargetName => $resultInfo) {
             // Add the individual result to the result data
@@ -848,6 +854,10 @@ if(empty($results)) {
 
             // Set the overall result
             $resultData['overall_result'] = $resultInfo['overall_result'] ?? null;
+
+            // Uniquify both timestamps for this master_result
+            $resultData['timestamp'] = uniquifyTimestamp($resultData['timestamp'], $usedTs);
+            $resultData['testcompletetimestamp'] = uniquifyTimestamp($resultData['testcompletetimestamp'], $usedTct);
 
             // Get the results into an array
             $resultParams = array_values($resultData);

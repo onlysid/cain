@@ -1930,3 +1930,79 @@ function getPrimaryIPv4() {
 
     return "Not connected";
 }
+
+// Add seconds to string-timestamps which don't have them
+function enforceSecondResolution(?string $ts): ?string {
+    $ts = isset($ts) ? trim($ts) : $ts;
+    if ($ts === null || $ts === '') {
+        return $ts; // leave empty/null as-is
+    }
+
+    $patternMinute  = '/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/';
+    $patternSecond  = '/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/';
+
+    if (preg_match($patternMinute, $ts)) {
+        $dt = DateTime::createFromFormat('Y-m-d H:i', $ts);
+        $errors = DateTime::getLastErrors();
+        if ($errors && $dt && $errors['warning_count'] === 0 && $errors['error_count'] === 0) {
+            return $dt->format('Y-m-d H:i:00');
+        }
+        return $ts; // invalid date/time -> leave as-is
+    }
+
+    if (preg_match($patternSecond, $ts)) {
+        $dt = DateTime::createFromFormat('Y-m-d H:i:s', $ts);
+        $errors = DateTime::getLastErrors();
+        if ($errors && $dt && $errors['warning_count'] === 0 && $errors['error_count'] === 0) {
+            return $dt->format('Y-m-d H:i:s'); // normalize (e.g., zero-pad)
+        }
+        return $ts;
+    }
+
+    // Any other format -> leave as-is
+    return $ts;
+}
+
+function uniquifyTimestamp(?string $ts, array &$used): ?string {
+    if ($ts === null) return null;
+    $ts = trim($ts);
+    if ($ts === '') return $ts;
+
+    $dt = null;
+
+    // Accept exact minute format (no seconds)
+    if (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/', $ts)) {
+        $dt = DateTime::createFromFormat('Y-m-d H:i', $ts);
+        if ($dt) {
+            $ts = $dt->format('Y-m-d H:i:00');
+        } else {
+            return $ts; // invalid
+        }
+    }
+    // Accept exact second format
+    elseif (preg_match('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $ts)) {
+        $dt = DateTime::createFromFormat('Y-m-d H:i:s', $ts);
+        if ($dt) {
+            $ts = $dt->format('Y-m-d H:i:s'); // normalize
+        } else {
+            return $ts; // invalid
+        }
+    } else {
+        // Any other format: leave it alone
+        return $ts;
+    }
+
+    // Make sure we have a valid DateTime before proceeding
+    $dt = DateTime::createFromFormat('Y-m-d H:i:s', $ts);
+    if (!$dt) {
+        return $ts; // couldn't parse, just return unchanged
+    }
+
+    // Bump forward until unique
+    while (isset($used[$dt->format('Y-m-d H:i:s')])) {
+        $dt->modify('+1 second');
+    }
+    $final = $dt->format('Y-m-d H:i:s');
+    $used[$final] = true; // mark taken
+    return $final;
+}
