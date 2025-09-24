@@ -12,7 +12,7 @@ if ($dateRange) {
     $query = "SELECT
             r.*,
             GROUP_CONCAT(res.result SEPARATOR ';') AS result_values,
-            GROUP_CONCAT(res.product SEPARATOR ';') AS assay_names,
+            GROUP_CONCAT(res.result_target SEPARATOR ';') AS assay_names,
             GROUP_CONCAT(res.flag SEPARATOR ';') AS result_flags,
             GROUP_CONCAT(res.ct_values SEPARATOR ';') AS ct_values
         FROM master_results r
@@ -38,7 +38,7 @@ if ($dateRange) {
     $query = "SELECT
             r.*,
             GROUP_CONCAT(res.result SEPARATOR ';') AS result_values,
-            GROUP_CONCAT(res.product SEPARATOR ';') AS assay_names,
+            GROUP_CONCAT(res.result_target SEPARATOR ';') AS assay_names,
             GROUP_CONCAT(res.flag SEPARATOR ';') AS result_flags,
             GROUP_CONCAT(res.ct_values SEPARATOR ';') AS ct_values
         FROM master_results r

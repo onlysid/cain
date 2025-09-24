@@ -897,6 +897,156 @@ function runUpdates($version, $dbVersion, $retry = true) {
             executeQueries($cainDB, $updates);
         }
 
+        if (compareVersions($dbVersion, "3.5.0")) {
+            $updates = [];
+
+            // Add a result_target field (if missing)
+            $resultTargetColExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+                WHERE table_schema = '" . DB_NAME . "'
+                AND table_name = 'results'
+                AND column_name = 'result_target';");
+            if (empty($resultTargetColExists) || (int)$resultTargetColExists['cnt'] === 0) {
+                $cainDB->query("ALTER TABLE results ADD result_target varchar(256) DEFAULT NULL AFTER product;");
+
+                // Copy product -> result_target
+                $cainDB->query("
+                    UPDATE results r
+                    SET r.result_target = r.product;
+                ");
+
+                // ---- Build eligible set: version is numeric and >= 3.0 ----
+                $cainDB->query("
+                    DROP TEMPORARY TABLE IF EXISTS _eligible_results;
+                    CREATE TEMPORARY TABLE _eligible_results AS
+                    SELECT id, master_result
+                    FROM results
+                    WHERE version REGEXP '^[0-9]+(\\.[0-9]+)?$'
+                    AND CAST(version AS DECIMAL(10,4)) >= 3.0;
+                ");
+
+                // For multiplex only: product = assay_name (only eligible rows; skip singlets)
+                $cainDB->query("
+                    UPDATE results r
+                    JOIN _eligible_results e ON e.id = r.id
+                    JOIN master_results mr ON mr.id = r.master_result
+                    JOIN (
+                        SELECT master_result
+                        FROM results
+                        WHERE master_result IS NOT NULL
+                        GROUP BY master_result
+                        HAVING COUNT(*) > 1
+                    ) m ON m.master_result = r.master_result
+                    SET r.product = mr.assay_name
+                    WHERE mr.assay_name IS NOT NULL
+                    AND mr.assay_name <> '';
+                ");
+
+                // For multiplex only: format product as *product*result_target (only eligible rows)
+                $cainDB->query("
+                    UPDATE results r
+                    JOIN _eligible_results e ON e.id = r.id
+                    JOIN (
+                        SELECT master_result
+                        FROM results
+                        WHERE master_result IS NOT NULL
+                        GROUP BY master_result
+                        HAVING COUNT(*) > 1
+                    ) m ON m.master_result = r.master_result
+                    SET r.product = CONCAT('*', TRIM(r.product), '*', TRIM(r.result_target))
+                    WHERE COALESCE(r.result_target, '') <> '';
+                ");
+
+                // Clean up (temporary tables auto-drop on session end)
+                $cainDB->query('DROP TEMPORARY TABLE IF EXISTS _eligible_results;');
+            }
+
+            // Update datetimes to have second-resolution where possible
+            $timestampColExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+                WHERE table_schema = '" . DB_NAME . "'
+                AND table_name = 'results'
+                AND column_name = 'timestamp';");
+            if (!empty($timestampColExists) && (int)$timestampColExists['cnt'] !== 0) {
+                $cainDB->query("
+                    UPDATE results
+                    SET timestamp = CONCAT(timestamp, ':00')
+                    WHERE timestamp REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$';
+                ");
+
+                // Enforce different timestamps for results of the same multiplex
+                $cainDB->query("
+                    DROP TEMPORARY TABLE IF EXISTS tmp_ts;
+
+                    CREATE TEMPORARY TABLE tmp_ts AS
+                    SELECT
+                    b.id,
+                    b.master_result,
+                    b.ts,
+                    @off := IF(@grp = b.master_result AND @prev_ts = b.ts, @off + 1, 0) AS off,
+                    @prev_ts := b.ts AS _set_prev_ts,
+                    @grp := b.master_result AS _set_grp
+                    FROM (
+                    SELECT
+                        r.id,
+                        r.master_result,
+                        STR_TO_DATE(r.`timestamp`, '%Y-%m-%d %H:%i:%s') AS ts
+                    FROM results r
+                    WHERE STR_TO_DATE(r.`timestamp`, '%Y-%m-%d %H:%i:%s') IS NOT NULL
+                    ) AS b
+                    JOIN (SELECT @grp := NULL, @prev_ts := NULL, @off := 0) vars
+                    ORDER BY b.master_result, b.ts, b.id;
+
+                    UPDATE results r
+                    JOIN tmp_ts t ON t.id = r.id
+                    SET r.`timestamp` = DATE_FORMAT(DATE_ADD(t.ts, INTERVAL t.off SECOND), '%Y-%m-%d %H:%i:%s');
+
+                    DROP TEMPORARY TABLE tmp_ts;
+                ");
+            }
+
+            $testCompleteTimestampColExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+                WHERE table_schema = '" . DB_NAME . "'
+                AND table_name = 'results'
+                AND column_name = 'testcompletetimestamp';");
+            if (!empty($testCompleteTimestampColExists) && (int)$testCompleteTimestampColExists['cnt'] !== 0) {
+                $cainDB->query("
+                    UPDATE results
+                    SET testcompletetimestamp = CONCAT(testcompletetimestamp, ':00')
+                    WHERE testcompletetimestamp REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}$';
+                ");
+
+                // Enforce different testcompletetimestamp for multiplex
+                $cainDB->query("
+                    DROP TEMPORARY TABLE IF EXISTS tmp_tct;
+
+                    CREATE TEMPORARY TABLE tmp_tct AS
+                    SELECT
+                    b.id,
+                    b.master_result,
+                    b.ts,
+                    @off := IF(@grp = b.master_result AND @prev_ts = b.ts, @off + 1, 0) AS off,
+                    @prev_ts := b.ts AS _set_prev_ts,
+                    @grp := b.master_result AS _set_grp
+                    FROM (
+                    SELECT
+                        r.id,
+                        r.master_result,
+                        STR_TO_DATE(r.`testcompletetimestamp`, '%Y-%m-%d %H:%i:%s') AS ts
+                    FROM results r
+                    WHERE STR_TO_DATE(r.`testcompletetimestamp`, '%Y-%m-%d %H:%i:%s') IS NOT NULL
+                    ) AS b
+                    JOIN (SELECT @grp := NULL, @prev_ts := NULL, @off := 0) vars
+                    ORDER BY b.master_result, b.ts, b.id;
+
+                    UPDATE results r
+                    JOIN tmp_tct t ON t.id = r.id
+                    SET r.`testcompletetimestamp` = DATE_FORMAT(DATE_ADD(t.ts, INTERVAL t.off SECOND), '%Y-%m-%d %H:%i:%s');
+
+                    DROP TEMPORARY TABLE tmp_tct;
+                ");
+            }
+        }
+
+
         // =================== Version 100.0.0 Updates (Test) ===================
         if (compareVersions($dbVersion, "100.0.0")) {
             sleep(2);

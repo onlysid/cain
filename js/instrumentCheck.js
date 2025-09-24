@@ -95,8 +95,8 @@ function updateTable(data, expired) {
     const modalWrapper = document.getElementById("instrumentModalWrapper");
     const existingInstrumentIds = new Set();
 
-    // How long until we want to assume the instruments are lost? (5 minutes)
-    const instrumentTimeout = 300;
+    // How long until we want to assume the instruments are lost? (60 minutes)
+    const instrumentTimeout = 3600;
 
     const showHiddenInstruments = expired;
 

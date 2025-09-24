@@ -9,6 +9,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## KNOWN ISSUES:
 -   Memory error on /lims-simulator.php line 135 when logs (presumably) get too large (LIMS LOG)
 
+&nbsp;
+
+## [v3.5.0] - 24/09/2025
+
+Adjusting results table
+
+### Changed
+-   Results table now accepts a result_target field. This is used in place of the product field, which now serves a different role.
+-   Results product is now EITHER the assayName (if singlet) or a concatenation of 
+-   Results timestamps are now forced into second-resolution.
+-   To satisfy LIMS, single results of a multiplex test now have timestamps which vary by a second (LIMS requirement).
+
+### Fixed
+-   Fields no longer autofocus on previous field in container if selected (noted on user creation page).
+
+&nbsp;
+
 ## [v3.4.1] - 03/09/2025
 
 Adjusting LIMS simulator, SAMBA II default responses and noting SSL cert allocation adjustments.
@@ -23,6 +40,8 @@ This is a backwards combatibility consideration, not a technical enhancement.
 -   Installation on the tablet: 
     -   Go to settings > network preferences > install certificates and navigate to the USB stick.
     -   Click on the cert, wait for confirmation toast, restart browser, good to go.
+
+&nbsp;
 
 ## [v3.4.0] - 23/07/2025
 

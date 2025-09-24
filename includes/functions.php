@@ -101,6 +101,7 @@ function checkAndSetupRequiredTables($conn) {
             `sampleid` varchar(256) NOT NULL DEFAULT '\"\"',
             `trackingCode` varchar(256) NOT NULL DEFAULT '\"\"',
             `product` varchar(256) NOT NULL DEFAULT '\"\"',
+            `result_target` varchar(256) '\"\"',
             `result` varchar(256) NOT NULL DEFAULT '\"\"',
             `testPurpose` varchar(256) NOT NULL DEFAULT '\"\"',
             `abortErrorCode` varchar(255) NOT NULL DEFAULT '\"\"',
@@ -634,7 +635,7 @@ function getResults($params, $itemsPerPage) {
         i.*,
         res.*,
         GROUP_CONCAT(res.overall_result SEPARATOR ';') AS result_values,
-        GROUP_CONCAT(res.product SEPARATOR ';') AS assay_names,
+        GROUP_CONCAT(res.result_target SEPARATOR ';') AS assay_names,
         GROUP_CONCAT(res.flag SEPARATOR ';') AS result_flags,
         GROUP_CONCAT(res.ct_values SEPARATOR ';') AS ct_values,
         CASE

@@ -513,7 +513,7 @@ $errors = null;
 
 // Check that the lot number exists in the DB (as it relies on a foreign key)
 $lotNumber = null;
-if($data['lotNumber']) {
+if(isset($data['lotNumber'])) {
     // Create the expiration date
     $expirationDate = null;
     $deliveryDate = null;
@@ -790,6 +790,7 @@ if(empty($results)) {
 
         // Also dynamically added
         "product"               => null,
+        "result_target"         => null,
 
         // Also dynamically added
         "overall_result"        => null,
@@ -828,18 +829,25 @@ if(empty($results)) {
         $resultData['master_result'] = $masterID;
 
         // Add individual result for each result we are sent
-        foreach($results as $assayName => $resultInfo) {
+        foreach($results as $assayTargetName => $resultInfo) {
             // Add the individual result to the result data
             $resultData['result'] = $resultInfo['result'];
 
-            // Set the product name (as for combined results, this may vary)
-            $resultData['product'] = $assayName;
+            // Set the result_target name (as for combined results, this may vary)
+            $resultData['result_target'] = $assayTargetName;
+
+            // Set the product name (again, may vary)
+            if(count($results) > 1) {
+              $resultData['product'] = "*" . $masterData['assay_name'] . "*" . $assayTargetName;
+            } else {
+              $resultData['product'] = $assayTargetName;
+            }
 
             // Set the CT value
             $resultData['ct_values'] = $resultInfo['ct_values'];
 
             // Set the overall result
-            $resultData['overall_result'] = $resultInfo['overall_result'];
+            $resultData['overall_result'] = $resultInfo['overall_result'] ?? null;
 
             // Get the results into an array
             $resultParams = array_values($resultData);
@@ -868,7 +876,7 @@ if(empty($results)) {
     }
 
     // If the test purpose was QC, we now need to add QC information to the DMS
-    if($purpose == 2) {
+    if($purpose == 2 && isset($lotID)) {
         // Add to QC
         $success = newLotQC($lotID, $masterID, $resultData['timestamp'] !== "" ? $resultData['timestamp'] : $resultData['post_timestamp']);
 
