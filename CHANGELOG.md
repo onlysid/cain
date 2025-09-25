@@ -11,6 +11,23 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.6.1] - 25/09/2025
+
+More bug fixes
+
+### Added
+
+-   Added test mode for LIMS to make it respond positively regardless of the input.
+
+### Changed
+-   Manual instrument QC tests which fail, fail the instrument's QC no matter what. (Previously, test types with no periodicity requirements would keep the instrument in a permanent pass state regardless of this test type outcome).
+
+### Fixed
+-   Timestamps from the tablet now parse correctly on PhP 7.4.
+-   Database updater does not always run regardless of version.
+
+&nbsp;
+
 ## [v3.6.0] - 25/09/2025
 
 Bug fixes, minor additions and UI adjustments.

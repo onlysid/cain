@@ -436,14 +436,15 @@ function enrichInstrumentWithQC($instrument) {
             continue;
         }
 
-        // If there are QC type conditions of any kind AND EITHER the latest test failed or does not exist, fail the test.
-        if(($qcType['time_intervals'] || $qcType['result_intervals'])) {
-            if($latestTest && !$latestTest['result']) {
-                // QC has been tested and failed
-                $instrument['qc']['pass'] = 0;
-                continue;
-            }
+        // If the latest test of this type failed, fail QC no matter what
+        if($latestTest && !$latestTest['result']) {
+            // QC has been tested and failed
+            $instrument['qc']['pass'] = 0;
+            continue;
+        }
 
+        // If there are QC type conditions of any kind AND does not exist, set as untested.
+        if(($qcType['time_intervals'] || $qcType['result_intervals'])) {
             if((!$latestTest)) {
                 // QC has never been run, but it is required
                 $instrument['qc']['pass'] = 3;
@@ -1217,7 +1218,7 @@ function newLotQC($lotID, $resultID, $timestamp) {
     }
 
     // Convert timestamp strictly to int
-    $timestamp = intval($timestamp);
+    $timestamp = strtotime($timestamp);
 
     // Add the result QC
     if($cainDB->query("INSERT INTO lots_qc_results (`lot`, `test_result`, `timestamp`) VALUES (?, ?, ?);", [$lotID, $resultID, $timestamp])) {
@@ -1633,9 +1634,11 @@ function convertTimestamp($timestamp, $time = false) {
 
     // Ensure that the timestamp is a valid string or UNIX timestamp
     if (is_string($timestamp)) {
-        if(!is_int((int) $timestamp)) {
+        if(strtotime($timestamp)) {
             // Attempt to convert the timestamp using strtotime, handle invalid input gracefully
             $timestamp = strtotime($timestamp);
+        } else {
+            $timestamp = (int) $timestamp;
         }
     }
 

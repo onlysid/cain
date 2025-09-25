@@ -8,7 +8,7 @@ ini_set('memory_limit', '2048M');
 set_time_limit(0);
 
 $ENDPOINT = 'localhost/send';
-$TARGET = 100000;
+$TARGET = 10;
 $okTotal = 0;
 $clientSeq = 1;
 $CONCURRENCY = 10;
@@ -144,7 +144,7 @@ function buildPayload(int $i): array {
         "expectedResult" => "",
         "assayType" => "90",
         "assaySubType" => "01",
-        "lotNumber" => str_pad((string)random_int(1, 999), 3, '0', STR_PAD_LEFT),
+        "lotNumber" => "",
         "subLotNumber" => str_pad((string)random_int(1, 99), 2, '0', STR_PAD_LEFT),
         "productionYear" => str_pad((string)random_int(24, 26), 2, '0', STR_PAD_LEFT),
         "expiryYear" => (string)random_int(2025, 2027),

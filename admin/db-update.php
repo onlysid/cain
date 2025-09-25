@@ -151,9 +151,6 @@ function autoUpdate($version) {
 function runUpdates($version, $dbVersion, $retry = true) {
     global $cainDB;
     try {
-        // Refresh the current database version.
-        $dbVersion = $cainDB->select("SELECT value FROM versions WHERE info = 'web-app';")['value'];
-
         // =================== Version 3.0.0 Updates =================== //
         if (compareVersions($dbVersion, "3.0.0")) {
             // Delete unused files.
@@ -1045,7 +1042,6 @@ function runUpdates($version, $dbVersion, $retry = true) {
                 ");
             }
         }
-
 
         // =================== Version 100.0.0 Updates (Test) ===================
         if (compareVersions($dbVersion, "100.0.0")) {

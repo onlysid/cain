@@ -532,6 +532,8 @@ if(isset($data['lotNumber'])) {
         'expiration_date' => $expirationDate,
         'production_year' => isset($data['productionYear']) && $data['productionYear'] !== "" ? intval($data['productionYear']) : null,
     ]);
+    
+    $lotNumber = $data['lotNumber'];
 }
 
 // TODO: Do the same thing for Instrument eventually

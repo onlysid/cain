@@ -158,6 +158,16 @@ const backupSettings = {
                 <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="patientId"><span></span></label>
             </div>
         </label>
+        <label for="testMode" class="field !flex-row toggle-field !px-6 py-2 rounded-full bg-white shadow-md">
+            <div class="flex flex-col w-full">
+                <div class="shrink">LIMS Test Mode</div>
+                <div class="description !text-xs text-grey mr-4">Should LIMS middleware respond positively regardless of input?</div>
+            </div>
+            <div class="checkbox-wrapper">
+                <input class="tgl" name="testMode" id="testMode" type="checkbox" <?= $networkInfo['test_mode'] ? "checked" : "";?>>
+                <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="testMode"><span></span></label>
+            </div>
+        </label>
     </div>
     <button class="btn smaller-btn trigger-loading" type="submit">Save Settings</button>
 </form>

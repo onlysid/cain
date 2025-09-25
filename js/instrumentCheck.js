@@ -114,8 +114,6 @@ function updateTable(data, expired) {
         // Get time remaining
         var timeRemaining = Math.floor(((Number(item.assay_start_time) + Number(item.duration)) - now)/60);
 
-        console.log(now, Number(item.assay_start_time), Number(item.duration), timeRemaining);
-
         // If it goes below 0, say pending.
         if(timeRemaining < 1) {
             timeRemaining = "<1 min";
