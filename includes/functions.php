@@ -1627,33 +1627,36 @@ function formatSize($size) {
 
 // Convert timestamps to their desired format
 function convertTimestamp($timestamp, $time = false) {
-    // Check if the timestamp is null or empty, and return a safe default value
+    // Check if the timestamp is null or empty
     if (empty($timestamp)) {
         return "Unknown";
     }
 
-    // Ensure that the timestamp is a valid string or UNIX timestamp
+    // Handle string input
     if (is_string($timestamp)) {
-        if(strtotime($timestamp)) {
-            // Attempt to convert the timestamp using strtotime, handle invalid input gracefully
-            $timestamp = strtotime($timestamp);
-        } else {
+        if (ctype_digit($timestamp)) {
+            // String of digits → treat as UNIX timestamp
             $timestamp = (int) $timestamp;
+        } else {
+            // Otherwise try to parse it as a datetime string
+            $parsed = strtotime($timestamp);
+            if ($parsed !== false) {
+                $timestamp = $parsed;
+            } else {
+                return "Unknown";
+            }
         }
     }
 
-    // Check for invalid timestamps (false or 0)
-    if (!$timestamp) {
+    // Handle integer input
+    if (!is_int($timestamp) || $timestamp <= 0) {
         return "Unknown";
     }
 
-    // Return the formatted date/time based on whether the time is needed
-    if ($time) {
-        return date("d/m/Y H:i", $timestamp);
-    } else {
-        return date("d/m/Y", $timestamp);
-    }
+    // Format
+    return $time ? date("d/m/Y H:i", $timestamp) : date("d/m/Y", $timestamp);
 }
+
 
 // Get the total size of the expired log files
 function getExpiredLogSize() {
