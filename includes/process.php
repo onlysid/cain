@@ -484,7 +484,7 @@ if (!class_exists('Process')) {
                 }
                 if(isset($dateRangeArr[1])) {
                     $query .= ' AND STR_TO_DATE(end_time, "%Y-%m-%d %H:%i") <= ?';
-                    $params[] = $dateRangeArr[1] . " 00:00";
+                    $params[] = $dateRangeArr[1] . " 23:59";
                 } else {
                     $query .= ' AND STR_TO_DATE(end_time, "%Y-%m-%d %H:%i") <= ?';
                     $params[] = $dateRangeArr[0] . " 23:59";

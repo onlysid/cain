@@ -159,7 +159,17 @@ if($instrument['device_error']) : ?>
                         </svg>
                         <h5>Time Remaining</h5>
                     </div>
-                    <p><?= $instrument['duration'];?></p>
+                    <?php
+                        // Get time remaining
+                        $timeRemaining = floor((((int)$instrument['assay_start_time'] + (int)$instrument['duration'] - time())/60));
+                        
+                        if(is_float($timeRemaining) && $timeRemaining <= 1) {
+                            $timeRemaining = "< 1 min";
+                        } else {
+                            $timeRemaining = strval($timeRemaining) . " mins";
+                        }
+                    ;?>
+                    <p><?= $instrument['duration'] != null ? ($timeRemaining ?? "N/A") : "N/A";?></p>
                 </div>
             <?php endif;
         endif;?>
@@ -329,7 +339,7 @@ if($instrument['device_error']) : ?>
 <!-- QC Actions -->
 <section class="flex gap-3 items-center flex-wrap mb-8">
     <a href="/assay-modules/qc/<?= $instrument['id'];?>" class="btn smaller-btn border-btn">View All Tests</a>
-    <a href="/assay-modules/new-qc?instrument=<?= $instrument['id'];?>" class="btn smaller-btn border-btn">Add QC Test</a>
+    <a href="/assay-modules/new-qc?instrument=<?= $instrument['id'];?>" class="btn smaller-btn border-btn">New QC Test</a>
 </section>
 
 <!-- QC Links -->

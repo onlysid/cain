@@ -3,7 +3,13 @@
 include_once __DIR__ . "/../includes/config.php";
 include_once BASE_DIR . "/includes/db.php";
 include_once BASE_DIR . "/includes/functions.php";
+include_once BASE_DIR . "/includes/session.php";
+
 $dateRange = $_POST['dateRange'];
+
+$currentUser = userInfo();
+
+$serviceEngineer = $currentUser['user_type'] == '3';
 
 // We don't want PhP memory limits to hinder the ability to download a CSV
 ini_set('memory_limit', '2048M');
@@ -46,6 +52,39 @@ if ($dateRange) {
         GROUP BY r.id;
         ";
     $results = $cainDB->selectAll($query);
+}
+
+// If service engineer, redact all fields except a whitelist
+if ($serviceEngineer && !empty($results)) {
+    $whitelist = [
+        'id',
+        'version',
+        'end_time',
+        'test_purpose',
+        'device_error',
+        'module_serial_number',
+        'lot_number',
+        'assay_id',
+        'assay_name',
+        'assay_type',
+        'assay_sub_type',
+        'assay_version',
+        'expected_result',
+        'result',
+        'result_values',   // from GROUP_CONCAT
+        'assay_names',     // from GROUP_CONCAT
+        'result_flags',    // from GROUP_CONCAT
+        'ct_values',       // from GROUP_CONCAT
+    ];
+
+    foreach ($results as &$row) {
+        foreach ($row as $key => $value) {
+            if (!in_array($key, $whitelist, true)) {
+                $row[$key] = '--REDACTED--';
+            }
+        }
+    }
+    unset($row);
 }
 
 // Check if there are any results

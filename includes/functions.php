@@ -290,10 +290,11 @@ function updateInstruments($tabletData) {
             $instrumentData['status'] = $tabletData['moduleStatus'] ?? null;
             $instrumentData['current_assay'] = $tabletData['runningAssay'] ?? null;
             $instrumentData['assay_start_time'] = !empty($tabletData['assayStartTime']) ? strtotime($tabletData['assayStartTime']) : null;
-            $instrumentData['duration'] = !empty($tableData['assayDuration']) ? (int)$tabletData['assayDuration'] : null;
+            $instrumentData['duration'] = !empty($tabletData['assayDuration']) ? (int)$tabletData['assayDuration'] : null;
             $instrumentData['device_error'] = $tabletData['deviceError'] ?? null;
             $instrumentData['tablet_version'] = $tabletData['tabletVersion'] ?? null;
             $instrumentData['last_connected'] = time();
+
 
             $instrumentExists = in_array($serialNumber, $allDbInstruments);
 
@@ -592,8 +593,15 @@ function getResults($params, $itemsPerPage) {
         $filters[] = "r.result LIKE '" . ($resultPolarity == 0 ? 'Negative' : 'Positive') . "'";
     }
 
-    if($sex) {
-        $filters[] = "r.sex = '$sex'";
+    if ($sex) {
+        if ($sex === 'M') {
+            $filters[] = "r.sex IN ('M', 'Male')";
+        } elseif ($sex === 'F') {
+            $filters[] = "r.sex IN ('F', 'Female')";
+        } else {
+            // fallback if some other value is passed
+            $filters[] = "r.sex = '$sex'";
+        }
     }
 
     if($age) {
@@ -616,12 +624,12 @@ function getResults($params, $itemsPerPage) {
     if($dateRange) {
         // We need to parse the date range
         $dateRangeArr = explode(' - ', $dateRange);
-
+        
         if($dateRangeArr[0]) {
             $filters[] = 'STR_TO_DATE(r.end_time, "%Y-%m-%d %H:%i") >= "' . $dateRangeArr[0] . ' 00:00"';
         }
         if(isset($dateRangeArr[1])) {
-            $filters[] = 'STR_TO_DATE(r.end_time, "%Y-%m-%d %H:%i") <= "' . $dateRangeArr[1] . ' 00:00"';
+            $filters[] = 'STR_TO_DATE(r.end_time, "%Y-%m-%d %H:%i") <= "' . $dateRangeArr[1] . ' 23:59"';
         } else {
             $filters[] = 'STR_TO_DATE(r.end_time, "%Y-%m-%d %H:%i") <= "' . $dateRangeArr[0] . ' 23:59"';
         }
@@ -663,7 +671,7 @@ function getResults($params, $itemsPerPage) {
 
     if ($searchFilter !== null) {
         $searchTerms = explode(" ", $searchFilter);
-        $columns = ['first_name', 'last_name', 'hospital_id', 'nhs_number', 'operator_id', 'patient_id', 'location', 'result', 'assay_name'];
+        $columns = ['first_name', 'last_name', 'hospital_id', 'nhs_number', 'operator_id', 'patient_id', 'location', 'result', 'assay_name', 'sex'];
 
         $termConditions = []; // Array to store each search term's condition group
 
@@ -909,7 +917,7 @@ function updateQueryString($keyValues, $resetPage = false) {
 function checkResultCapacity() {
     global $cainDB;
 
-    $resultsCount = $cainDB->select("SELECT COUNT(*) FROM results;")['COUNT(*)'];
+    $resultsCount = $cainDB->select("SELECT COUNT(*) FROM master_results;")['COUNT(*)'];
 
     if($resultsCount >= floor(MAX_RESULTS * 0.9)) {
         Session::setWarning("max-results-reached");
@@ -1625,8 +1633,10 @@ function convertTimestamp($timestamp, $time = false) {
 
     // Ensure that the timestamp is a valid string or UNIX timestamp
     if (is_string($timestamp)) {
-        // Attempt to convert the timestamp using strtotime, handle invalid input gracefully
-        $timestamp = strtotime($timestamp);
+        if(!is_int((int) $timestamp)) {
+            // Attempt to convert the timestamp using strtotime, handle invalid input gracefully
+            $timestamp = strtotime($timestamp);
+        }
     }
 
     // Check for invalid timestamps (false or 0)

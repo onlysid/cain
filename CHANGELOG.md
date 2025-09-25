@@ -11,6 +11,31 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.6.0] - 25/09/2025
+
+Bug fixes, minor additions and UI adjustments.
+
+### Added
+-   Script added to inject 100,000 multiplex results to the /send endpoint with random patient information for testing.
+-   Script added to delete results which come from the test script (as they may infect real data so deletion can be a hassle).
+
+### Changed
+-   Hub Mac Address now prioritises the enp1s0 as it is suspected that this will be more useful.
+-   Male/Female filter now filters on 'Male' or 'Female' and not just 'M' or 'F'.
+-   Searching 'Male' or 'Female' now works (if you do not want to use the filter for some reason!).
+-   100,000 results warning now pertains to master results, not to separate results. This could mean 400,000 individual results, for example.
+
+
+### Fixed
+-   Switching the primary ID for the dashboard table now presents the correct header
+-   Date range selection now shows the results on the last selected date!
+-   Deleting data now deletes data on the last selected date!
+-   Exporting data as a system admin now redacts the data.
+-   Converting timestamps now works on php 7.4 (would result in unknown).
+-   Time remaining now shows correctly on the assay modules page and within the individual assay module pages.
+
+&nbsp;
+
 ## [v3.5.0] - 24/09/2025
 
 Adjusting results table

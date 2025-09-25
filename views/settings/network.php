@@ -3,7 +3,13 @@
 // Hospital Info Settings Subset
 $networkInfoKeys = ['selected_protocol', 'cain_server_ip', 'cain_server_port', 'hl7_server_ip', 'hl7_server_port', 'hl7_server_dest', 'patient_id', 'test_mode', 'app_mode'];
 $networkInfo = array_intersect_key($settings, array_flip($networkInfoKeys));
-$macAddress = exec('ifconfig | grep -o -E \'([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}\'');
+
+$macAddress = exec("ifconfig enp1s0 2>/dev/null | awk '/ether/{print $2}'");
+
+if (empty($macAddress)) {
+    $macAddress = exec("ifconfig | grep -o -E '([[:xdigit:]]{1,2}:){5}[[:xdigit:]]{1,2}' | head -n 1");
+}
+
 
 // Get IP address of eth0
 $eth0IP = getPrimaryIPv4();

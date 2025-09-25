@@ -43,11 +43,11 @@ if($defaultIdField == 'patient_id') {
     $idColName = "Patient ID";
 }
 
-if($defaultIdField == 'nhsNumber') {
+if($defaultIdField == 'nhs_number') {
     $idColName = "NHS #";
 }
 
-if($defaultIdField == 'hospitalId') {
+if($defaultIdField == 'hospital_id') {
     $idColName = "Hospital ID";
 }
 
