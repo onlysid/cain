@@ -8,7 +8,7 @@ ini_set('memory_limit', '2048M');
 set_time_limit(0);
 
 $ENDPOINT = 'localhost/send';
-$TARGET = 10;
+$TARGET = 100000;
 $okTotal = 0;
 $clientSeq = 1;
 $CONCURRENCY = 10;
@@ -235,7 +235,7 @@ function buildPayload(int $i): array {
 
 
 // ----- cURL Multi POST pump -----
-function postJsonMultiEnsureAck(string $endpoint, array $payloads, int $concurrency = 10,): array {
+function postJsonMultiEnsureAck(string $endpoint, array $payloads, int $concurrency = 10): array {
     $mh = curl_multi_init();
     $headers = ['Content-Type: application/json'];
 

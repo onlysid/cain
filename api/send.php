@@ -745,7 +745,7 @@ if(empty($results)) {
         "test_purpose"         => cleanValue($data['testPurpose'] ?? null),
         "device_error"         => cleanValue($data['deviceError'] ?? null),
         "module_serial_number" => cleanValue($data['moduleSerialNumber'] ?? null),
-        "lot_number"           => $lotNumber ?? null,
+        "lot_number"           => cleanValue($lotNumber) ?? null,
         "assay_name"           => cleanValue($data['assayName'] ?? null),
         "assay_id"             => cleanValue($data['assayId'] ?? null),
         "assay_type"           => cleanValue($data['assayType'] ?? null),
