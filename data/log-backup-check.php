@@ -8,13 +8,10 @@ ini_set('memory_limit', '2048M');
 
 // Define the primary and fallback folders
 $primaryPath = rtrim(BASE_DIR . '/logs', '/'); // Primary log folder
-$fallbackPath = sys_get_temp_dir() . '/app_logs'; // Fallback log folder
 
-// Determine which folder to use
-$folderPath = is_dir($primaryPath) ? $primaryPath : $fallbackPath;
+$folderPath = $primaryPath;
 
 if (!is_dir($folderPath)) {
-    // If no valid log directory exists, return an error
     http_response_code(404);
     echo 'No logs available for export.';
     exit;
@@ -41,7 +38,11 @@ if ($zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) === TRU
             $filePath = $file->getRealPath();
 
             // Get the relative path by trimming the base folder path
-            $relativePath = str_replace(realpath($folderPath), '', $filePath);
+            $base = realpath($folderPath);
+            $relativePath = substr($filePath, strlen($base) + 1);
+
+            // Force forward slashes (Windows-compatible)
+            $relativePath = str_replace('\\', '/', $relativePath);
 
             // Add the file to the ZIP archive with its relative path to keep folder structure
             if (!$zip->addFile($filePath, $relativePath)) {
