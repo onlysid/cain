@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.6.2] - 13/11/2025
+
+Log files now zip instead of gZip (for better windows support) and the files aren't stored in tmp dirs in the event that they're unable to be created. An error is thrown instead.
+
+&nbsp;
+
 ## [v3.6.1] - 25/09/2025
 
 More bug fixes

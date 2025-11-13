@@ -1472,29 +1472,40 @@ function resultStringify($result) {
 }
 
 /* Functions for logging */
+function getLogDir(string $logType) {
+    // Base logs dir
+    $logDir = __DIR__ . '/../logs/' . $logType;
+
+    // Ensure directory exists
+    if (!is_dir($logDir)) {
+        if (!mkdir($logDir, 0777, true) && !is_dir($logDir)) {
+            throw new RuntimeException("Failed to create log directory: {$logDir}");
+        }
+    }
+
+    // Ensure directory is writable
+    if (!is_writable($logDir)) {
+        throw new RuntimeException("Log directory is not writable: {$logDir}");
+    }
+
+    return $logDir;
+}
+
 
 // Adding a log entry and handling log rotation and compression
 function addLogEntry($logType, $message) {
     // Get the primary log directory
-    $logDir = __DIR__ . '/../logs/' . $logType;
+    $logDir = getLogDir($logType);
     $folderName = basename($logDir);
 
-    // Fallback directory if primary isn't writable
-    $fallbackDir = sys_get_temp_dir() . '/app_logs/' . $logType;
+    // The "current" active log file
+    $currentLogFile = $logDir . '/' . $folderName . '.log';
 
-    // Determine which directory to use
-    $activeLogDir = is_writable($logDir) || @mkdir($logDir, 0777, true) ? $logDir : $fallbackDir;
-
-    // Create fallback directory if necessary
-    if ($activeLogDir === $fallbackDir && !is_dir($fallbackDir)) {
-        mkdir($fallbackDir, 0777, true);
-    }
-
-    // Get the current log file
-    $currentLogFile = $activeLogDir . '/' . $folderName . '.log';
-
-    // Get all log files (including those which are zipped)
-    $allFiles = glob($activeLogDir . '/' . $folderName . '-*.log*');
+    // All rotated logs (numbered)
+    $allFiles = array_merge(
+        glob($logDir . '/' . $folderName . '-*.log') ?: [],
+        glob($logDir . '/' . $folderName . '-*.zip') ?: []
+    );
 
     // Natural sort to get the correct order
     usort($allFiles, function ($a, $b) {
@@ -1508,24 +1519,17 @@ function addLogEntry($logType, $message) {
     $logNumber = 1;
 
     // Get the latest log number
-    if (preg_match('/-(\d+)\.log(?:\.gz)?$/', $latestFile, $matches)) {
-        $logNumber = (int)$matches[1] + 1;
-
-        // Reset log number if it reaches 999
+    if ($latestFile && preg_match('/-(\d+)\.(?:log|zip)$/', $latestFile, $matches)) {
+        $logNumber = (int) $matches[1] + 1;
         $logNumber = ($logNumber === 999) ? 1 : $logNumber;
     }
 
     // Define a maximum file size for log rotation (2MB in this example)
-    $maxFileSize = 1024 * 1024 * 2; // 2MB
+    $maxFileSize = 2 * 1024 * 1024; // 2MB
 
     // Check if the latest file exists and is too large
     if (file_exists($currentLogFile) && filesize($currentLogFile) >= $maxFileSize) {
         compressLogFile($currentLogFile, $logNumber, $logType);
-    }
-
-    // If no latest file exists or the file was rotated, create a new one
-    if (!$latestFile) {
-        $latestFile = $activeLogDir . '/' . $folderName . '-' . str_pad($logNumber, 3, '0', STR_PAD_LEFT) . '.log';
     }
 
     // Append the new log entry
@@ -1537,53 +1541,57 @@ function addLogEntry($logType, $message) {
 
 // Function to compress log files when they hit the size limit
 function compressLogFile($logFilePath, $logNumber, $logType) {
+    $zip = new ZipArchive();
     $logDir = dirname($logFilePath);
-    $gzFilePath = $logDir . '/' . $logType . '-' . str_pad($logNumber, 3, '0', STR_PAD_LEFT) . '.log.gz';
 
-    // Open the original log file and the new compressed file
-    $logFile = fopen($logFilePath, 'rb');
-    $gzFile = gzopen($gzFilePath, 'wb9'); // Max compression level 9
+    $zipFilePath = $logDir . '/' . $logType . '-' . str_pad($logNumber, 3, '0', STR_PAD_LEFT) . '.zip';
 
-    while (!feof($logFile)) {
-        gzwrite($gzFile, fread($logFile, 1024 * 512));
+    // Create the ZIP file
+    if ($zip->open($zipFilePath, ZipArchive::CREATE | ZipArchive::OVERWRITE) !== true) {
+        throw new RuntimeException("Failed to create ZIP log file: " . $zipFilePath);
     }
 
-    fclose($logFile);
-    gzclose($gzFile);
+    // Add the original log file into the ZIP
+    $zip->addFile($logFilePath, basename($logFilePath));
+    $zip->close();
 
-    // Delete the original log file after compression
+    // Delete original log file after zipping
     unlink($logFilePath);
 }
 
-// Reading log data (including gzipped files) and loading in reverse order
+// Reading log data (including zipped files) and loading in reverse order
 function readLogFile($logType, $limit = 1000, $offset = 0) {
-    $logDir = __DIR__ . '/../logs/' . $logType;
-    $fallbackDir = sys_get_temp_dir() . '/app_logs/' . $logType;
+    $logDir = getLogDir($logType);
 
-    // Determine which directory to use
-    $activeLogDir = is_dir($logDir) ? $logDir : $fallbackDir;
-
-    // Find all log files including gzipped ones and sort them naturally
+    // Find all log files including zipped ones and sort them naturally
     $logFiles = array_merge(
-        glob($activeLogDir . '/*.log'),
-        glob($activeLogDir . '/*.log.gz')
+        glob($logDir . '/*.log') ?: [],
+        glob($logDir . '/*.zip') ?: []
     );
+
+    // If no files, return empty string
+    if(empty($logFiles)) {
+        return '';
+    }
+
     natsort($logFiles);
+    $logFiles = array_reverse($logFiles);
 
     $lines = [];
 
     // Read from the most recent log files (reverse order)
-    foreach (array_reverse($logFiles) as $logfile) {
+    foreach ($logFiles as $logfile) {
         $fileLines = [];
 
-        // Handle gzipped files
-        if (substr($logfile, -3) === '.gz') {
-            $gz = gzopen($logfile, 'rb');
-            if ($gz) {
-                while (!gzeof($gz)) {
-                    $fileLines[] = gzgets($gz);
+        // Handle zipped files
+        if (substr($logfile, -4) === '.zip') {
+            $zip = new ZipArchive();
+            if ($zip->open($logfile) === true) {
+                $content = $zip->getFromIndex(0);
+                if ($content !== false) {
+                    $fileLines = explode("\n", $content);
                 }
-                gzclose($gz);
+                $zip->close();
             }
         } else {
             // Handle regular log files
@@ -1660,15 +1668,11 @@ function convertTimestamp($timestamp, $time = false) {
 
 // Get the total size of the expired log files
 function getExpiredLogSize() {
-    // Define the path to the primary and fallback logs directory
-    $primaryPath = BASE_DIR . '/logs'; // Primary log directory
-    $fallbackPath = sys_get_temp_dir() . '/app_logs'; // Fallback log directory
-
     // Determine which directory to use
-    $activePath = is_dir($primaryPath) ? $primaryPath : $fallbackPath;
+    $activePath = BASE_DIR . '/logs';
 
-    // Variable to hold the total size of `.gz` files
-    $totalGzSize = 0;
+    // Variable to hold the total size of `.zip` files
+    $totalZipSize = 0;
 
     // Ensure the active path exists
     if (is_dir($activePath)) {
@@ -1679,15 +1683,15 @@ function getExpiredLogSize() {
         );
 
         foreach ($files as $file) {
-            // Check if the file is not a directory and is a `.gz` file
+            // Check if the file is not a directory and is a `.zip` file
             if (!$file->isDir()) {
                 // Add the file size to the total
-                $totalGzSize += $file->getSize();
+                $totalZipSize += $file->getSize();
             }
         }
     }
 
-    return $totalGzSize;
+    return $totalZipSize;
 }
 
 // Function to check expiration of cartridge
