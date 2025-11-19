@@ -865,12 +865,14 @@ if(empty($results)) {
             $resultData['overall_result'] = $resultInfo['overall_result'] ?? null;
 
             // If the result is not positive/negative, set the flag to 104 if we cannot send the data to LIMS
-			if (
-				((!in_array(strtolower((string) ($resultData['overall_result'] ?? '')), ['positive', 'negative'], true) && isValidAPIVersion($version)) 
+            if (
+              	((strpos(strtolower((string) ($resultData['overall_result'] ?? '')), 'invalid') !== false && isValidAPIVersion($version)) 
 					|| strpos(strtolower((string) ($resultData['result'] ?? '')), 'invalid') !== false)
 					&& !sendInvalidResultsToLIMS()
-			) {
-				$resultData['flag'] = 104;
+            ) {
+              	$resultData['flag'] = 104;
+            } else {
+				$resultData['flag'] = 100;
 			}
 
             // Uniquify both timestamps for this master_result
