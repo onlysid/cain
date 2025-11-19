@@ -94,6 +94,12 @@ if (!class_exists('Process')) {
                     case('add-simulator-patient'):
                         $this->addSimulatorPatient();
                         break;
+                    case('reset-retry-count'):
+                        $this->resetRetryCount();
+                        break;
+                    case('reset-retry-count-via-master'):
+                        $this->resetRetryCountViaMaster();
+                        break;
                     default:
                         // Silence. This post has not been accounted for.
                         break;
@@ -965,6 +971,9 @@ if (!class_exists('Process')) {
             $testMode = ($_POST['testMode'] ?? null) === "on" ? 1 : 0;
             $appMode = ($_POST['appMode'] ?? null) === "on" ? 1 : 0;
             $limsSim = ($_POST['limsSim'] ?? null) === "on" ? 1 : 0;
+            $sendInvalid = ($_POST['sendInvalid'] ?? null) === "on" ? 1 : 0;
+            $retryTimeoutInput = (int)($_POST['retryTimeout'] ?? 60);
+            $retryTimeout = ceil($retryTimeoutInput / 5);
 
             // If LIMS simulator is on, turn on the lims simulator!
             if($limsSim) {
@@ -1009,6 +1018,8 @@ if (!class_exists('Process')) {
                     WHEN 'patient_id' THEN :patientId
                     WHEN 'test_mode' THEN :testMode
                     WHEN 'app_mode' THEN :appMode
+                    WHEN 'send_invalid_results_to_lims' THEN :sendInvalid
+                    WHEN 'lims_retry_timeout' THEN :retryTimeout
                     ELSE `value`
                 END;";
 
@@ -1022,7 +1033,9 @@ if (!class_exists('Process')) {
                     ':hl7ServerName' => $hl7ServerName,
                     ':patientId' => $patientId,
                     ':testMode' => $testMode,
-                    ':appMode' => $appMode
+                    ':appMode' => $appMode,
+                    ':sendInvalid' => $sendInvalid,
+                    ':retryTimeout' => $retryTimeout,
                 ];
 
                 // Execute the query
@@ -1030,7 +1043,20 @@ if (!class_exists('Process')) {
 
                 // Check if the update was successful
                 if ($rowCount > 0 || $change) {
-                    Session::setNotice("Successfully updated settings.");
+                    // Apply the invalid-results policy based on the *new* setting
+                    $policyOk = toggleSendInvalidResultsSetting();
+                    $retryOk  = applyRetryTimeoutToResults($retryTimeout);
+
+                    if (!$policyOk && !$retryOk) {
+                        Session::setNotice("Settings updated, but failed to apply invalid result policy and retry timeout.", 1);
+                    } elseif (!$policyOk) {
+                        Session::setNotice("Settings updated, but failed to apply invalid result policy.", 1);
+                    } elseif (!$retryOk) {
+                        Session::setNotice("Settings updated, but failed to update retry timeout for results.", 1);
+                    } else {
+                        Session::setNotice("Successfully updated settings.");
+                    }
+
                     addLogEntry('events', "{$this->currentUser['operator_id']} updated network settings.");
                     return;
                 } else {
@@ -1578,6 +1604,20 @@ if (!class_exists('Process')) {
                 ];
                 addLogEntry('events', "ERROR: " . json_encode($errorDetails, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
             }
+        }
+
+        function resetRetryCount() {
+            $resultId = $_POST['resultId'];
+
+            resetRetryCount($resultId);
+            Session::setNotice("Re-attempting LIMS delivery.", 0);
+        }
+
+        function resetRetryCountViaMaster() {
+            $masterResultId = $_POST['masterResultId'];
+
+            resetRetryCount($masterResultId, true);
+            Session::setNotice("Re-attempting LIMS delivery.", 0);
         }
 
     }

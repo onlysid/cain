@@ -238,6 +238,50 @@ function systemInfo() {
         return [];
     }
 }
+// Check if invalid results can be sent to LIMS
+function sendInvalidResultsToLIMS() {
+    global $cainDB;
+    return ($cainDB->select("SELECT `value` FROM settings WHERE `name` = 'send_invalid_results_to_lims'")['value'] != '0');
+}
+
+// Toggle logic: applies correct updates based on the setting
+function toggleSendInvalidResultsSetting() {
+    global $cainDB;
+
+    $allowInvalid = sendInvalidResultsToLIMS();
+
+    try {
+        if ($allowInvalid) {
+            // If invalid results ARE allowed → revert the blocks
+            $cainDB->query("
+                UPDATE results
+                SET flag = 100
+                WHERE flag = 104;
+            ");
+
+        } else {
+            // If invalid results are NOT allowed → block them (your original filter)
+            $cainDB->query("
+                UPDATE results
+                SET flag = 104
+                WHERE flag != 102
+                AND (
+                        LOWER(overall_result) LIKE '%invalid%' 
+                        OR LOWER(result) LIKE '%invalid%'
+                    );
+            ");
+        }
+
+    } catch (Exception $e) {
+        error_log("Failed to toggle invalid send setting: " . $e->getMessage());
+        return false;
+    }
+
+    return true;
+}
+
+// Adjust timeouts 
+
 
 // Retrieve LIMS connectivity status from db
 function limsConnectivity() {
@@ -485,6 +529,8 @@ function enrichInstrumentWithQC($instrument) {
         if($qcType['result_intervals']) {
             // If we are here, we require that this test is carried out every x results generated. Check this.
 
+            // TODO: Make sure that the result counter actually gets incremented somewhere
+
             // Result count comparison
             if($latestTest['result_counter'] > $qcType['result_intervals']) {
                 // The QC test has expired
@@ -644,12 +690,15 @@ function getResults($params, $itemsPerPage) {
         i.*,
         res.*,
         GROUP_CONCAT(res.overall_result SEPARATOR ';') AS result_values,
+        GROUP_CONCAT(res.id SEPARATOR ';') AS result_ids,
         GROUP_CONCAT(res.result_target SEPARATOR ';') AS assay_names,
         GROUP_CONCAT(res.flag SEPARATOR ';') AS result_flags,
         GROUP_CONCAT(res.ct_values SEPARATOR ';') AS ct_values,
         CASE
             WHEN SUM(res.flag = 101) > 0 THEN 1
             WHEN SUM(res.flag = 102) = COUNT(res.flag) THEN 2
+            WHEN SUM(res.flag = 103) > 0 THEN 3
+            WHEN SUM(res.flag = 104) > 0 THEN 4
             ELSE 0
         END AS lims_status
         FROM master_results r
@@ -661,6 +710,8 @@ function getResults($params, $itemsPerPage) {
             CASE
                 WHEN SUM(res.flag = 101) > 0 THEN 1
                 WHEN SUM(res.flag = 102) = COUNT(res.flag) THEN 2
+                WHEN SUM(res.flag = 103) > 0 THEN 3
+                WHEN SUM(res.flag = 104) > 0 THEN 4
                 ELSE 0
             END AS lims_status
         FROM master_results r
@@ -700,7 +751,7 @@ function getResults($params, $itemsPerPage) {
         }
     }
 
-    // Remove all results not on 3.0
+    // Remove all results not on 3.0 (TODO: Potentially make this option togglable via query param)
     $query .= "WHERE r.version != 'D' ";
     $countQuery .= "WHERE r.version != 'D' ";
 
@@ -719,6 +770,10 @@ function getResults($params, $itemsPerPage) {
             $limsFilter = 1;
         } else if ($sentToLIMS == 102) {
             $limsFilter = 2;
+        } else if ($sentToLIMS == 103) {
+            $limsFilter = 3;
+        } else if ($sentToLIMS == 104) {
+            $limsFilter = 4;
         } else if ($sentToLIMS == 100) {
             $limsFilter = 0;
         }
@@ -1072,6 +1127,59 @@ function updateTablet($tabletId, $appVersion) {
     // Something has gone wrong
     return false;
 }
+
+function resetRetryCount($resultId, $master = false) {
+    global $cainDB;
+
+    // Get the retry count settings
+    $limsRetryTimeout = $cainDB->select("SELECT `value` FROM settings WHERE `name` = 'lims_retry_timeout'")['value'];
+
+    $query = "UPDATE results SET retry_count = ?, flag = 100 ";
+
+    // Update based on master result
+    if($master) {
+        $query .= "WHERE master_result = ? AND flag = 103;";
+    } else {
+        // Form update result query
+        $query .= "WHERE id = ?;";
+    }
+    
+    $queryParams = [$limsRetryTimeout, $resultId];
+
+    return $cainDB->query($query, $queryParams);
+}
+
+function applyRetryTimeoutToResults(int $retryTimeout) {
+    global $cainDB;
+
+    // Make sure it's a clean integer
+    $retryTimeout = (int)$retryTimeout;
+
+    try {
+        // 1) Change the default value of retry_count
+        // MySQL syntax: ALTER TABLE ... ALTER COLUMN ... SET DEFAULT ...
+        $cainDB->query("
+            ALTER TABLE results
+            ALTER COLUMN retry_count SET DEFAULT {$retryTimeout};
+        ");
+
+        // 2) Update all existing results where it hasn't already been sent and it isn't already timed out
+        $cainDB->query("
+            UPDATE results
+            SET retry_count = :retryTimeout
+            WHERE flag != 102 AND retry_count != 0;
+        ", [
+            ':retryTimeout' => $retryTimeout,
+        ]);
+
+    } catch (Exception $e) {
+        error_log("Failed to apply retry timeout to results: " . $e->getMessage());
+        return false;
+    }
+
+    return true;
+}
+
 
 // Add a Lot to the db
 function updateLot($lotNumber, $params = null) {

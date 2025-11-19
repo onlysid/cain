@@ -1043,6 +1043,34 @@ function runUpdates($version, $dbVersion, $retry = true) {
             }
         }
 
+        if(compareVersions($dbVersion, "3.7.0")) {
+            $updates = [];
+
+            // Add setting to send invalid result to LIMS
+            $sendInvalidResultsToLims = $cainDB->select("SELECT COUNT(*) AS cnt FROM settings WHERE name = 'send_invalid_results_to_lims';");
+            if (empty($sendInvalidResultsToLims) || $sendInvalidResultsToLims['cnt'] == 0) {
+                $updates["INSERT INTO settings (name, value) VALUES ('send_invalid_results_to_lims', '1');"] = [];
+            }
+
+            // Add setting to configure the default retry timeout (basically, the default retry count for results -- 12 ~ 60s)
+            $limsRetryTimeout = $cainDB->select("SELECT COUNT(*) AS cnt FROM settings WHERE name = 'lims_retry_timeout';");
+            if (empty($limsRetryTimeout) || $limsRetryTimeout['cnt'] == 0) {
+                $updates["INSERT INTO settings (name, value) VALUES ('lims_retry_timeout', '12');"] = [];
+            }
+
+            // Add retry_count to the results field
+            $retryCountExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+                WHERE table_schema = '" . DB_NAME . "'
+                AND table_name = 'results'
+                AND column_name = 'retry_count';");
+            if (!$retryCountExists['cnt']) {
+                $updates["ALTER TABLE results ADD retry_count SMALLINT DEFAULT 12;"] = [];
+            }
+
+            // Execute queries for 3.7.0
+            executeQueries($cainDB, $updates);
+        }
+
         // =================== Version 100.0.0 Updates (Test) ===================
         if (compareVersions($dbVersion, "100.0.0")) {
             sleep(2);

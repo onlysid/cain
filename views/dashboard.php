@@ -213,34 +213,50 @@ include_once BASE_DIR . "/utils/AgeGroup.php";?>
                         <td>
                             <div class="h-full flex items-center gap-1.5 justify-end">
                                 <!-- Statuses and chevron -->
-                                <?php if($result && $summary == 'Positive') : ?>
+                                <!-- <?php if($result && $summary == 'Positive') : ?>
                                     <button class="flex items-center tooltip" title="Positive Result">
                                         <svg class="h-5 fill-red-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512">
                                             <path d="M256 80c0-17.7-14.3-32-32-32s-32 14.3-32 32V224H48c-17.7 0-32 14.3-32 32s14.3 32 32 32H192V432c0 17.7 14.3 32 32 32s32-14.3 32-32V288H400c17.7 0 32-14.3 32-32s-14.3-32-32-32H256V80z"/>
                                         </svg>
                                     </button>
-                                <?php endif;?>
+                                <?php endif;?> -->
+
                                 <button id="sendResult<?= $result['master_result_id'];?>" class="flex items-center">
-                                <?php
-                                // Determine the symbol (if any) to display
-                                $limsStatus = false;
-                                $limsStatusMessage = "Not sent to LIMS";
+                                    <?php
+                                    // Determine the symbol (if any) to display
+                                    $limsStatus = false;
+                                    $limsStatusMessage = "Not sent to LIMS";
 
-                                if($limsConnection) {
-                                    $limsStatus = 'unsent';
-                                }
+                                    if($limsConnection) {
+                                        $limsStatus = 'unsent';
+                                    }
 
-                                if($result['lims_status'] == 2) {
-                                    $limsStatus = 'active';
-                                    $limsStatusMessage = "Sent to LIMS";
-                                } else if($result['lims_status'] == 1 && $limsStatus) {
-                                    $limsStatus = 'pending';
-                                    $limsStatusMessage = "Sending to LIMS";
-                                }
+                                    if($result['lims_status'] == 2) {
+                                        $limsStatus = 'active';
+                                        $limsStatusMessage = "Sent to LIMS";
+                                    } else if($result['lims_status'] == 1 && $limsStatus) {
+                                        $limsStatus = 'pending';
+                                        $limsStatusMessage = "Sending to LIMS";
+                                    } else if($result['lims_status'] == 3 && $limsStatus) {
+                                        $limsStatus = 'failed';
+                                        $limsStatusMessage = "Failed to send to LIMS";
+                                    } else if($result['lims_status'] == 4 && $limsStatus) {
+                                        $limsStatus = 'invalid';
+                                        $limsStatusMessage = "Invalid results do not get sent to LIMS";
+                                    }
 
-                                if($limsStatus !== false) : ?>
-                                    <div class="status-indicator <?= $limsStatus;?> tooltip" title="<?= $limsStatusMessage;?>"></div>
-                                <?php endif;?>
+                                    if($limsStatus !== false) : ?>
+                                        <?php if($limsStatus == "failed") : ?>
+                                            <form action="/process" method="POST">
+                                                <input type="hidden" name="action" value="reset-retry-count-via-master">
+                                                <input type="hidden" name="masterResultId" value="<?= $result['master_result_id']?>">
+                                                <button type="submit" class="tooltip" title="Re-attempt sending to LIMS" onclick="event.stopPropagation();">
+                                                    <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M470.6 118.6c12.5-12.5 12.5-32.8 0-45.3l-64-64c-9.2-9.2-22.9-11.9-34.9-6.9S352 19.1 352 32l0 32-160 0C86 64 0 150 0 256 0 273.7 14.3 288 32 288s32-14.3 32-32c0-70.7 57.3-128 128-128l160 0 0 32c0 12.9 7.8 24.6 19.8 29.6s25.7 2.2 34.9-6.9l64-64zM41.4 393.4c-12.5 12.5-12.5 32.8 0 45.3l64 64c9.2 9.2 22.9 11.9 34.9 6.9S160 492.9 160 480l0-32 160 0c106 0 192-86 192-192 0-17.7-14.3-32-32-32s-32 14.3-32 32c0 70.7-57.3 128-128 128l-160 0 0-32c0-12.9-7.8-24.6-19.8-29.6s-25.7-2.2-34.9 6.9l-64 64z"/></svg>
+                                                </button>
+                                            </form>
+                                        <?php endif;?>
+                                        <div class="status-indicator <?= $limsStatus;?> tooltip" title="<?= $limsStatusMessage;?>"></div>
+                                    <?php endif;?>
                                 </button>
                             </div>
                         </td>
@@ -309,6 +325,7 @@ if($resultItems) {
 
         // Get the individual result information (which may be the same!)
         $individualResults = explode(';', $result['result_values'] ?? "");
+        $individualResultIds = explode(';', $result['result_ids'] ?? "");
         $individualAssayNames = explode(';', $result['assay_names'] ?? "");
         $individualCTValues = explode(';', $result['ct_values'] ?? "");
         $individualStatusFlags = explode(';', $result['result_flags'] ?? "");
@@ -323,6 +340,7 @@ if($resultItems) {
         foreach($individualAssayNames as $key => $individualAssayName) {
             $individualAssayNamesProcessed[$key] = explode(', ', $individualAssayName);
         }
+
         ?>
         <div id="result<?= $result['master_result_id'];?>Modal" class="result-modal">
             <div class="result-modal-backdrop">
@@ -335,6 +353,7 @@ if($resultItems) {
 
                     <h2 class="flex text-center items-center gap-2.5 sm:text-start mx-12 sm:mx-0 sm:mr-12 mb-2.5 sm:mb-1">
                         <?= convertTimestamp($result['end_time'] ?? $result['end_time'], true);?>: <?= $serviceEngineer ? '-REDACTED-' : $result['first_name'] ?? 'Unknown';?> <?= !$serviceEngineer ? $result['last_name'] : '';?>
+                        
                         <?php // Determine the symbol (if any) to display
                         $limsStatus = false;
                         $limsStatusMessage = "Not sent to LIMS";
@@ -349,10 +368,25 @@ if($resultItems) {
                         } else if($result['lims_status'] == 1 && $limsStatus) {
                             $limsStatus = 'pending';
                             $limsStatusMessage = "Sending to LIMS";
+                        } else if($result['lims_status'] == 3 && $limsStatus) {
+                            $limsStatus = 'failed';
+                            $limsStatusMessage = "Failed to send to LIMS";
+                        } else if($result['lims_status'] == 4 && $limsStatus) {
+                            $limsStatus = 'invalid';
+                            $limsStatusMessage = "Invalid results do not get sent to LIMS";
                         }
 
                         if($limsStatus !== false) : ?>
-                            <div class="status-indicator <?= $limsStatus;?> tooltip" title="<?= $limsStatusMessage;?>"><span class="hidden"> (<?= $limsStatusMessage;?>)</span></div>
+                            <?php if($limsStatus == "failed") : ?>
+                                <form class="w-max" action="/process" method="POST">
+                                    <input type="hidden" name="action" value="reset-retry-count-via-master">
+                                    <input type="hidden" name="masterResultId" value="<?= $result['master_result_id']?>">
+                                    <button type="submit" class="tooltip" title="Re-attempt sending to LIMS" onclick="event.stopPropagation();">
+                                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--!Font Awesome Free v7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free Copyright 2025 Fonticons, Inc.--><path d="M470.6 118.6c12.5-12.5 12.5-32.8 0-45.3l-64-64c-9.2-9.2-22.9-11.9-34.9-6.9S352 19.1 352 32l0 32-160 0C86 64 0 150 0 256 0 273.7 14.3 288 32 288s32-14.3 32-32c0-70.7 57.3-128 128-128l160 0 0 32c0 12.9 7.8 24.6 19.8 29.6s25.7 2.2 34.9-6.9l64-64zM41.4 393.4c-12.5 12.5-12.5 32.8 0 45.3l64 64c9.2 9.2 22.9 11.9 34.9 6.9S160 492.9 160 480l0-32 160 0c106 0 192-86 192-192 0-17.7-14.3-32-32-32s-32 14.3-32 32c0 70.7-57.3 128-128 128l-160 0 0-32c0-12.9-7.8-24.6-19.8-29.6s-25.7-2.2-34.9 6.9l-64 64z"/></svg>
+                                    </button>
+                                </form>
+                            <?php endif;?>
+                            <div class="status-indicator <?= $limsStatus;?> tooltip" title="<?= $limsStatusMessage;?>"></div>
                         <?php endif;?>
                     </h2>
 
@@ -375,7 +409,6 @@ if($resultItems) {
 
                             <?php // Show the results
                             foreach($individualResultsProcessed as $key => $res) : ?>
-
                                 <?php // We should loop through the individual results and display them one by one
                                 $ctValues = explode(",", $individualCTValues[$key] ?? "");
                                 $resultInterpretation = resultInterpretation($res);
@@ -411,9 +444,26 @@ if($resultItems) {
                                     } else if($individualStatusFlags[$key] == 101 && $individualLimsStatus) {
                                         $individualLimsStatus = 'pending';
                                         $individualLimsStatusMessage = "Sending to LIMS";
-                                    }?>
+                                    } else if($individualStatusFlags[$key] == 103 && $individualLimsStatus) {
+                                        $individualLimsStatus = 'failed';
+                                        $individualLimsStatusMessage = "Failed to send to LIMS";
+                                    } else if($individualStatusFlags[$key] == 104 && $individualLimsStatus) {
+                                        $individualLimsStatus = 'invalid';
+                                        $individualLimsStatusMessage = "Invalid results do not get sent to LIMS";
+                                    }
+                                    
+                                    ?>
                                     <h4 class="px-2.5 title border-2 border-transparent py-0.5 flex items-center gap-2 bg-white !text-dark rounded-md w-full">
                                         <?php if($individualLimsStatus) : ?>
+                                            <?php if($individualLimsStatus == 'failed') : ?>
+                                                <form class="w-max" action="/process" method="POST">
+                                                    <input type="hidden" name="action" value="reset-retry-count">
+                                                    <input type="hidden" name="resultId" value="<?= $individualResultIds[$key]?>">
+                                                    <button type="submit" class="tooltip" title="Re-attempt sending to LIMS" onclick="event.stopPropagation();">
+                                                        <svg class="h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="M470.6 118.6c12.5-12.5 12.5-32.8 0-45.3l-64-64c-9.2-9.2-22.9-11.9-34.9-6.9S352 19.1 352 32l0 32-160 0C86 64 0 150 0 256 0 273.7 14.3 288 32 288s32-14.3 32-32c0-70.7 57.3-128 128-128l160 0 0 32c0 12.9 7.8 24.6 19.8 29.6s25.7 2.2 34.9-6.9l64-64zM41.4 393.4c-12.5 12.5-12.5 32.8 0 45.3l64 64c9.2 9.2 22.9 11.9 34.9 6.9S160 492.9 160 480l0-32 160 0c106 0 192-86 192-192 0-17.7-14.3-32-32-32s-32 14.3-32 32c0 70.7-57.3 128-128 128l-160 0 0-32c0-12.9-7.8-24.6-19.8-29.6s-25.7-2.2-34.9 6.9l-64 64z"/></svg>
+                                                    </button>
+                                                </form>
+                                            <?php endif;?>
                                             <div class="status-indicator border-2 <?= $individualLimsStatus;?> tooltip" title="<?= $individualLimsStatusMessage;?>"><span class="hidden"> (<?= $individualLimsStatusMessage;?>)</span></div>
                                         <?php endif;?>
                                         <?= $individualAssayNames[$key];?>
@@ -440,7 +490,6 @@ if($resultItems) {
                                                         <p class="!text-sm !text-dark">ct: <?= $ctValues[$key2];?></p>
                                                     <?php endif;?>
                                                     </p>
-
                                                 <?php endforeach;?>
                                             </div>
                                         </div>
@@ -615,6 +664,8 @@ if($currentUser['user_type'] >= ADMINISTRATIVE_CLINICIAN) : ?>
                             <option <?= ($filters['l'] ?? null) == "100" ? "selected" : "";?> value="100">Not Sent</option>
                             <option <?= ($filters['l'] ?? null) == "101" ? "selected" : "";?> value="101">Pending</option>
                             <option <?= ($filters['l'] ?? null) == "102" ? "selected" : "";?> value="102">Sent</option>
+                            <option <?= ($filters['l'] ?? null) == "103" ? "selected" : "";?> value="103">Failed</option>
+                            <option <?= ($filters['l'] ?? null) == "104" ? "selected" : "";?> value="104">Invalid</option>
                         </select>
                     </div>
                 </div>

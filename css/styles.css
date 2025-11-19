@@ -371,6 +371,10 @@ table:not(.result-explosion):not(.lot-explosion) tbody tr {
     @apply bg-amber-500;
 }
 
+.status-indicator.invalid {
+    @apply bg-gray-500;
+}
+
 td .table-controls {
     @apply flex gap-2.5 items-center justify-end;
 }

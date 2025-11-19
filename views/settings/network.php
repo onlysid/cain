@@ -1,7 +1,7 @@
 <?php // General Settings
 
 // Hospital Info Settings Subset
-$networkInfoKeys = ['selected_protocol', 'cain_server_ip', 'cain_server_port', 'hl7_server_ip', 'hl7_server_port', 'hl7_server_dest', 'patient_id', 'test_mode', 'app_mode'];
+$networkInfoKeys = ['selected_protocol', 'cain_server_ip', 'cain_server_port', 'hl7_server_ip', 'hl7_server_port', 'hl7_server_dest', 'patient_id', 'test_mode', 'app_mode', 'lims_retry_timeout', 'send_invalid_results_to_lims'];
 $networkInfo = array_intersect_key($settings, array_flip($networkInfoKeys));
 
 $macAddress = exec("ifconfig enp1s0 2>/dev/null | awk '/ether/{print $2}'");
@@ -145,6 +145,12 @@ const backupSettings = {
                     <input required id="cainPort" type="number" name="cainPort" value="<?= $networkInfo['cain_server_port'];?>">
                 </div>
             </div>
+            <div class="field">
+                <label for="retryTimeout">Timeout (s)</label>
+                <div class="input-wrapper">
+                    <input required id="retryTimeout" type="number" name="retryTimeout" value="<?= (int)$networkInfo['lims_retry_timeout'] * 5;?>">
+                </div>
+            </div>
         </div>
     </div>
     <div class="form-fields -mt-4">
@@ -156,6 +162,16 @@ const backupSettings = {
             <div class="checkbox-wrapper">
                 <input class="tgl" name="patientId" id="patientId" type="checkbox" <?= $networkInfo['patient_id'] ? "checked" : "";?>>
                 <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="patientId"><span></span></label>
+            </div>
+        </label>
+        <label for="sendInvalid" class="field !flex-row toggle-field !px-6 py-2 rounded-full bg-white shadow-md">
+            <div class="flex flex-col w-full">
+                <div class="shrink">Send Invalid Results to LIMS</div>
+                <div class="description !text-xs text-grey mr-4">Does your LIMS allow invalid results?</div>
+            </div>
+            <div class="checkbox-wrapper">
+                <input class="tgl" name="sendInvalid" id="sendInvalid" type="checkbox" <?= $networkInfo['send_invalid_results_to_lims'] ? "checked" : "";?>>
+                <label class="toggle" data-tg-off="DISABLED" data-tg-on="ENABLED" for="sendInvalid"><span></span></label>
             </div>
         </label>
         <label for="testMode" class="field !flex-row toggle-field !px-6 py-2 rounded-full bg-white shadow-md">

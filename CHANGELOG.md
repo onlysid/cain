@@ -11,6 +11,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.7.0] - 19/11/2025
+
+LIMS timeouts and invalid results.
+
+### Added
+
+-   Added ability to re-attempt delivering to LIMS if a failure occurs.
+-   Added ability to timeout delivering to LIMS.
+-   Added configuration settings for LIMS timeout options.
+-   Added configuration setting for allowing invalid results to be delivered to LIMS.
+
+&nbsp;
+
 ## [v3.6.2] - 13/11/2025
 
 Log files now zip instead of gZip (for better windows support) and the files aren't stored in tmp dirs in the event that they're unable to be created. An error is thrown instead.
