@@ -840,6 +840,9 @@ if(empty($results)) {
         $usedTs  = [];
         $usedTct = [];
 
+        // If we have a module serial number, increment the count for any dependent QC results
+        incrementInstrumentQC($resultData['moduleSerialNumber']);
+
         // Add individual result for each result we are sent
         foreach($results as $assayTargetName => $resultInfo) {
             // Add the individual result to the result data

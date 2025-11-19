@@ -19,6 +19,10 @@ SampleID <-> PatientID switcheroo.
 
 -   Newcastle site and DRW have requested that anything being sent as patientId should be stored in the sampleId field too. Anything sent as sampleId should be stored in a NEW sampleTubeId field. This change involves a database migration of previous results to the new format and some API adjustments to redirect data appropriately.
 
+### Fixed
+
+-   Instrument QC results now count the number of results correctly by incrementing the result count based on new results hitting the /send endpoint. 
+
 &nbsp;
 
 ## [v3.7.0] - 19/11/2025

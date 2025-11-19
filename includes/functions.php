@@ -448,6 +448,43 @@ function getInstrumentStatusText($code = 0) {
     }
 }
 
+// Increment QC count for a particular instrument
+function incrementInstrumentQC($instrumentSerial) {
+    global $cainDB;
+
+    if ($instrumentSerial && $instrumentSerial !== "") {
+
+        // 1. Look up the instrument's primary key by serial number
+        $instrument = $cainDB->select("
+            SELECT id
+            FROM instruments
+            WHERE serial_number = :serial
+            LIMIT 1
+        ", [
+            ':serial' => $instrumentSerial,
+        ]);
+
+        if (!empty($instrument['id'])) {
+            $instrumentId = (int) $instrument['id'];
+
+            // 2. Increment result_counter on the most recent QC result of each type for this instrument
+            $cainDB->query("
+                UPDATE instrument_qc_results AS iqr
+                JOIN (
+                    SELECT MAX(id) AS max_id
+                    FROM instrument_qc_results
+                    WHERE instrument = :instrument_id
+                    GROUP BY `type`
+                ) AS latest
+                    ON iqr.id = latest.max_id
+                SET iqr.result_counter = COALESCE(iqr.result_counter, 0) + 1
+            ", [
+                ':instrument_id' => $instrumentId,
+            ]);
+        }
+    }
+}
+
 // Add QC and number of tests to the instrument snapshot
 function enrichInstrumentWithQC($instrument) {
     global $cainDB;
@@ -465,7 +502,7 @@ function enrichInstrumentWithQC($instrument) {
 
     foreach($qcTypes as $qcType) {
         // Get the latest QC test for this QC type for this instrument
-        $latestTest = $cainDB->select("SELECT * FROM instrument_qc_results WHERE instrument = ? AND `type` = ? ORDER BY `timestamp` DESC LIMIT 1;", [$instrument['id'], $qcType['id']]);
+        $latestTest = $cainDB->select("SELECT * FROM instrument_qc_results WHERE instrument = ? AND `type` = ? ORDER BY `id` DESC, `timestamp` DESC LIMIT 1;", [$instrument['id'], $qcType['id']]);
 
         // If this is false, no test has been carried out yet
         $instrument['qc']['res'][$qcType['id']] = $latestTest;
@@ -593,9 +630,9 @@ function getInstrumentQCResults($instrumentId = null, $orderByTime = false) {
 
     // If there is an instrument ID, get its specific results. Otherwise, get all results.
     if($instrumentId) {
-        return $cainDB->selectAll("SELECT * FROM instrument_qc_results WHERE instrument = ? ORDER BY `timestamp`;", [$instrumentId]);
+        return $cainDB->selectAll("SELECT * FROM instrument_qc_results WHERE instrument = ? ORDER BY `timestamp` DESC, `id` DESC;", [$instrumentId]);
     } else {
-        return $cainDB->selectAll("SELECT * FROM instrument_qc_results ORDER BY `timestamp`;");
+        return $cainDB->selectAll("SELECT * FROM instrument_qc_results ORDER BY `timestamp` DESC, `id` DESC;");
     }
 }
 
