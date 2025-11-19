@@ -1071,6 +1071,30 @@ function runUpdates($version, $dbVersion, $retry = true) {
             executeQueries($cainDB, $updates);
         }
 
+        if(compareVersions($dbVersion, "3.7.1")) {
+            $updates = [];
+
+            // Add sampleTubeId to results table
+            $sampleTubeIdExists = $cainDB->select("SELECT COUNT(*) AS cnt FROM information_schema.columns
+                WHERE table_schema = '" . DB_NAME . "'
+                AND table_name = 'results'
+                AND column_name = 'sample_tube_id';");
+            if (!$sampleTubeIdExists['cnt']) {
+                $updates["ALTER TABLE results ADD sample_tube_id VARCHAR(256) DEFAULT '';"] = [];
+            }
+
+            executeQueries($cainDB, $updates);
+            $updates = [];
+
+            // Copy all sample IDs into sample_tube_id field (results table)
+            $updates["UPDATE results SET sample_tube_id = sampleid WHERE sample_tube_id IS NULL;"] = [];
+
+            // Copy all patient IDs to the sampleid field
+            $updates["UPDATE results SET sampleid = patientId;"] = [];
+
+            executeQueries($cainDB, $updates);
+        }
+
         // =================== Version 100.0.0 Updates (Test) ===================
         if (compareVersions($dbVersion, "100.0.0")) {
             sleep(2);

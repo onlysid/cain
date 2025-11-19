@@ -11,6 +11,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v3.7.1] - 19/11/2025
+
+SampleID <-> PatientID switcheroo.
+
+### Changed
+
+-   Newcastle site and DRW have requested that anything being sent as patientId should be stored in the sampleId field too. Anything sent as sampleId should be stored in a NEW sampleTubeId field. This change involves a database migration of previous results to the new format and some API adjustments to redirect data appropriately.
+
+&nbsp;
+
 ## [v3.7.0] - 19/11/2025
 
 LIMS timeouts and invalid results.

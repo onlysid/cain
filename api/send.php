@@ -756,8 +756,9 @@ if(empty($results)) {
     // Add the data to an array which can be iterated over to add each field to the db. THIS IS ESSENTIALLY WHAT IS SENT TO LIMS
     $resultData = [
         "version"               => $data['version'] ?? "",
-        "sampleId"              => $data['sampleId'] ?? "",
+        "sampleid"              => $data['patientId'] ?? "",
         "patientId"             => $data['patientId'] ?? "",
+        "sample_tube_id"        => $data['sampleId'] ?? "",
         "firstName"             => $data['patientFirstName'] ?? "",
         "lastName"              => $data['patientLastName'] ?? "",
         "patientAge"            => $data['patientAge'] ?? "",
