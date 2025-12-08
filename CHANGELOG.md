@@ -8,6 +8,13 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## KNOWN ISSUES:
 -   Memory error on /lims-simulator.php line 135 when logs (presumably) get too large (LIMS LOG)
+-   Logging out as results are exporting exports a logout page's HTML.
+
+&nbsp;
+
+## [v3.7.2] - 08/12/2025
+
+Version bump to re-sync git.
 
 &nbsp;
 
