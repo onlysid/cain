@@ -1,9 +1,7 @@
-FROM php:8.3-cli
+FROM php:8.3-apache
 
-WORKDIR /app
+RUN a2enmod rewrite
 
-COPY . .
+COPY ./app /var/www/html
 
-EXPOSE 8080
-
-CMD ["php", "-S", "0.0.0.0:8080", "-t", "."]
+EXPOSE 80
