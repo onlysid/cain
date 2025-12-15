@@ -3,7 +3,6 @@
 // For debugging (remove in production)
 // error_reporting(E_ALL);
 // ini_set('display_errors', 1);
-echo("TESTING");
 
 // Include necessary files
 require_once 'includes/config.php';
