@@ -1,6 +1,5 @@
-<?php // Database Constants
-
-define("DB_SERVER", "127.0.0.1");
-define("DB_USER", "cm"); // Database username
-define("DB_PASS", "uQ8nstTMYAa6XAaf"); // Databse password
-define("DB_NAME", "patientresult_db"); // Database name
+<?php
+define("DB_SERVER", getenv("DB_SERVER") ?: "127.0.0.1");
+define("DB_USER", getenv("DB_USER") ?: "");
+define("DB_PASS", getenv("DB_PASS") ?: "");
+define("DB_NAME", getenv("DB_NAME") ?: "");
