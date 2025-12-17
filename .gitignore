@@ -23,3 +23,6 @@ curves/*
 
 # MacOS
 .DS_Store
+
+middleware/
+releases/
