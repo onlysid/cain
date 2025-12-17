@@ -1,5 +1,5 @@
 services:
-  db:
+  drw_nexus_db:
     image: mariadb:11
     container_name: cain_db
     restart: unless-stopped
@@ -39,14 +39,14 @@ services:
     restart: unless-stopped
 
     depends_on:
-      db:
+      drw_nexus_db:
         condition: service_healthy
 
     ports:
       - "8080:80"
 
     environment:
-      DB_SERVER: db
+      DB_SERVER: drw_nexus_db
       DB_NAME: ${DB_NAME}
       DB_USER: ${DB_USER}
       DB_PASS: ${DB_PASS}
