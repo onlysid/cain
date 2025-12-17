@@ -1,6 +1,6 @@
 # Change Log
 
-All notable changes to the SAMBA III DMS will be documented in this file.
+All notable changes to the Nexus DMS will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to [Semantic Versioning](http://semver.org/).
 
@@ -9,6 +9,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ## KNOWN ISSUES:
 -   Memory error on /lims-simulator.php line 135 when logs (presumably) get too large (LIMS LOG)
 -   Logging out as results are exporting exports a logout page's HTML.
+
+&nbsp;
+
+## [v3.7.2] - 17/12/2025
+
+Bundled releases and middleware code into the same repository for better visibility. No new code for the DMS so no need for version increment.
 
 &nbsp;
 

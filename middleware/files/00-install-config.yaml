@@ -1,0 +1,20 @@
+network:
+  version: 2
+  renderer: NetworkManager
+  ethernets:
+    enp2s0:
+      nameservers:
+        addresses: [8.8.8.8, 8.8.4.4]
+      dhcp6: true
+      dhcp4: true
+  wifis:
+    wlp2s0:
+      addresses:
+      - 192.168.0.2/24
+      - "2001:1::1/64"
+      access-points:
+        "Samba3Wifi":
+          mode: ap
+          auth:
+            key-management: psk
+            password: xZB!z5csF8aN

@@ -45,3 +45,7 @@ You can then delete any test data by running
 ```
 php /var/www/html/data/tests/delete-tests.php
 ```
+
+## Releases
+
+For updates and releases, refer to the README and SETUP files in the releases folder of this repository.
