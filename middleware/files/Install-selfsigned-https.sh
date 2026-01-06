@@ -1,5 +1,5 @@
 sudo apt install openssl
-openssl req -x509 -nodes -days 36500 -newkey rsa:2048 -keyout apache-selfsigned.key -out apache-selfsigned.crt -subj "/C=UK/ST=DRW/L=DRW/O=DRW/OU=HUB/CN=192.168.0.1"
+openssl req -x509 -nodes -days 36500 -newkey rsa:2048 -keyout apache-selfsigned.key -out apache-selfsigned.crt -subj "/C=UK/ST=DRW/L=DRW/O=DRW/OU=HUB/CN=192.168.0.2"
 sudo a2enmod ssl
 sudo mv apache-selfsigned.key /etc/ssl/private
 sudo mv apache-selfsigned.crt /etc/ssl/certs

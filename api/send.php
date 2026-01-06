@@ -853,10 +853,10 @@ if(empty($results)) {
 
             // Set the product name (again, may vary)
             if(count($results) > 1) {
-				$resultData['product'] = "*" . $masterData['assay_name'] . "*" . $assayTargetName;
-			} else {
-				$resultData['product'] = $assayTargetName;
-			}
+              $resultData['product'] = "*" . $masterData['assay_name'] . "*" . $assayTargetName;
+            } else {
+              $resultData['product'] = $assayTargetName;
+            }
 
             // Set the CT value
             $resultData['ct_values'] = $resultInfo['ct_values'];

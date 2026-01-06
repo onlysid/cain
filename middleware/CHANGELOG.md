@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 &nbsp;
 
+## [v2.0.8] - 05/01/2026
+
+Altered default IP to 192.168.0.2
+
+&nbsp;
+
 ## [v2.0.7] - 02/12/2025
 
 Added LIMs sending recovery

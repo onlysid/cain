@@ -6,7 +6,7 @@ Data Management System (DMS) for medical tests, quality control and instruments 
 
 This project requires an apache web server, an sql (mysql or maridb) database and an installation of PhP (7.2 or newer).
 
-In the case of Nexus, the DMS should already be set up and running, accessible on the internal network at https://192.168.0.1.
+In the case of Nexus, the DMS should already be set up and running, accessible on the internal network at https://192.168.0.2.
 
 ## Updating the DMS
 
